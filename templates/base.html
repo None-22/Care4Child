@@ -23,7 +23,8 @@
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3.0">
 </head>
 
 <body>
@@ -108,7 +109,7 @@
                 </div>
             </nav>
 
-            <div class="container-fluid px-4 py-5">
+            <div class="{% block wrapper_class %}container-fluid px-4 py-5{% endblock %}">
                 <!-- Alerts Section -->
                 <!-- Alerts Section Handled by SweetAlert2 -->
 

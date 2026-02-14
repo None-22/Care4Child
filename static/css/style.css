@@ -1,156 +1,273 @@
+/* --- Care4Child: Medical Teal & Sidebar Fix --- */
 :root {
-    --main-bg-color: #f1f6ff;
-    /* Light Blueish Gray */
-    --primary-color: #009688;
-    /* Teal */
-    --secondary-color: #2c3e50;
-    /* Dark Blue */
-    --accent-color: #ff6b6b;
-    /* Soft Red */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    /* Brand Colors (Medical/Care Palette) */
+    --primary-color: #20c997;
+    /* Medical Teal (The user loved this) */
+    --primary-dark: #0f9d58;
+    --primary-light: #e6fffa;
+
+    --secondary-color: #34495e;
+    /* Navy Blue for Sidebar */
+    --accent-color: #ff9f43;
+    /* Warm Orange for accents */
+
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+
+    /* Text */
+    --text-dark: #2c3e50;
+    --text-muted: #6c757d;
+
+    /* Backgrounds */
+    --bg-body: #f4f7f6;
+    /* Very soft mint/gray */
+    --bg-card: #ffffff;
+
+    /* Gradients */
+    --grad-primary: linear-gradient(135deg, #20c997 0%, #0f9d58 100%);
+    --grad-success: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    --grad-warning: linear-gradient(135deg, #ffc107 0%, #ff9f43 100%);
+    --grad-danger: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 5px 15px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 10px 25px rgba(32, 201, 151, 0.15);
+    /* Teal shadow */
 }
 
 body {
-    background: #e0eafc;
-    /* Fallback */
-    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    background-color: var(--bg-body);
     font-family: 'Cairo', sans-serif;
-    overflow: hidden;
-    /* Prevent body scroll, layout handles scrolling */
+    color: var(--text-dark);
+    margin: 0;
+    overflow-x: hidden;
 }
 
+/* --- SIDEBAR STYLES (Restored Functionality) --- */
 #wrapper {
+    overflow-x: hidden;
     display: flex;
-    width: 100%;
-    height: 100vh;
-    /* Full Viewport Height */
-    align-items: stretch;
-    overflow: hidden;
 }
 
 #sidebar-wrapper {
-    width: 280px;
-    min-width: 280px;
-    height: 100%;
-    /* Fill wrapper */
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-left: 1px solid var(--glass-border);
-    transition: width 0.3s ease, min-width 0.3s ease;
-
-    /* Content Handling */
-    white-space: nowrap;
-    overflow-x: hidden;
-    /* Hide horizontal overflow */
-    overflow-y: auto;
-    /* vertical scroll if menu is long */
-    flex-shrink: 0;
-    z-index: 1100;
-    /* Ensure above content and NAVBAR (1050) if overlap occurs */
+    min-height: 100vh;
+    margin-right: -17rem;
+    /* RTL: Hidden by default on mobile */
+    width: 17rem;
+    transition: margin 0.3s ease-out, width 0.3s ease-out;
+    background: #fff;
+    border-left: 1px solid #eee;
+    z-index: 1000;
 }
 
-#page-content-wrapper {
-    flex-grow: 1;
-    min-width: 0;
-    /* width: auto; Let flex handle width */
-    height: 100%;
-    /* Fill wrapper */
-    overflow: auto;
-    /* BECOMES THE SCROLL CONTAINER */
-    padding-right: 0;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-/* --- Desktop Logic (Default > 768px) --- */
-
-/* Toggled State: Shrink to 80px (Icons Only) */
-#wrapper.toggled #sidebar-wrapper {
-    width: 80px !important;
-    min-width: 80px !important;
-}
-
-/* Hide Text when toggled */
-#wrapper.toggled .link-text {
-    display: none !important;
-    opacity: 0;
-}
-
-/* Center Icons when toggled */
-#wrapper.toggled .list-group-item,
-#wrapper.toggled .sidebar-heading {
-    text-align: center !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#wrapper.toggled .list-group-item i,
-#wrapper.toggled .sidebar-heading i {
-    margin: 0 !important;
-    /* Remove spacing margin if any */
+#sidebar-wrapper .sidebar-heading {
+    padding: 1.5rem;
     font-size: 1.5rem;
-    /* Make icons slightly larger in mini mode */
-}
-
-
-/* --- Mobile Logic (< 768px) --- */
-@media (max-width: 768px) {
-
-    /* Default: Hidden completely */
-    #sidebar-wrapper {
-        width: 0 !important;
-        min-width: 0 !important;
-    }
-
-    /* Toggled: Full Width (Not Mini) */
-    #wrapper.toggled #sidebar-wrapper {
-        width: 280px !important;
-        min-width: 280px !important;
-    }
-
-    /* Restore Text & Layout on Mobile Open */
-    #wrapper.toggled .link-text {
-        display: inline-block !important;
-        opacity: 1;
-    }
-
-    #wrapper.toggled .list-group-item,
-    #wrapper.toggled .sidebar-heading {
-        text-align: right !important;
-        /* RTL Default */
-        padding: 15px 25px !important;
-        display: block;
-    }
-
-    #wrapper.toggled .list-group-item i {
-        margin-left: 0.5rem !important;
-        /* Restore Spacing */
-        font-size: inherit;
-    }
-}
-
-/* Re-add styling for list items since we replaced the whole block */
-.sidebar-heading {
-    padding: 1.5rem 1.25rem;
-    font-size: 1.5rem;
-    font-weight: bold;
     color: var(--primary-color);
 }
 
+#sidebar-wrapper .list-group {
+    width: 17rem;
+    transition: width 0.3s ease-out;
+}
+
+/* Sidebar Links */
 .list-group-item {
     border: none;
-    padding: 15px 25px;
-    font-weight: 600;
+    padding: 1rem 1.5rem;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    color: var(--text-dark);
+    position: relative;
+    transition: 0.2s;
+}
+
+.list-group-item:hover {
+    color: var(--primary-color);
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary-color);
 }
 
 .list-group-item.active {
-    background-color: rgba(0, 150, 136, 0.1);
-    color: var(--primary-color);
-    border-right: 4px solid var(--primary-color);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border-left: 4px solid var(--primary-dark);
+    font-weight: 800;
+}
+
+.list-group-item i {
+    min-width: 30px;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* Page Content */
+#page-content-wrapper {
+    min-width: 100vw;
+    transition: margin 0.3s ease-out;
+}
+
+/* --- TOGGLED STATE (Shrink/Expand) --- */
+/* Desktop: Start Open, Toggle to Shrink */
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-right: 0;
+    }
+
+    /* Show sidebar */
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+
+    /* When Toggled (Shrunk) */
+    #wrapper.toggled #sidebar-wrapper {
+        margin-right: 0;
+        width: 4.5rem;
+        /* Shrink width */
+    }
+
+    #wrapper.toggled #sidebar-wrapper .link-text {
+        display: none;
+    }
+
+    /* Hide text */
+    #wrapper.toggled #sidebar-wrapper .sidebar-heading .link-text {
+        display: none;
+    }
+
+    #wrapper.toggled #sidebar-wrapper .sidebar-heading {
+        padding: 1.5rem 0;
+        text-align: center;
+    }
+
+    #wrapper.toggled #sidebar-wrapper .list-group {
+        width: 4.5rem;
+    }
+
+    #wrapper.toggled #sidebar-wrapper .list-group-item {
+        padding: 1rem 0;
+        justify-content: center;
+    }
+
+    #wrapper.toggled #sidebar-wrapper .list-group-item i {
+        margin: 0;
+        font-size: 1.4rem;
+    }
+}
+
+/* Mobile: Start Hidden, Toggle to Show */
+@media (max-width: 767px) {
+    #wrapper.toggled #sidebar-wrapper {
+        margin-right: 0;
+    }
+}
+
+/* --- Card Styles (Classic Luxury) --- */
+.card-luxury {
+    background: var(--bg-card);
+    border: none;
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+}
+
+.card-luxury:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Gradient Bottom Border */
+.card-border-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+}
+
+.grad-primary {
+    background: var(--grad-primary);
+}
+
+.grad-success {
+    background: var(--grad-success);
+}
+
+.grad-warning {
+    background: var(--grad-warning);
+}
+
+.grad-danger {
+    background: var(--grad-danger);
+}
+
+/* Icons */
+.icon-square-lg {
+    width: 65px;
+    height: 65px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.bg-soft-primary {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.bg-soft-success {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.bg-soft-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--accent-color);
+}
+
+.bg-soft-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+/* Table */
+.table-luxury {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.table-luxury tbody tr {
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: 0.2s;
+}
+
+.table-luxury tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.table-luxury td {
+    border: none;
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.table-luxury td:first-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.table-luxury td:last-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
 }

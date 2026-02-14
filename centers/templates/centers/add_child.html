@@ -48,6 +48,39 @@
                 </div>
 
                 <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
+                    <i class="fas fa-map-marker-alt me-2"></i>بيانات مكان الميلاد
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select name="governorate" class="form-select" id="govSelect" required>
+                                <option value="" selected disabled>اختر المحافظة</option>
+                                {% for gov in governorates %}
+                                <option value="{{ gov.id }}">{{ gov.name_ar }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="govSelect">المحافظة</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select name="directorate" class="form-select" id="dirSelect" disabled required>
+                                <option value="" selected disabled>اختر المديرية</option>
+                            </select>
+                            <label for="dirSelect">المديرية</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select name="health_center" class="form-select" id="centerSelect" disabled required>
+                                <option value="" selected disabled>اختر المركز الصحي</option>
+                            </select>
+                            <label for="centerSelect">مرفق الولادة (المركز الصحي)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
                     <i class="fas fa-users me-2"></i>بيانات العائلة
                 </h5>
                 <div class="row g-3">
@@ -79,12 +112,78 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Date Picker
         flatpickr(".flatpickr-date", {
             locale: "ar",
             dateFormat: "Y-m-d",
             maxDate: "today",
-            disableMobile: true, // Force custom picker even on mobile for better control
+            disableMobile: true,
             defaultDate: "today"
+        });
+
+        // Dependent Dropdowns Logic
+        const govSelect = document.getElementById('govSelect');
+        const dirSelect = document.getElementById('dirSelect');
+        const centerSelect = document.getElementById('centerSelect');
+
+        // 1. On Governorate Change -> Fetch Directorates
+        govSelect.addEventListener('change', function () {
+            const govId = this.value;
+
+            // Reset Directorate
+            dirSelect.innerHTML = '<option value="" selected disabled>جاري التحميل...</option>';
+            dirSelect.disabled = true;
+
+            // Reset Center
+            centerSelect.innerHTML = '<option value="" selected disabled>اختر المديرية أولاً</option>';
+            centerSelect.disabled = true;
+
+            if (govId) {
+                fetch(`{% url 'centers:api_locations' %}?type=directorate&parent_id=${govId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        dirSelect.innerHTML = '<option value="" selected disabled>اختر المديرية</option>';
+                        data.data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.name_ar;
+                            dirSelect.appendChild(option);
+                        });
+                        dirSelect.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        dirSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
+                    });
+            }
+        });
+
+        // 2. On Directorate Change -> Fetch Health Centers
+        dirSelect.addEventListener('change', function () {
+            const dirId = this.value;
+
+            // Reset Center
+            centerSelect.innerHTML = '<option value="" selected disabled>جاري التحميل...</option>';
+            centerSelect.disabled = true;
+
+            if (dirId) {
+                fetch(`{% url 'centers:api_locations' %}?type=center&parent_id=${dirId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        centerSelect.innerHTML = '<option value="" selected disabled>اختر المركز الصحي</option>';
+                        data.data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.name_ar;
+                            centerSelect.appendChild(option);
+                        });
+                        centerSelect.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        centerSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
+                    });
+            }
         });
     });
 </script>

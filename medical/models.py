@@ -24,6 +24,12 @@ class VaccineSchedule(models.Model):
         verbose_name = "جدول اللقاحات"
         verbose_name_plural = "جداول اللقاحات"
 
+    STAGE_CHOICES = (
+        ('BASIC', 'أساسي (رضّع)'),
+        ('SCHOOL', 'مدرسي (سن المدرسة)'),
+    )
+    stage = models.CharField(max_length=10, choices=STAGE_CHOICES, default='BASIC', verbose_name="المرحلة")
+
     def __str__(self):
         return f"{self.vaccine.name_ar} - جرعة {self.dose_number} (شهر {self.age_in_months})"
 
@@ -78,7 +84,8 @@ class Child(models.Model):
     # مكان الميلاد (للاحصائيات)
     birth_governorate = models.ForeignKey(Governorate, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="محافظة الميلاد")
     birth_directorate = models.ForeignKey(Directorate, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="مديرية الميلاد")
-    place_of_birth_detail = models.CharField(max_length=100, blank=True, null=True, verbose_name="مكان الميلاد (تفصيل)")
+    birth_health_center = models.ForeignKey(HealthCenter, on_delete=models.SET_NULL, null=True, blank=True, related_name='births', verbose_name="مركز الميلاد (المرفق الصحي)")
+    place_of_birth_detail = models.CharField(max_length=100, blank=True, null=True, verbose_name="مكان الميلاد (تفصيل/أخرى)")
 
     # 3. الحالة
     is_completed = models.BooleanField(default=False, verbose_name="مكتمل التحصين (مؤرشف)")

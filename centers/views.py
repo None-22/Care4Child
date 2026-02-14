@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from medical.models import Child, Family, VaccineSchedule, VaccineRecord, ChildVaccineSchedule
-from .models import Governorate, Directorate
+from .models import Governorate, Directorate, HealthCenter
+from django.http import JsonResponse
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 
@@ -42,9 +43,14 @@ def record_vaccine(request, child_id, schedule_id):
 
         messages.success(request, f"تم تسجيل جرعة {schedule.vaccine.name_ar} بنجاح!")
 
-        # 3. التحقق من الاكتمال (Auto-Archive Logic)
-        remaining_vaccines = ChildVaccineSchedule.objects.filter(child=child, is_taken=False).count()
-        if remaining_vaccines == 0:
+        # 3. التحقق من الاكتمال (Auto-Archive Logic) - معدل
+        # نتحقق فقط من اللقاحات "الأساسية"
+        remaining_basic = ChildVaccineSchedule.objects.filter(
+            child=child, 
+            is_taken=False,
+            vaccine_schedule__stage='BASIC' 
+        ).count()
+        if remaining_basic == 0:
             child.is_completed = True
             child.completed_date = timezone.now().date()
             child.save()
@@ -139,18 +145,129 @@ def dashboard_view(request):
         last_7_days.append(count)
         days_labels.append(day.strftime("%A")[:3]) # Short day name (e.g., Sat, Sun)
 
-    # 6. Recent Activity
-    recent_records = VaccineRecord.objects.select_related('child', 'vaccine', 'staff').order_by('-created_at')[:5]
+    # 6. Vaccine Coverage (Top 5 Administered)
+    from django.db.models import Count
+    vaccine_dist = VaccineRecord.objects.values('vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:5]
+    dist_labels = [item['vaccine__name_ar'] for item in vaccine_dist]
+    dist_data = [item['count'] for item in vaccine_dist]
 
+    # 7. Appointment Status (Doughnut)
+    # Status: Completed (Taken), Overdue (Late), Upcoming (Future)
+    total_records = VaccineRecord.objects.count()
+    total_overdue = ChildVaccineSchedule.objects.filter(due_date__lt=today, is_taken=False).count()
+    status_data = [total_records, total_overdue] 
+    status_labels = ['جرعات مكتملة', 'جرعات متأخرة']
+
+    # 8. Gender Distribution (Pie Chart)
+    males = Child.objects.filter(gender='M').count()
+    females = Child.objects.filter(gender='F').count()
+    gender_data = [males, females]
+
+    # 9. Dropout Rate (Children with > 2 overdue vaccines)
+    # This is an "Estimate" for the dashboard shape
+    dropout_count = Child.objects.filter(personal_schedule__is_taken=False, personal_schedule__due_date__lt=today - timedelta(days=60)).distinct().count()
+
+    # 10. Today's Expected Appointments (for Table - Kept for compatibility if needed, but old design uses recent_records)
+    today_expected = ChildVaccineSchedule.objects.filter(
+        due_date=today, 
+        is_taken=False
+    ).select_related('child', 'child__family', 'vaccine_schedule__vaccine').order_by('child__full_name')
+
+    # 11. Recent Activity (Required for Old Design)
+    recent_records = VaccineRecord.objects.select_related('child', 'vaccine', 'staff').order_by('-date_given', '-id')[:5]
+
+    # --- DEMO DATA LOGIC (If no data exists, show sample) ---
+    is_demo_mode = False
+    
+    # Check if we should override with Demo Data
+    # 1. New user with no children
+    # 2. Or children exist but NO actual vaccinations (boring charts)
+    # 3. Or user explicitly asked for ?demo=1
+    should_run_demo = (total_children == 0) or (total_records == 0) or request.GET.get('demo')
+    
+    if should_run_demo:
+        is_demo_mode = True
+        # Sample Stats for Visualization
+        total_children = 125
+        today_records = 12
+        upcoming_appointments = 5
+        overdue_appointments = 8
+        completion_rate = 85.5
+        
+        # Charts
+        last_7_days = [5, 8, 12, 7, 15, 10, 12] # Activity
+        
+        dist_labels = ['BCG', 'Hexavalent', 'Pneumococcal', 'Rotavirus', 'Measles']
+        dist_data = [45, 120, 95, 80, 60]
+        
+        status_data = [350, 45] # Completed vs Overdue
+        gender_data = [65, 60] # Males vs Females
+        dropout_count = 14
+        
+        # Demo Table Data (Mock Objects)
+        class MockObj:
+            def __init__(self, **kwargs): self.__dict__.update(kwargs)
+            
+        today_expected = [
+            MockObj(
+                child=MockObj(
+                    full_name="أحمد محمد علي", 
+                    gender="M", 
+                    get_gender_display="ذكر",
+                    id=0,
+                    family=MockObj(access_code="F-2024-1234")
+                ),
+                vaccine_schedule=MockObj(
+                    dose_number=1,
+                    vaccine=MockObj(name_ar="لقاح شلل الأطفال (IPV)")
+                )
+            ),
+            MockObj(
+                child=MockObj(
+                    full_name="سارة خالد عمر", 
+                    gender="F", 
+                    get_gender_display="أنثى",
+                    id=0,
+                    family=MockObj(access_code="F-2024-5678")
+                ),
+                vaccine_schedule=MockObj(
+                    dose_number=2,
+                    vaccine=MockObj(name_ar="اللقاح السداسي")
+                )
+            ),
+            MockObj(
+                child=MockObj(
+                    full_name="يوسف عبد الله", 
+                    gender="M", 
+                    get_gender_display="ذكر",
+                    id=0,
+                    family=MockObj(access_code="F-2024-9012")
+                ),
+                vaccine_schedule=MockObj(
+                    dose_number=1,
+                    vaccine=MockObj(name_ar="الروتا")
+                )
+            ),
+        ]
+    
     context = {
+        'is_demo_mode': is_demo_mode,
         'total_children': total_children,
         'today_records': today_records,
         'upcoming_appointments': upcoming_appointments,
         'overdue_appointments': overdue_appointments,
         'completion_rate': round(completion_rate, 1),
-        'recent_records': recent_records,
         'chart_data': last_7_days,
         'chart_labels': days_labels,
+        'dist_labels': dist_labels,
+        'dist_data': dist_data,
+        'status_data': status_data,
+        'status_labels': status_labels,
+        'gender_data': gender_data,
+        'dropout_count': dropout_count,
+        'dropout_count': dropout_count,
+        'today_expected': today_expected,
+        'recent_records': recent_records,
     }
     return render(request, 'centers/dashboard.html', context)
 
@@ -276,6 +393,7 @@ def add_child_view(request):
         
         gov_id = request.POST.get('governorate')
         dir_id = request.POST.get('directorate')
+        health_center_id = request.POST.get('health_center')
 
         # 2. منطق العائلة (Unified Family Logic)
         # البحث عن عائلة بنفس الأب والأم تماماً
@@ -319,6 +437,7 @@ def add_child_view(request):
             health_center=request.user.health_center, # Save the center!
             birth_governorate_id=gov_id,
             birth_directorate_id=dir_id,
+            birth_health_center_id=health_center_id,
             created_by=request.user
         )
 
@@ -364,6 +483,23 @@ def add_child_view(request):
 def get_directorates(request):
     # API View Helper for AJAX dropdowns (Simple implementation for now)
     pass
+
+def get_locations_api(request):
+    # API to fetch Directorates and Health Centers
+    req_type = request.GET.get('type') # 'directorate' or 'center'
+    parent_id = request.GET.get('parent_id')
+    
+    data = []
+    
+    if req_type == 'directorate' and parent_id:
+        qs = Directorate.objects.filter(governorate_id=parent_id).values('id', 'name_ar')
+        data = list(qs)
+        
+    elif req_type == 'center' and parent_id:
+        qs = HealthCenter.objects.filter(directorate_id=parent_id).values('id', 'name_ar')
+        data = list(qs)
+        
+    return JsonResponse({'data': data})
 
 @login_required
 def add_staff_view(request):

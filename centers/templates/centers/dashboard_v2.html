@@ -1,0 +1,530 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}لوحة المعلومات الرئيسية{% endblock %}
+
+{% block wrapper_class %}container-fluid p-3{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<!-- Custom Styles -->
+<style>
+    .card-luxury {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        background: #fff;
+        transition: 0.3s;
+    }
+
+    .card-luxury:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(32, 201, 151, 0.15);
+    }
+
+    .card-border-bottom {
+        height: 4px;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+    }
+
+    .icon-square-lg {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+    }
+
+    /* Avatars */
+    .avatar-circle-lg {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        background: #f8f9fa;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border: 2px solid transparent;
+    }
+
+    .gender-border-M {
+        border-color: #556ee6;
+        color: #556ee6;
+        background: rgba(85, 110, 230, 0.1);
+    }
+
+    .gender-border-F {
+        border-color: #f46a6a;
+        color: #f46a6a;
+        background: rgba(244, 106, 106, 0.1);
+    }
+
+    /* Circular Progress */
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: conic-gradient(var(--color) var(--percent), #f0f0f0 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .progress-circle::before {
+        content: '';
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #fff;
+    }
+
+    .progress-value {
+        position: relative;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        position: relative;
+        height: 300px !important;
+        min-height: 300px !important;
+        width: 100%;
+    }
+
+    /* Colors */
+    .bg-soft-primary {
+        background: rgba(32, 201, 151, 0.1);
+        color: #20c997;
+    }
+
+    .grad-primary {
+        background: linear-gradient(135deg, #20c997 0%, #0f9d58 100%);
+    }
+
+    .bg-soft-success {
+        background: rgba(52, 195, 143, 0.1);
+        color: #34c38f;
+    }
+
+    .grad-success {
+        background: linear-gradient(135deg, #34c38f 0%, #209cff 100%);
+    }
+
+    .bg-soft-warning {
+        background: rgba(241, 180, 76, 0.1);
+        color: #f1b44c;
+    }
+
+    .grad-warning {
+        background: linear-gradient(135deg, #f1b44c 0%, #ff7e5f 100%);
+    }
+
+    .bg-soft-danger {
+        background: rgba(244, 106, 106, 0.1);
+        color: #f46a6a;
+    }
+
+    .grad-danger {
+        background: linear-gradient(135deg, #f46a6a 0%, #ff4b4b 100%);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    {% if is_demo_mode %}
+    <div class="alert alert-info border-0 shadow-sm rounded-pill mb-4 px-4 d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+        <div>
+            <strong>وضع العرض التجريبي:</strong> لا توجد بيانات في النظام حالياً، لذا نعرض لك <b>بيانات افتراضية</b>
+            لتجربة التصميم.
+            <br><small>بمجرد إضافة أول طفل أو تسجيل جرعة، ستظهر بياناتك الحقيقية هنا.</small>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. Page Title -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h4 class="fw-bold text-dark m-0">مرحباً بعودتك، د. أحمد 👋</h4>
+            <p class="text-muted m-0">نظرة عامة على أداء المركز اليوم.</p>
+        </div>
+        <div class="col-auto">
+            <div class="bg-white p-2 px-3 rounded-pill shadow-sm">
+                <i class="bi bi-calendar-check text-success me-2"></i>
+                <span class="fw-bold text-dark">{% now "Y-m-d" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. KPI Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Total Children -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted fw-bold mb-1 text-uppercase small">إجمالي الأطفال</p>
+                            <h2 class="mb-0 fw-bold text-dark">{{ total_children }}</h2>
+                        </div>
+                        <div class="icon-square-lg bg-soft-primary">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-border-bottom grad-primary"></div>
+            </div>
+        </div>
+
+        <!-- Today's Doses -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted fw-bold mb-1 text-uppercase small">جرعات اليوم</p>
+                            <h2 class="mb-0 fw-bold text-dark">{{ today_records }}</h2>
+                        </div>
+                        <div class="icon-square-lg bg-soft-success">
+                            <i class="bi bi-eyedropper"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-border-bottom grad-success"></div>
+            </div>
+        </div>
+
+        <!-- Completion Rate -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted fw-bold mb-1 text-uppercase small">نسبة التحصين</p>
+                            <h2 class="mb-0 fw-bold text-dark">{{ completion_rate }}%</h2>
+                        </div>
+                        <div class="icon-square-lg bg-soft-warning">
+                            <i class="bi bi-pie-chart-fill"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-4" style="height: 6px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ completion_rate }}%">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-border-bottom grad-warning"></div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted fw-bold mb-1 text-uppercase small">حالات متأخرة</p>
+                            <h2 class="mb-0 fw-bold text-dark">{{ overdue_appointments }}</h2>
+                        </div>
+                        <div class="icon-square-lg bg-soft-danger">
+                            <i class="bi bi-bell-fill"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-border-bottom grad-danger"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Advanced Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Main Line Chart -->
+        <div class="col-lg-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-4 text-dark">نشاط التحصين الأسبوعي</h5>
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Pie Chart -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4 text-center">
+                    <h5 class="card-title fw-bold mb-4 text-dark">توزيع الأطفال</h5>
+                    <div class="chart-container" style="height: 200px !important;">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Circular KPI -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-center align-items-center">
+                    <h5 class="card-title fw-bold mb-4 text-dark">هدف التحصين الشهري</h5>
+                    <div class="progress-circle mb-3" style="--percent: {{ completion_rate }}%; --color: #20c997;">
+                        <div class="progress-value">{{ completion_rate }}%</div>
+                    </div>
+                    <p class="text-muted small mb-0">معدل اكتمال اللقاحات</p>
+                    <hr class="w-100 my-3 opacity-10">
+                    <h6 class="fw-bold text-danger">{{ dropout_count }} <small class="text-muted fw-normal">حالة
+                            انقطاع</small></h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Secondary Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Status Doughnut -->
+        <div class="col-lg-4">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3 text-dark">حالة الملفات</h5>
+                    <div class="chart-container" style="height: 250px !important;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vaccine Distribution Bar -->
+        <div class="col-lg-8">
+            <div class="card card-luxury h-100">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-3 text-dark">اللقاحات الأكثر استخداماً (Top 5)</h5>
+                    <div class="chart-container" style="height: 250px !important;">
+                        <canvas id="vaccineDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Today's Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-luxury">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0 text-dark">جدول مواعيد اليوم</h5>
+                        <span class="badge bg-soft-primary text-primary rounded-pill p-2 px-3 fw-bold">{{
+                            today_expected.count }} حالة</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 border-0 rounded-start text-muted fw-bold">الطفل</th>
+                                    <th class="border-0 text-muted fw-bold">اللقاح المستحق</th>
+                                    <th class="border-0 text-muted fw-bold">ملف الأسرة</th>
+                                    <th class="text-end pe-3 border-0 rounded-end text-muted fw-bold">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in today_expected %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center py-1">
+                                            <div class="avatar-circle-lg gender-border-{{ item.child.gender }}">
+                                                {{ item.child.full_name|slice:":1" }}
+                                            </div>
+                                            <div class="ms-3">
+                                                <h6 class="mb-0 fw-bold text-dark">{{ item.child.full_name }}</h6>
+                                                <small class="text-muted">{{ item.child.get_gender_display }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-soft-info text-dark fs-6 fw-normal px-3 py-2 rounded-pill shadow-sm">
+                                            {{ item.vaccine_schedule.vaccine.name_ar }}
+                                            <small class="text-muted ms-1">(جرعة {{ item.vaccine_schedule.dose_number
+                                                }})</small>
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-muted">#{{ item.child.family.access_code }}</td>
+                                    <td class="text-end pe-3">
+                                        <a href="{% url 'centers:child_detail' item.child.id %}"
+                                            class="btn btn-primary btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold">
+                                            <i class="bi bi-syringe"></i> تطعيم
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted fw-bold opacity-50">لا توجد
+                                        مواعيد مقررة لهذا اليوم.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/chart.min.js' %}"></script>
+<script>
+    // Global Error Handler
+    window.onerror = function (msg, url, line) {
+        // Suppress benign resize observer errors
+        if (msg.includes("ResizeObserver")) return true;
+        alert("خطأ في الصفحة (JS):\n" + msg + "\nLine: " + line);
+        return false;
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Chart === 'undefined') {
+            console.error("Chart.js not loaded.");
+            return;
+        }
+
+        Chart.defaults.font.family = "'Cairo', sans-serif";
+
+        try {
+            // 1. Activity Chart
+            const activityCtx = document.getElementById('activityChart');
+            if (activityCtx) {
+                new Chart(activityCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: {{ chart_labels| safe }
+        },
+        datasets: [{
+            label: 'الجرعات المعطاة',
+            data: {{ chart_data| safe }},
+        borderColor: '#20c997',
+        backgroundColor: 'rgba(32, 201, 151, 0.1)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#20c997'
+                        }]
+                    },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, border: { display: false } }
+        }
+    }
+                });
+            }
+
+    // 2. Gender Chart
+    const genderCanvas = document.getElementById('genderChart');
+    if (genderCanvas) {
+        new Chart(genderCanvas, {
+            type: 'pie',
+            data: {
+                labels: ['ذكور', 'إناث'],
+                datasets: [{
+                    data: {{ gender_data| safe }
+        },
+            backgroundColor: ['#556ee6', '#f46a6a'],
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 4
+                        }]
+                    },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: {
+            legend: {
+                position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20 }
+            }
+        }
+    }
+                });
+            }
+
+    // 3. Status Chart
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx) {
+        new Chart(statusCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ status_labels| safe }},
+    datasets: [{
+        data: {{ status_data| safe }},
+        backgroundColor: ['#20c997', '#dc3545'],
+        borderWidth: 0,
+        hoverOffset: 4
+                        }]
+                    },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                cutout: '75%',
+                    plugins: {
+            legend: {
+                position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20 }
+            }
+        }
+    }
+                });
+            }
+
+    // 4. Vaccine Dist Chart
+    const distCanvas = document.getElementById('vaccineDistChart');
+    if (distCanvas) {
+        new Chart(distCanvas, {
+            type: 'bar',
+            data: {
+                labels: {{ dist_labels| safe }},
+    datasets: [{
+        label: 'الكمية',
+        data: {{ dist_data| safe }},
+        backgroundColor: '#556ee6',
+        borderRadius: 4,
+        barThickness: 20
+                        }]
+                    },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false } },
+            y: { display: false }
+        }
+    }
+                });
+            }
+
+        } catch (e) {
+        console.error("Chart Error:", e);
+        alert("حدث خطأ في الرسوم البيانية: " + e.message);
+    }
+    });
+</script>
+{% endblock %}
