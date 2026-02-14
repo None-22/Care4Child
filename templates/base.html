@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Care4Child | رعاية الطفل{% endblock %}</title>
+
+    <!-- Google Fonts (Cairo for Arabic) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <div class="d-flex toggled" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-glass border-start" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold text-uppercase border-bottom">
+                <i class="fas fa-baby-carriage"></i>
+                <span class="link-text ms-2">Care4Child</span>
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="{% url 'centers:dashboard' %}"
+                    class="list-group-item list-group-item-action bg-transparent second-text active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="link-text ms-2">لوحة التحكم</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="fas fa-project-diagram"></i>
+                    <span class="link-text ms-2">التقارير</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                    <i class="fas fa-cog"></i>
+                    <span class="link-text ms-2">الإعدادات</span>
+                </a>
+                <!-- Show 'Add Staff' only for Managers (Logic will be added) -->
+                {% if user.is_center_manager %}
+                <a href="{% url 'centers:add_staff' %}"
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold text-warning">
+                    <i class="fas fa-user-plus"></i>
+                    <span class="link-text ms-2">إدارة الموظفين</span>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'logout' %}"
+                    class="list-group-item list-group-item-action bg-transparent text-danger fw-bold mt-5">
+                    <i class="fas fa-power-off"></i>
+                    <span class="link-text ms-2">تسجيل خروج</span>
+                </a>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-glass py-4 px-4 border-bottom sticky-top"
+                style="z-index: 1050;">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-align-right primary-text fs-4 me-3" id="menu-toggle" style="cursor: pointer;"></i>
+                    <h2 class="fs-2 m-0">{% block page_title %}لوحة التحكم{% endblock %}</h2>
+                </div>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle second-text fw-bold" href="#" id="navbarDropdown"
+                                role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-2"></i>{{ user.username }}
+                                <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown"
+                                style="z-index: 1051;">
+                                <li><a class="dropdown-item" href="#">الملف الشخصي</a></li>
+                                <li><a class="dropdown-item" href="#">الإعدادات</a></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">خروج</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-5">
+                <!-- Alerts Section -->
+                <!-- Alerts Section Handled by SweetAlert2 -->
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ar.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        var el = document.getElementById("wrapper");
+        var toggleButton = document.getElementById("menu-toggle");
+
+        toggleButton.onclick = function () {
+            el.classList.toggle("toggled");
+        };
+
+        // Django Messages to SweetAlert2
+        {% if messages %}
+        {% for message in messages %}
+        Swal.fire({
+            title: "{% if message.tags == 'success' %}نجاح{% elif message.tags == 'error' %}خطأ{% else %}تنبيه{% endif %}",
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}",
+            confirmButtonText: 'موافق',
+            confirmButtonColor: '#3085d6',
+        });
+        {% endfor %}
+        {% endif %}
+    </script>
+</body>
+
+</html>

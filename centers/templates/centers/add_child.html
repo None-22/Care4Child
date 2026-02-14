@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block page_title %}تسجيل طفل جديد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-shine p-5">
+            <div class="text-center mb-5">
+                <div class="bg-primary text-white rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
+                    style="width: 70px; height: 70px;">
+                    <i class="fas fa-baby-carriage fa-2x"></i>
+                </div>
+                <h3 class="fw-bold">بيانات الطفل الجديد</h3>
+                <p class="text-muted">يرجى تعبئة البيانات بدقة لإصدار الكرت الإلكتروني فوراً</p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <h5 class="text-primary mb-3 border-bottom pb-2">
+                    <i class="fas fa-id-card me-2"></i>البيانات الأساسية
+                </h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <input type="text" name="child_name" class="form-control" id="floatingChildName"
+                                placeholder="الاسم الرباعي" required>
+                            <label for="floatingChildName">اسم الطفل (الرباعي)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="dob" class="form-control flatpickr-date" id="floatingDob"
+                                placeholder="تاريخ الميلاد" required>
+                            <label for="floatingDob">تاريخ الميلاد</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select name="gender" class="form-select" id="floatingGender">
+                                <option value="M">ذكر</option>
+                                <option value="F">أنثى</option>
+                            </select>
+                            <label for="floatingGender">الجنس</label>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
+                    <i class="fas fa-users me-2"></i>بيانات العائلة
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="father_name" class="form-control" id="floatingFather"
+                                placeholder="اسم الأب" required>
+                            <label for="floatingFather">اسم الأب (الرباعي)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="mother_name" class="form-control" id="floatingMother"
+                                placeholder="اسم الأم" required>
+                            <label for="floatingMother">اسم الأم (الرباعي)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-top pt-4 mt-5">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow">
+                        <i class="fas fa-save me-2"></i>حفظ وإصدار الكرت
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr(".flatpickr-date", {
+            locale: "ar",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            disableMobile: true, // Force custom picker even on mobile for better control
+            defaultDate: "today"
+        });
+    });
+</script>
+</div>
+</div>
+</div>
+{% endblock %}

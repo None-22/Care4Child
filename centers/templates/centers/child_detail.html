@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block page_title %}بطاقة الطفل الرقمية{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted small">رقم الملف</span>
+            <h3 class="fw-bold">{{ child.family.access_code }}</h3>
+        </div>
+        <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>عودة
+        </a>
+    </div>
+</div>
+
+<!-- بطاقة معلومات الطفل -->
+<div class="row g-4 mb-5">
+    <!-- Main Info -->
+    <div class="col-md-8">
+        <div class="card-shine p-4 h-100 position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <i class="fas fa-baby fa-8x text-primary" style="opacity: 0.1;"></i>
+            </div>
+
+            <div class="d-flex align-items-start">
+                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fs-2 fw-bold me-4 shadow"
+                    style="width: 80px; height: 80px;">
+                    {{ child.first_name|slice:":1" }}
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-1">{{ child.first_name }} {{ child.family.father_name }}</h2>
+                    <p class="text-muted mb-3"><i class="fas fa-female me-2"></i>والدته: {{ child.family.mother_name }}
+                    </p>
+
+                    <div class="d-flex gap-3">
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>{{ child.date_of_birth }}
+                        </span>
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            <i class="fas fa-venus-mars me-2 text-danger"></i>{{ child.get_gender_display }}
+                        </span>
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            <i class="fas fa-map-marker-alt me-2 text-success"></i>{{ child.birth_governorate.name_ar }}
+                            - {{ child.birth_directorate.name_ar }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="col-md-4">
+        <div
+            class="card-shine p-4 h-100 bg-white text-center d-flex flex-column justify-content-center align-items-center">
+            <div class="mb-3">
+                {% if child.is_completed %}
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h4 class="text-success">مكتمل التحصين</h4>
+                <p class="text-muted small">تم أخذ جميع اللقاحات المقررة</p>
+                {% else %}
+                <i class="fas fa-hourglass-half fa-4x text-warning mb-3"></i>
+                <h4 class="text-warning text-dark">نشط / قيد المتابعة</h4>
+                <p class="text-muted small">ما زال هناك لقاحات مستحقة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول التطعيمات -->
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4"><i class="fas fa-syringe text-primary me-2"></i>جدول الزيارات واللقاحات</h3>
+
+        <div class="row g-4">
+            {% for visit in visits %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h5 class="fw-bold text-primary border-start border-4 border-primary ps-2">
+                            {{ visit.label }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for item in visit.vaccines %}
+                            <li class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">{{ item.schedule.vaccine.name_ar }}</div>
+                                    <div class="text-muted small">
+                                        جرعة {{ item.schedule.dose_number }}
+                                        <!-- <span class="badge bg-light text-dark ms-1">{{ item.schedule.vaccine.name_en }}</span> -->
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    {% if item.is_taken %}
+                                    <div class="text-success small fw-bold mb-1">
+                                        <i class="fas fa-check-circle me-1"></i>تم التحصين
+                                    </div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">
+                                        {{ item.date_taken|date:"Y/m/d" }}
+                                    </div>
+                                    {% else %}
+                                    <a href="{% url 'centers:record_vaccine' child.id item.schedule.id %}"
+                                        class="btn btn-outline-primary btn-sm rounded-pill py-0 px-3 small">
+                                        تسجيل
+                                    </a>
+                                    {% if item.status == 'مستحق' %}
+                                    <!-- <div class="text-warning small mt-1">مستحق</div> -->
+                                    {% endif %}
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

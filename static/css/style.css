@@ -1,0 +1,156 @@
+:root {
+    --main-bg-color: #f1f6ff;
+    /* Light Blueish Gray */
+    --primary-color: #009688;
+    /* Teal */
+    --secondary-color: #2c3e50;
+    /* Dark Blue */
+    --accent-color: #ff6b6b;
+    /* Soft Red */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+body {
+    background: #e0eafc;
+    /* Fallback */
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    font-family: 'Cairo', sans-serif;
+    overflow: hidden;
+    /* Prevent body scroll, layout handles scrolling */
+}
+
+#wrapper {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    /* Full Viewport Height */
+    align-items: stretch;
+    overflow: hidden;
+}
+
+#sidebar-wrapper {
+    width: 280px;
+    min-width: 280px;
+    height: 100%;
+    /* Fill wrapper */
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-left: 1px solid var(--glass-border);
+    transition: width 0.3s ease, min-width 0.3s ease;
+
+    /* Content Handling */
+    white-space: nowrap;
+    overflow-x: hidden;
+    /* Hide horizontal overflow */
+    overflow-y: auto;
+    /* vertical scroll if menu is long */
+    flex-shrink: 0;
+    z-index: 1100;
+    /* Ensure above content and NAVBAR (1050) if overlap occurs */
+}
+
+#page-content-wrapper {
+    flex-grow: 1;
+    min-width: 0;
+    /* width: auto; Let flex handle width */
+    height: 100%;
+    /* Fill wrapper */
+    overflow: auto;
+    /* BECOMES THE SCROLL CONTAINER */
+    padding-right: 0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* --- Desktop Logic (Default > 768px) --- */
+
+/* Toggled State: Shrink to 80px (Icons Only) */
+#wrapper.toggled #sidebar-wrapper {
+    width: 80px !important;
+    min-width: 80px !important;
+}
+
+/* Hide Text when toggled */
+#wrapper.toggled .link-text {
+    display: none !important;
+    opacity: 0;
+}
+
+/* Center Icons when toggled */
+#wrapper.toggled .list-group-item,
+#wrapper.toggled .sidebar-heading {
+    text-align: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#wrapper.toggled .list-group-item i,
+#wrapper.toggled .sidebar-heading i {
+    margin: 0 !important;
+    /* Remove spacing margin if any */
+    font-size: 1.5rem;
+    /* Make icons slightly larger in mini mode */
+}
+
+
+/* --- Mobile Logic (< 768px) --- */
+@media (max-width: 768px) {
+
+    /* Default: Hidden completely */
+    #sidebar-wrapper {
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+
+    /* Toggled: Full Width (Not Mini) */
+    #wrapper.toggled #sidebar-wrapper {
+        width: 280px !important;
+        min-width: 280px !important;
+    }
+
+    /* Restore Text & Layout on Mobile Open */
+    #wrapper.toggled .link-text {
+        display: inline-block !important;
+        opacity: 1;
+    }
+
+    #wrapper.toggled .list-group-item,
+    #wrapper.toggled .sidebar-heading {
+        text-align: right !important;
+        /* RTL Default */
+        padding: 15px 25px !important;
+        display: block;
+    }
+
+    #wrapper.toggled .list-group-item i {
+        margin-left: 0.5rem !important;
+        /* Restore Spacing */
+        font-size: inherit;
+    }
+}
+
+/* Re-add styling for list items since we replaced the whole block */
+.sidebar-heading {
+    padding: 1.5rem 1.25rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.list-group-item {
+    border: none;
+    padding: 15px 25px;
+    font-weight: 600;
+}
+
+.list-group-item.active {
+    background-color: rgba(0, 150, 136, 0.1);
+    color: var(--primary-color);
+    border-right: 4px solid var(--primary-color);
+}

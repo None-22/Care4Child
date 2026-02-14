@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block page_title %}إضافة موظف جديد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-shine p-5">
+            <div class="text-center mb-5">
+                <div class="bg-warning text-white rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
+                    style="width: 70px; height: 70px;">
+                    <i class="fas fa-user-nurse fa-2x"></i>
+                </div>
+                <h3 class="fw-bold">تسجيل موظف جديد</h3>
+                <p class="text-muted">سيتم ربط الموظف تلقائياً بمركزك: <strong>{{ request.user.health_center.name_ar
+                        }}</strong></p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <h5 class="text-primary mb-3 border-bottom pb-2">
+                    <i class="fas fa-id-badge me-2"></i>بيانات الحساب
+                </h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="username" class="form-control" id="floatingUsername"
+                                placeholder="اسم المستخدم" required>
+                            <label for="floatingUsername">اسم المستخدم (للدخول)</label>
+                        </div>
+                        <div class="form-text small ps-2"><i class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية
+                            وأرقام.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="password" name="password" class="form-control" id="floatingPassword"
+                                placeholder="كلمة المرور" required>
+                            <label for="floatingPassword">كلمة المرور</label>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
+                    <i class="fas fa-user me-2"></i>البيانات الشخصية
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="first_name" class="form-control" id="floatingFirst"
+                                placeholder="الاسم الأول" required>
+                            <label for="floatingFirst">الاسم الأول</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="last_name" class="form-control" id="floatingLast"
+                                placeholder="اسم العائلة" required>
+                            <label for="floatingLast">الاسم الأخير (العائلة)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <input type="tel" name="phone" class="form-control" id="floatingPhone"
+                                placeholder="رقم الهاتف">
+                            <label for="floatingPhone">رقم الهاتف (اختياري)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-top pt-4 mt-5">
+                    <button type="submit" class="btn btn-warning text-white btn-lg w-100 rounded-pill shadow">
+                        <i class="fas fa-plus-circle me-2"></i>إضافة الموظف
+                    </button>
+                    <a href="{% url 'centers:dashboard' %}" class="btn btn-link w-100 mt-2 text-muted">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
