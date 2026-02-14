@@ -102,9 +102,64 @@ def child_detail_view(request, child_id):
 
 @login_required
 def dashboard_view(request):
-    # 1. Fetch Flat Header (for data mapping)
-    # 1. Fetch Flat Header (for data mapping)
-    # 1. Fetch Vaccines and Schedules (Group by VACCINE) - Refactored for Booklet Style
+    """
+    Premium Dashboard with Statistics and KPIs.
+    """
+    # 1. Total Children Count
+    total_children = Child.objects.count()
+
+    # 2. Today's Statistics
+    today = timezone.now().date()
+    today_records = VaccineRecord.objects.filter(date_given=today).count()
+
+    # 3. Upcoming & Overdue
+    next_week = today + timedelta(days=7)
+    upcoming_appointments = ChildVaccineSchedule.objects.filter(
+        due_date__range=[today, next_week],
+        is_taken=False
+    ).count()
+    
+    overdue_appointments = ChildVaccineSchedule.objects.filter(
+        due_date__lt=today,
+        is_taken=False
+    ).count()
+    
+    # 4. Completion Rate
+    completed_children = Child.objects.filter(is_completed=True).count()
+    active_children = total_children - completed_children
+    completion_rate = (completed_children / total_children * 100) if total_children > 0 else 0
+
+    # 5. Chart Data: Last 7 Days Activity
+    # Returns list of ints: [Day1, Day2, ..., Today]
+    last_7_days = []
+    days_labels = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        count = VaccineRecord.objects.filter(date_given=day).count()
+        last_7_days.append(count)
+        days_labels.append(day.strftime("%A")[:3]) # Short day name (e.g., Sat, Sun)
+
+    # 6. Recent Activity
+    recent_records = VaccineRecord.objects.select_related('child', 'vaccine', 'staff').order_by('-created_at')[:5]
+
+    context = {
+        'total_children': total_children,
+        'today_records': today_records,
+        'upcoming_appointments': upcoming_appointments,
+        'overdue_appointments': overdue_appointments,
+        'completion_rate': round(completion_rate, 1),
+        'recent_records': recent_records,
+        'chart_data': last_7_days,
+        'chart_labels': days_labels,
+    }
+    return render(request, 'centers/dashboard.html', context)
+
+@login_required
+def registry_view(request):
+    """
+    Detached Vaccination Registry Page.
+    """
+    # 1. Fetch Vaccines and Schedules (Group by VACCINE)
     from medical.models import Vaccine
     vaccines = Vaccine.objects.prefetch_related('schedules').all()
     
@@ -112,26 +167,19 @@ def dashboard_view(request):
     flat_header = []
 
     for vac in vaccines:
-        # Get doses for this vaccine ordered by dose_number
         doses = list(vac.schedules.all().order_by('dose_number'))
-        
         if doses:
             grouped_headers_list.append({
                 'label': vac.name_ar,
                 'doses': doses
             })
-            
-            # Add to flat header for row mapping
             for i, sch in enumerate(doses):
-                sch.is_group_end = (i == len(doses) - 1) # Mark last in group for styling
+                sch.is_group_end = (i == len(doses) - 1)
                 flat_header.append(sch)
         
-    # 3. Fetch Children (GLOBAL ACCESS & SEARCH)
-    # Show only ACTIVE (non-completed) children by default
-    # Show only ACTIVE (non-completed) children by default
+    # 2. Fetch Children (With Search)
     children = Child.objects.filter(is_completed=False).select_related('family').order_by('-created_at')
 
-    # Search Logic
     query = request.GET.get('q')
     if query:
         from django.db.models import Q
@@ -142,22 +190,17 @@ def dashboard_view(request):
             Q(family__access_code__icontains=query)
         )
     
-    # Statistics (Count before slicing)
     total_count = children.count()
 
-    # Limit results if no search (Performance)
     if not query:
-        children = children[:100]
+        # Pagination could be added here
+        children = children[:50] # Limit default view for performance
 
-    # 4. Build Rows
+    # 3. Build Rows
     child_rows = []
-    from django.utils import timezone
-    from dateutil.relativedelta import relativedelta
-    from datetime import timedelta
     today = timezone.now().date()
 
     for child in children:
-        # Map: (VaccineID, DoseNumber) -> Record
         records_map = {
             (rec.vaccine_id, rec.dose_number): rec 
             for rec in child.vaccine_records.all()
@@ -165,22 +208,22 @@ def dashboard_view(request):
         
         cells = []
         for col in flat_header:
-            # col is a VaccineSchedule instance (from flat_header)
             key = (col.vaccine.id, col.dose_number)
+            is_taken = key in records_map
             
-            # Check if Taken
-            if key in records_map:
+            status = 'future'
+            date_val = None
+            
+            if is_taken:
                 rec = records_map[key]
                 status = 'taken'
                 date_val = rec.date_given
             else:
-                # Not Taken - Calculate Due Date dynamically
+                # Calculate Due Date
                 if child.date_of_birth:
-                    # Fix: Handle fractional months (e.g. 1.5 months)
                     import math
                     months_int = int(col.age_in_months)
                     days_extra = int((col.age_in_months - months_int) * 30)
-                    
                     due_date = child.date_of_birth + relativedelta(months=months_int) + timedelta(days=days_extra)
                     date_val = due_date
                     
@@ -188,12 +231,7 @@ def dashboard_view(request):
                         status = 'overdue'
                     elif today >= due_date - timedelta(days=14):
                          status = 'due'
-                    else:
-                         status = 'future'
-                else:
-                    status = 'future'
-                    date_val = None
-
+                
             cells.append({
                 'status': status,
                 'date': date_val,
@@ -209,10 +247,10 @@ def dashboard_view(request):
         'grouped_headers': grouped_headers_list,
         'flat_header': flat_header, 
         'child_rows': child_rows,
-        'total_children_count': total_count, # Valid Total
+        'total_children_count': total_count,
         'search_query': query
     }
-    return render(request, 'centers/dashboard.html', context)
+    return render(request, 'centers/registry.html', context)
 
 @login_required
 def add_child_view(request):

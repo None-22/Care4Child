@@ -37,10 +37,17 @@
             </div>
             <div class="list-group list-group-flush my-3">
                 <a href="{% url 'centers:dashboard' %}"
-                    class="list-group-item list-group-item-action bg-transparent second-text active">
+                    class="list-group-item list-group-item-action bg-transparent second-text {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span class="link-text ms-2">لوحة التحكم</span>
+                    <span class="link-text ms-2">لوحة المعلومات</span>
                 </a>
+
+                <a href="{% url 'centers:registry' %}"
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold {% if request.resolver_match.url_name == 'registry' %}active{% endif %}">
+                    <i class="fas fa-book-medical"></i>
+                    <span class="link-text ms-2">سجل التحصين</span>
+                </a>
+
                 <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
                     <i class="fas fa-project-diagram"></i>
                     <span class="link-text ms-2">التقارير</span>

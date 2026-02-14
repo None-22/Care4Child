@@ -10,6 +10,10 @@ class Vaccine(models.Model):
     def __str__(self):
         return f"{self.name_ar} / {self.name_en}"
 
+    class Meta:
+        verbose_name = "لقاح"
+        verbose_name_plural = "اللقاحات"
+
 class VaccineSchedule(models.Model):
     vaccine = models.ForeignKey(Vaccine, on_delete=models.CASCADE, related_name='schedules')
     dose_number = models.PositiveIntegerField(verbose_name="رقم الجرعة")
@@ -17,6 +21,8 @@ class VaccineSchedule(models.Model):
     
     class Meta:
         ordering = ['age_in_months', 'dose_number']
+        verbose_name = "جدول اللقاحات"
+        verbose_name_plural = "جداول اللقاحات"
 
     def __str__(self):
         return f"{self.vaccine.name_ar} - جرعة {self.dose_number} (شهر {self.age_in_months})"
@@ -47,8 +53,8 @@ class Family(models.Model):
         # منع تكرار نفس الأب مع نفس الأم (لأن هذا يعني نفس الحساب)
         # ولكن قد يحدث تشابه أسماء، لذا سنعتمد على الفحص اليدوي في الـ Views أفضل
         # أو يمكننا إضافته هنا كـ UniqueConstraint
-        verbose_name = "ملف عائلة"
-        verbose_name_plural = "ملفات العائلات"
+        verbose_name = "سجل عائلة"
+        verbose_name_plural = "سجلات العائلات"
 
     def __str__(self):
         return f"{self.access_code} | {self.father_name} & {self.mother_name}"
@@ -84,6 +90,10 @@ class Child(models.Model):
     def __str__(self):
         return self.full_name
 
+    class Meta:
+        verbose_name = "طفل"
+        verbose_name_plural = "الأطفال"
+
 
 class VaccineRecord(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='vaccine_records')
@@ -100,6 +110,8 @@ class VaccineRecord(models.Model):
 
     class Meta:
         unique_together = ('child', 'vaccine', 'dose_number')
+        verbose_name = "سجل تطعيم"
+        verbose_name_plural = "سجلات التطعيم"
 
 class ChildVaccineSchedule(models.Model):
     """
@@ -113,3 +125,7 @@ class ChildVaccineSchedule(models.Model):
     
     def __str__(self):
         return f"{self.child.full_name} - {self.vaccine_schedule} ({self.due_date})"
+
+    class Meta:
+        verbose_name = "استحقاق لقاح"
+        verbose_name_plural = "استحقاقات اللقاحات"

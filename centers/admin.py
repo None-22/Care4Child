@@ -61,7 +61,6 @@ class HealthCenterAdmin(admin.ModelAdmin):
                 user.set_password(password)
                 user.role = 'CENTER_MANAGER'
                 user.health_center = obj
-                user.is_staff = True 
                 user.save()
                 
                 msg = f"تم {'إنشاء' if created else 'تحديث'} حساب مدير المركز بنجاح. اسم المستخدم: {username}"

@@ -9,6 +9,10 @@ class Governorate(models.Model):
     def __str__(self):
         return f"{self.name_ar} ({self.code})"
 
+    class Meta:
+        verbose_name = "محافظة"
+        verbose_name_plural = "المحافظات"
+
 class Directorate(models.Model):
     governorate = models.ForeignKey(Governorate, on_delete=models.CASCADE, related_name='directorates', verbose_name="المحافظة")
     name_ar = models.CharField(max_length=100, verbose_name="اسم المديرية (عربي)")
@@ -17,6 +21,8 @@ class Directorate(models.Model):
 
     class Meta:
         unique_together = ('governorate', 'code')
+        verbose_name = "مديرية"
+        verbose_name_plural = "المديريات"
 
     def __str__(self):
         return f"{self.name_ar} ({self.code})"
@@ -80,4 +86,8 @@ class HealthCenter(models.Model):
 
     def __str__(self):
         return f"{self.name_ar} ({self.center_code})"
+
+    class Meta:
+        verbose_name = "مركز صحي"
+        verbose_name_plural = "المراكز الصحية"
 

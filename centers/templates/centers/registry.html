@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load centers_extras %}
+{% load static %}
+
+{% block page_title %}سجل التحصين الإلكتروني{% endblock %}
+
+{% block content %}
+
+<!-- Header & Search -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+    <div class="mb-3 mb-md-0">
+        <h3 class="fw-bold text-primary"><i class="fas fa-book-medical me-2"></i>السجل العام</h3>
+        <p class="text-muted">عرض تفصيلي لجميع الأطفال وحالة تطعيماتهم.</p>
+    </div>
+    
+    <div class="d-flex align-items-center">
+        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm me-3">
+            {{ total_children_count }} طفل نشط
+        </span>
+        <a href="{% url 'centers:add_child' %}" class="btn btn-success shadow-sm rounded-pill px-4">
+            <i class="fas fa-plus me-2"></i>تسجيل طفل
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+    <div class="card-body p-2">
+        <form method="get" action="." class="d-flex w-100">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-0 shadow-none ps-0"
+                    placeholder="بحث عن طفل (الاسم، اسم الأب، رقم العائلة...)" value="{{ request.GET.q|default:'' }}">
+                <button class="btn btn-primary px-4 rounded-pill m-1" type="submit">بحث</button>
+                {% if request.GET.q %}
+                <a href="{% url 'centers:registry' %}" class="btn btn-light text-danger px-3 rounded-pill m-1" title="إلغاء البحث"><i class="fas fa-times"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Registry Table -->
+<div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 text-center registry-table" style="min-width: 1500px;">
+                <thead style="position: sticky; top: 0; z-index: 20;">
+                    <!-- Row 1: Vaccine Groups -->
+                    <tr>
+                        <th rowspan="2" class="sticky-col-start align-middle shadow-sm bg-primary text-white"
+                            style="width: 250px; z-index: 30; border: 1px solid #2980b9;">
+                            <div class="py-2">الطفل</div>
+                        </th>
+                        {% for group in grouped_headers %}
+                        <th colspan="{{ group.doses|length }}" class="text-center align-middle py-3"
+                            style="background-color: #3498db; color: white; border: 1px solid #2980b9; {% if forloop.last %}border-left: 2px solid #1a5276;{% endif %}">
+                            {{ group.label }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                    <!-- Row 2: Doses & Age -->
+                    <tr>
+                        {% for group in grouped_headers %}
+                        {% for schedule in group.doses %}
+                        <th class="small align-middle bg-light"
+                            style="min-width: 100px; border: 1px solid #dee2e6; color: #555; font-weight: 600; {% if forloop.last %}border-left: 2px solid #adb5bd;{% endif %}">
+                            <div class="d-flex flex-column py-1">
+                                <span>جرعة {{ schedule.dose_number }}</span>
+                                <span class="text-muted fw-normal mt-1" style="font-size: 0.75rem;">
+                                    {{ schedule.age_in_months|format_age_ar }}
+                                </span>
+                            </div>
+                        </th>
+                        {% endfor %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in child_rows %}
+                    <tr>
+                        <td class="sticky-col-start fw-bold text-start p-3"
+                            style="z-index: 5; background-color: #fff; border: 1px solid #dee2e6; border-left: 2px solid #dee2e6;">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2"
+                                    style="width: 35px; height: 35px; min-width: 35px; font-size: 0.9em;">
+                                    {{ row.child.full_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <a href="{% url 'centers:child_detail' row.child.id %}"
+                                        class="text-decoration-none text-dark stretched-link"
+                                        style="font-size: 0.95rem;">
+                                        {{ row.child.full_name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+
+                        {% for cell in row.cells %}
+                        <td class="align-middle {% if cell.is_group_end %}border-group-end{% endif %} {% if cell.status == 'taken' %}bg-status-taken{% elif cell.status == 'overdue' %}bg-status-overdue{% elif cell.status == 'due' %}bg-status-due{% else %}bg-status-future{% endif %}"
+                            style="border: 1px solid #dee2e6;">
+
+                            {% if cell.status == 'taken' %}
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="fas fa-check text-success fs-5"></i>
+                                <span class="text-success mt-1" style="font-size: 0.75em; font-weight: bold;">
+                                    {{ cell.date|date:'Y/m/d' }}
+                                </span>
+                            </div>
+                            {% elif cell.status == 'overdue' %}
+                            <div class="text-danger fw-bold" style="font-size: 0.85em;">
+                                {{ cell.date|date:"Y/m/d" }}
+                            </div>
+                            {% elif cell.status == 'due' %}
+                            <div class="text-warning fw-bold" style="font-size: 0.85em;">
+                                {{ cell.date|date:"Y/m/d" }}
+                            </div>
+                            {% else %}
+                            <div class="text-muted small" style="font-size: 0.8em; opacity: 0.4;">
+                                {{ cell.date|date:"Y/m/d" }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="100" class="text-center py-5 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3 opacity-50"></i>
+                            <p class="fw-bold mt-2">لا توجد سجلات مطابقة للبحث.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Registry Specific Styles */
+    .sticky-col-start {
+        position: sticky;
+        right: 0;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.08);
+        border-right: 1px solid #dee2e6;
+        background-color: #fff;
+    }
+
+    th {
+        white-space: nowrap;
+        font-family: 'Cairo', sans-serif;
+    }
+
+    .bg-status-taken { background-color: #dcfce7; color: #14532d; }
+    .bg-status-overdue { background-color: #fee2e2; color: #7f1d1d; }
+    .bg-status-due { background-color: #fef3c7; color: #78350f; }
+    .bg-status-future { background-color: #ffffff; }
+
+    .border-group-end { border-left: 2px solid #94a3b8 !important; }
+    
+    .registry-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+</style>
+{% endblock %}

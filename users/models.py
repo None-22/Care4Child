@@ -36,3 +36,7 @@ class CustomUser(AbstractUser):
     @property
     def is_center_staff(self):
         return self.role == 'CENTER_STAFF'
+
+    class Meta:
+        verbose_name = "مستخدم"
+        verbose_name_plural = "المستخدمين"
