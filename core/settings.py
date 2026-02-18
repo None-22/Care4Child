@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-wp1tqnnla2htfvi!epv*m&x!ej3m*$$!^w&6_z4u=n)d^r5vmv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,25 +39,27 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # --- 3rd Party Libraries (مكتبات خارجية) ---
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'smart_selects',
+    'django_filters',
 
     # --- My Apps (تطبيقاتنا) ---
     'users.apps.UsersConfig',
     'centers.apps.CentersConfig',
     'medical.apps.MedicalConfig',
+    'api',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Added CORS
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # --- Middleware for CORS (عشان الفلاتر يشتغل) ---
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -147,5 +149,18 @@ CORS_ALLOW_ALL_ORIGINS = True
 LOGIN_REDIRECT_URL = 'centers:dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
+
+# REST Framework Config
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+
 
 

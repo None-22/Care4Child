@@ -10,5 +10,8 @@ urlpatterns = [
     path('child/<int:child_id>/', views.child_detail_view, name='child_detail'),
     path('vaccine/record/<int:child_id>/<int:schedule_id>/', views.record_vaccine, name='record_vaccine'),
     path('staff/add/', views.add_staff_view, name='add_staff'),
+    path('staff/list/', views.staff_list_view, name='staff_list'),
+    path('staff/toggle/<int:staff_id>/', views.toggle_staff_status, name='toggle_staff_status'),
+    path('staff/delete/<int:staff_id>/', views.delete_staff, name='delete_staff'),
     path('api/locations/', views.get_locations_api, name='api_locations'),
 ]

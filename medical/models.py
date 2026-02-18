@@ -62,6 +62,22 @@ class Family(models.Model):
         verbose_name = "سجل عائلة"
         verbose_name_plural = "سجلات العائلات"
 
+    def save(self, *args, **kwargs):
+        if not self.access_code:
+            import random
+            from datetime import datetime
+            
+            while True:
+                code_suffix = random.randint(10000, 99999)
+                current_year = datetime.now().year
+                new_code = f"F-{current_year}-{code_suffix}"
+                
+                if not Family.objects.filter(access_code=new_code).exists():
+                    self.access_code = new_code
+                    break
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.access_code} | {self.father_name} & {self.mother_name}"
 
@@ -82,10 +98,11 @@ class Child(models.Model):
     health_center = models.ForeignKey(HealthCenter, on_delete=models.PROTECT, related_name='children', verbose_name="مركز التسجيل", null=True, blank=True)
     
     # مكان الميلاد (للاحصائيات)
+    # مكان الميلاد (للاحصائيات)
     birth_governorate = models.ForeignKey(Governorate, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="محافظة الميلاد")
     birth_directorate = models.ForeignKey(Directorate, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="مديرية الميلاد")
-    birth_health_center = models.ForeignKey(HealthCenter, on_delete=models.SET_NULL, null=True, blank=True, related_name='births', verbose_name="مركز الميلاد (المرفق الصحي)")
-    place_of_birth_detail = models.CharField(max_length=100, blank=True, null=True, verbose_name="مكان الميلاد (تفصيل/أخرى)")
+    # تم تغيير مكان الميلاد لنصي بناءً على طلب User
+    place_of_birth = models.CharField(max_length=255, verbose_name="مكان الميلاد (قرية/منزل/مرفق)")
 
     # 3. الحالة
     is_completed = models.BooleanField(default=False, verbose_name="مكتمل التحصين (مؤرشف)")

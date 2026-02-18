@@ -59,7 +59,7 @@
                 </a>
                 <!-- Show 'Add Staff' only for Managers (Logic will be added) -->
                 {% if user.is_center_manager %}
-                <a href="{% url 'centers:add_staff' %}"
+                <a href="{% url 'centers:staff_list' %}"
                     class="list-group-item list-group-item-action bg-transparent second-text fw-bold text-warning">
                     <i class="fas fa-user-plus"></i>
                     <span class="link-text ms-2">إدارة الموظفين</span>

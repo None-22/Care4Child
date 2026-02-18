@@ -50,10 +50,25 @@
                 <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
                     <i class="fas fa-map-marker-alt me-2"></i>بيانات مكان الميلاد
                 </h5>
+
+                <!-- خيار التبديل -->
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="manualLocationSwitch">
+                            <label class="form-check-label fw-bold" for="manualLocationSwitch">
+                                إدخال المحافظة والمديرية يدوياً (خارج القائمة / خارج اليمن)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row g-3">
+                    <!-- 1. المحافظة -->
                     <div class="col-md-4">
-                        <div class="form-floating">
-                            <select name="governorate" class="form-select" id="govSelect" required>
+                        <!-- Dropdown -->
+                        <div class="form-floating" id="govSelectContainer">
+                            <select name="governorate_select" class="form-select" id="govSelect">
                                 <option value="" selected disabled>اختر المحافظة</option>
                                 {% for gov in governorates %}
                                 <option value="{{ gov.id }}">{{ gov.name_ar }}</option>
@@ -61,24 +76,84 @@
                             </select>
                             <label for="govSelect">المحافظة</label>
                         </div>
+                        <!-- Manual Text (Hidden by default) -->
+                        <div class="form-floating d-none" id="govTextContainer">
+                            <input type="text" name="governorate_text" class="form-control" id="govInput"
+                                placeholder="اسم المحافظة">
+                            <label for="govInput">اسم المحافظة (كتابة)</label>
+                        </div>
                     </div>
+
+                    <!-- 2. المديرية -->
                     <div class="col-md-4">
-                        <div class="form-floating">
-                            <select name="directorate" class="form-select" id="dirSelect" disabled required>
+                        <!-- Dropdown -->
+                        <div class="form-floating" id="dirSelectContainer">
+                            <select name="directorate_select" class="form-select" id="dirSelect" disabled>
                                 <option value="" selected disabled>اختر المديرية</option>
                             </select>
                             <label for="dirSelect">المديرية</label>
                         </div>
+                        <!-- Manual Text (Hidden by default) -->
+                        <div class="form-floating d-none" id="dirTextContainer">
+                            <input type="text" name="directorate_text" class="form-control" id="dirInput"
+                                placeholder="اسم المديرية">
+                            <label for="dirInput">اسم المديرية (كتابة)</label>
+                        </div>
                     </div>
+
+                    <!-- 3. المكان المحدد (قرية/منزل) -->
                     <div class="col-md-4">
                         <div class="form-floating">
-                            <select name="health_center" class="form-select" id="centerSelect" disabled required>
-                                <option value="" selected disabled>اختر المركز الصحي</option>
-                            </select>
-                            <label for="centerSelect">مرفق الولادة (المركز الصحي)</label>
+                            <input type="text" name="place_of_birth" class="form-control" id="placeOfBirth"
+                                placeholder="مكان الميلاد " required>
+                            <label for="placeOfBirth">مكان الميلاد (قرية / منزل / مرفق)</label>
                         </div>
                     </div>
                 </div>
+
+                <script>
+                    document.getElementById('manualLocationSwitch').addEventListener('change', function () {
+                        const isManual = this.checked;
+
+                        // Containers
+                        const govSelCont = document.getElementById('govSelectContainer');
+                        const govTxtCont = document.getElementById('govTextContainer');
+                        const dirSelCont = document.getElementById('dirSelectContainer');
+                        const dirTxtCont = document.getElementById('dirTextContainer');
+
+                        // Inputs
+                        const govSelect = document.getElementById('govSelect');
+                        const dirSelect = document.getElementById('dirSelect');
+                        const govInput = document.getElementById('govInput');
+                        const dirInput = document.getElementById('dirInput');
+
+                        if (isManual) {
+                            // Show Text, Hide Select
+                            govSelCont.classList.add('d-none');
+                            dirSelCont.classList.add('d-none');
+                            govTxtCont.classList.remove('d-none');
+                            dirTxtCont.classList.remove('d-none');
+
+                            // Require/Enable logic
+                            govSelect.disabled = true;
+                            dirSelect.disabled = true;
+                            govInput.required = true;
+                            dirInput.required = true;
+                        } else {
+                            // Show Select, Hide Text
+                            govSelCont.classList.remove('d-none');
+                            dirSelCont.classList.remove('d-none');
+                            govTxtCont.classList.add('d-none');
+                            dirTxtCont.classList.add('d-none');
+
+                            // Require/Enable logic
+                            govSelect.disabled = false;
+                            // Dir select remains disabled until gov chosen logic handles it
+                            govInput.required = false;
+                            dirInput.required = false;
+                        }
+                    });
+                </script>
 
                 <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
                     <i class="fas fa-users me-2"></i>بيانات العائلة
@@ -124,67 +199,66 @@
         // Dependent Dropdowns Logic
         const govSelect = document.getElementById('govSelect');
         const dirSelect = document.getElementById('dirSelect');
-        const centerSelect = document.getElementById('centerSelect');
 
         // 1. On Governorate Change -> Fetch Directorates
         govSelect.addEventListener('change', function () {
             const govId = this.value;
 
             // Reset Directorate
-            dirSelect.innerHTML = '<option value="" selected disabled>جاري التحميل...</option>';
+            dirSelect.innerHTML = '<option value="" selected disabled>جاري جلب البيانات...</option>';
             dirSelect.disabled = true;
 
-            // Reset Center
-            centerSelect.innerHTML = '<option value="" selected disabled>اختر المديرية أولاً</option>';
-            centerSelect.disabled = true;
-
             if (govId) {
-                fetch(`{% url 'centers:api_locations' %}?type=directorate&parent_id=${govId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        dirSelect.innerHTML = '<option value="" selected disabled>اختر المديرية</option>';
-                        data.data.forEach(item => {
-                            const option = document.createElement('option');
-                            option.value = item.id;
-                            option.textContent = item.name_ar;
-                            dirSelect.appendChild(option);
-                        });
-                        dirSelect.disabled = false;
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        dirSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
-                    });
+                const url = `{% url 'centers:api_locations' %}?type=directorate&parent_id=${govId}`;
+                console.log("XHR Request to:", url);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+
+                xhr.onreadystatechange = function () {
+                    console.log("XHR State:", xhr.readyState, "Status:", xhr.status);
+                    if (xhr.readyState === 4) { // Done
+                        if (xhr.status === 200) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                console.log("Data received:", data);
+                                dirSelect.innerHTML = '<option value="" selected disabled>اختر المديرية</option>';
+
+                                if (data.data && data.data.length > 0) {
+                                    data.data.forEach(function (item) {
+                                        var option = document.createElement('option');
+                                        option.value = item.id;
+                                        option.textContent = item.name_ar;
+                                        dirSelect.appendChild(option);
+                                    });
+                                    dirSelect.disabled = false;
+                                } else {
+                                    dirSelect.innerHTML = '<option value="" selected disabled>لا توجد مديريات مسجلة</option>';
+                                }
+                            } catch (e) {
+                                console.error("JSON Parse Error:", e);
+                                alert("خطأ في معالجة البيانات: " + e.message);
+                            }
+                        } else {
+                            console.error("Server Error:", xhr.statusText);
+                            alert("خطأ من السيرفر: " + xhr.status + " " + xhr.statusText);
+                            dirSelect.innerHTML = '<option value="" selected disabled>فشل التحميل (' + xhr.status + ')</option>';
+                        }
+                    }
+                };
+
+                xhr.onerror = function () {
+                    console.error("Network Error");
+                    alert("خطأ في الاتصال بالشبكة. تأكد لم يتم حظر الرابط.");
+                    dirSelect.innerHTML = '<option value="" selected disabled>خطأ في الشبكة</option>';
+                };
+
+                xhr.send();
             }
         });
 
-        // 2. On Directorate Change -> Fetch Health Centers
-        dirSelect.addEventListener('change', function () {
-            const dirId = this.value;
-
-            // Reset Center
-            centerSelect.innerHTML = '<option value="" selected disabled>جاري التحميل...</option>';
-            centerSelect.disabled = true;
-
-            if (dirId) {
-                fetch(`{% url 'centers:api_locations' %}?type=center&parent_id=${dirId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        centerSelect.innerHTML = '<option value="" selected disabled>اختر المركز الصحي</option>';
-                        data.data.forEach(item => {
-                            const option = document.createElement('option');
-                            option.value = item.id;
-                            option.textContent = item.name_ar;
-                            centerSelect.appendChild(option);
-                        });
-                        centerSelect.disabled = false;
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        centerSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
-                    });
-            }
-        });
+        // 2. On Directorate Change -> No more Center Fetching needed for Text Field
+        // dirSelect.addEventListener('change', function () { ... });
     });
 </script>
 </div>

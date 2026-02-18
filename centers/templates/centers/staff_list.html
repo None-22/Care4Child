@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold m-0 text-primary">قائمة موظفي المركز</h5>
+                <a href="{% url 'centers:add_staff' %}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-plus me-1"></i> إضافة موظف جديد
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">الموظف</th>
+                                <th>اسم المستخدم</th>
+                                <th>الدور</th>
+                                <th>تاريخ الانضمام</th>
+                                <th>الحالة</th>
+                                <th class="text-end pe-4">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_members %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-soft-primary text-primary rounded-circle d-flex justify-content-center align-items-center me-3"
+                                            style="width: 40px; height: 40px;">
+                                            {{ staff.first_name|slice:":1" }}{{ staff.last_name|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ staff.first_name }} {{ staff.last_name }}
+                                            </div>
+                                            <div class="small text-muted">{{ staff.phone|default:"-" }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="font-monospace text-muted">{{ staff.username }}</span></td>
+                                <td>
+                                    {% if staff.role == 'CENTER_MANAGER' %}
+                                    <span class="badge bg-soft-warning text-warning">مدير مركز</span>
+                                    {% else %}
+                                    <span class="badge bg-soft-info text-info">موظف صحي</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ staff.date_joined|date:"Y/m/d" }}</td>
+                                <td>
+                                    {% if staff.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">موقف</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if staff.id != request.user.id %}
+                                    <form action="{% url 'centers:toggle_staff_status' staff.id %}" method="POST"
+                                        class="d-inline">
+                                        {% csrf_token %}
+                                        {% if staff.is_active %}
+                                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                            title="إيقاف الحساب"
+                                            onclick="return confirm('هل أنت متأكد من إيقاف هذا الموظف؟ لن يتمكن من الدخول للنظام.')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                            title="تفعيل الحساب">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <!-- زر الحذف -->
+                                    <form action="{% url 'centers:delete_staff' staff.id %}" method="POST"
+                                        class="d-inline ms-1">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف نهائي"
+                                            onclick="return confirm('تحذير خطير! 🚫\nهل أنت متأكد تماماً من حذف هذا الموظف نهائياً؟\nلا يمكن التراجع عن هذا الإجراء!')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted small fst-italic">حسابك الحالي</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-users-slash fa-3x mb-3 text-light"></i>
+                                    <p class="mb-0">لا يوجد موظفين مسجلين في هذا المركز حتى الآن.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

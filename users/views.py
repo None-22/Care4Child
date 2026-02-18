@@ -8,6 +8,21 @@ class CustomLoginView(LoginView):
     form_class = CenterLoginForm
     redirect_authenticated_user = True
 
+    def get_success_url(self):
+        """
+        Redirect users based on their role:
+        - Superusers/Staff -> Django Admin
+        - Center Managers -> Center Dashboard
+        """
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return '/admin/' # Redirect to standard Django Admin
+        elif user.groups.filter(name='Center Manager').exists() or getattr(user, 'health_center', None):
+             return '/center/dashboard/'
+        else:
+             # Default fallback
+             return '/center/dashboard/'
+
 def logout_view(request):
     """
     Custom logout view to handle GET requests for logout.

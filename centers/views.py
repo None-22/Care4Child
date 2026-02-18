@@ -7,6 +7,8 @@ from .models import Governorate, Directorate, HealthCenter
 from django.http import JsonResponse
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
+from api.serializers import ChildCreateUpdateSerializer
+from users.models import CustomUser
 
 # ... (Previous views) ...
 
@@ -371,118 +373,50 @@ def registry_view(request):
 
 @login_required
 def add_child_view(request):
+    """
+    إضافة طفل جديد (النسخة الاحترافية باستخدام السيريالايزر)
+    """
     if request.method == 'POST':
-        # 1. استلام البيانات
-        child_name = request.POST.get('child_name')
-        gender = request.POST.get('gender')
-        dob_str = request.POST.get('dob') # Text 'YYYY-MM-DD'
+        # 1. نجهز البيانات (نسخة قابلة للتعديل)
+        data = request.POST.copy()
         
-        # تحويل النص إلى تاريخ لتجنب مشاكل الجمع لاحقاً
-        from datetime import datetime
-        try:
-            dob_date = datetime.strptime(dob_str, '%Y-%m-%d').date()
-            # Basic validation for year
-            if dob_date.year > datetime.now().year + 1 or dob_date.year < 1900:
-                 raise ValueError("Year out of range")
-        except ValueError:
-            messages.error(request, "تاريخ الميلاد غير صحيح. يرجى التأكد من كتابة السنة بشكل سليم (مثال: 2025).")
-            return redirect('centers:add_child')
-
-        father_name = request.POST.get('father_name')
-        mother_name = request.POST.get('mother_name')
+        # 2. نربط أسماء الحقول في الـ HTML مع السيريالايزر
+        data['full_name'] = request.POST.get('child_name') 
+        data['date_of_birth'] = request.POST.get('dob')
         
-        gov_id = request.POST.get('governorate')
-        dir_id = request.POST.get('directorate')
-        health_center_id = request.POST.get('health_center')
-
-        # 2. منطق العائلة (Unified Family Logic)
-        # البحث عن عائلة بنفس الأب والأم تماماً
-        family = Family.objects.filter(father_name=father_name, mother_name=mother_name).first()
+        # ربط القوائم المنسدلة بأسماء الحقول في المودل
+        data['birth_governorate'] = request.POST.get('governorate_select')
+        data['birth_directorate'] = request.POST.get('directorate_select')
         
-        is_new_account = False
-        password = None
+        # 3. نعطي البيانات للسيريالايزر وهو يتصرف (يفحص، ينشئ العائلة، يدمج النص)
+        serializer = ChildCreateUpdateSerializer(data=data)
         
-        if not family:
-            is_new_account = True
-            # إنشاء حساب جديد
-            import random
-            import string
-            
-            # Generate Access Code (F-YYYY-XXXX)
-            # F = Family, YYYY = Birth Year of first child, XXXX = Random
-            rand_suffix = random.randint(1000, 9999)
-            username = f"F-{dob_date.year}-{rand_suffix}"
-            password = username # كلمة المرور هي نفسها رقم الحساب للتسهيل
-            
-            # Create Django User
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            user_account = User.objects.create_user(username=username, password=password, role='CUSTOMER')
-            
-            # Create Family
-            family = Family.objects.create(
-                father_name=father_name,
-                mother_name=mother_name,
-                account=user_account,
-                access_code=username,
-                created_by=request.user
+        if serializer.is_valid():
+            # 4. الحفظ! (ونمرر له الموظف والمركز تلقائياً)
+            child = serializer.save(
+                created_by=request.user,
+                health_center=request.user.health_center
             )
-
-        # 3. إنشاء الطفل
-        child = Child.objects.create(
-            full_name=child_name,
-            gender=gender,
-            date_of_birth=dob_date, # Use the date object
-            family=family,
-            health_center=request.user.health_center, # Save the center!
-            birth_governorate_id=gov_id,
-            birth_directorate_id=dir_id,
-            birth_health_center_id=health_center_id,
-            created_by=request.user
-        )
-
-        # 4. إنشاء "كرت التطعيم" (الجدول الزمني الشخصي)
-        # ننسخ كل اللقاحات المطلوبة ونضع تواريخ استحقاقها بناء على ميلاد الطفل
-        standard_schedules = VaccineSchedule.objects.all()
-        personal_schedule_list = []
-        
-        for item in standard_schedules:
-            # حساب تاريخ الاستحقاق مع دعم الكسور (مثل 1.5 شهر)
-            import math
-            months_int = int(item.age_in_months)
-            days_extra = int((item.age_in_months - months_int) * 30)
             
-            due_date = child.date_of_birth + relativedelta(months=months_int) + timedelta(days=days_extra)
-            
-            personal_schedule_list.append(
-                ChildVaccineSchedule(
-                    child=child,
-                    vaccine_schedule=item,
-                    due_date=due_date,
-                    is_taken=False
-                )
-            )
-        
-        ChildVaccineSchedule.objects.bulk_create(personal_schedule_list)
-        
-        if is_new_account:
-            msg = f"تم إنشاء حساب جديد بنجاح! 🎊\nرقم الحساب: {username}"
+            # رسالة النجاح
+            fam = child.family
+            msg = f"تم تسجيل الطفل {child.full_name} بنجاح! ✅\nكود العائلة: {fam.access_code}"
             messages.success(request, msg)
-        else:
-            messages.success(request, f"تم إضافة الطفل إلى حساب العائلة: {family.father_name} و {family.mother_name}")
             
-        return redirect('centers:dashboard')
+            return redirect('centers:dashboard')
+        else:
+            # لو في أخطاء، نرجعها للمستخدم
+            for field, errors in serializer.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            
+            # نرجع لنفس الصفحة
+            governorates = Governorate.objects.all()
+            return render(request, 'centers/add_child.html', {'governorates': governorates})
 
     # GET Request
     governorates = Governorate.objects.all()
-    context = {
-        'governorates': governorates
-    }
-    return render(request, 'centers/add_child.html', context)
-
-def get_directorates(request):
-    # API View Helper for AJAX dropdowns (Simple implementation for now)
-    pass
+    return render(request, 'centers/add_child.html', {'governorates': governorates})
 
 def get_locations_api(request):
     # API to fetch Directorates and Health Centers
@@ -496,6 +430,7 @@ def get_locations_api(request):
         data = list(qs)
         
     elif req_type == 'center' and parent_id:
+        # Note: Health Centers logic is preserved here if needed later
         qs = HealthCenter.objects.filter(directorate_id=parent_id).values('id', 'name_ar')
         data = list(qs)
         
@@ -539,3 +474,73 @@ def add_staff_view(request):
             return redirect('centers:dashboard')
 
     return render(request, 'centers/add_staff.html')
+
+
+@login_required
+def staff_list_view(request):
+    """عرض قائمة موظفي المركز للمدير فقط"""
+    if not request.user.role == 'CENTER_MANAGER':
+        messages.error(request, "عذراً، هذه الصفحة مخصصة لمدراء المراكز فقط.")
+        return redirect('centers:dashboard')
+
+    # جلب الموظفين التابعين لنفس المركز (باستثناء المدير نفسه)
+    staff_members = CustomUser.objects.filter(
+        health_center=request.user.health_center
+    ).exclude(id=request.user.id).order_by('-date_joined')
+
+    context = {
+        'staff_members': staff_members
+    }
+    return render(request, 'centers/staff_list.html', context)
+
+
+@login_required
+def toggle_staff_status(request, staff_id):
+    """تفعيل/إيقاف حساب موظف"""
+    if not request.user.role == 'CENTER_MANAGER':
+        messages.error(request, "عذراً، هذا الإجراء للمدراء فقط.")
+        return redirect('centers:dashboard')
+
+    if request.method == 'POST':
+        # التأكد أن الموظف يتبع نفس المركز
+        # نستخدم get_user_model() لضمان التوافق
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        staff = get_object_or_404(User, id=staff_id, health_center=request.user.health_center)
+        
+        # عكس الحالة
+        staff.is_active = not staff.is_active
+        staff.save()
+        
+        action = "تفعيل" if staff.is_active else "إيقاف"
+        if staff.is_active:
+             messages.success(request, f"تم {action} حساب الموظف {staff.first_name} بنجاح.")
+        else:
+             messages.warning(request, f"تم {action} حساب الموظف {staff.first_name}. لن يتمكن من الدخول للنظام.")
+        
+    return redirect('centers:staff_list')
+
+
+@login_required
+def delete_staff(request, staff_id):
+    """حذف حساب موظف نهائياً"""
+    if not request.user.role == 'CENTER_MANAGER':
+        messages.error(request, "عذراً، هذا الإجراء للمدراء فقط.")
+        return redirect('centers:dashboard')
+
+    if request.method == 'POST':
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # التأكد أن الموظف يتبع نفس المركز
+        staff = get_object_or_404(User, id=staff_id, health_center=request.user.health_center)
+        
+        staff_name = f"{staff.first_name} {staff.last_name}"
+        staff.delete()
+        
+        messages.error(request, f"تم حذف الموظف {staff_name} نهائياً.")
+        
+    return redirect('centers:staff_list')
+
+

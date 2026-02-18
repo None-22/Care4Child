@@ -19,9 +19,10 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
+    path('api/', include('api.urls')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('chaining/', include('smart_selects.urls')),
     path('center/', include('centers.urls')),  # Center Dashboard
-    path('', RedirectView.as_view(url='/center/dashboard/', permanent=False)), # Redirect root
+    path('', RedirectView.as_view(pattern_name='login', permanent=False)), # Redirect root to login
 ]
