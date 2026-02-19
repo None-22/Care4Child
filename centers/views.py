@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from .decorators import center_staff_required, center_manager_required
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
@@ -111,165 +112,211 @@ def child_detail_view(request, child_id):
 @login_required
 def dashboard_view(request):
     """
-    Premium Dashboard with Statistics and KPIs.
+    Premium Dashboard with Engineering KPIs.
+    "Smart Data" for "Smart Decisions".
     """
-    # 1. Total Children Count
-    total_children = Child.objects.count()
-
-    # 2. Today's Statistics
+    user = request.user
+    center = user.health_center
     today = timezone.now().date()
-    today_records = VaccineRecord.objects.filter(date_given=today).count()
-
-    # 3. Upcoming & Overdue
-    next_week = today + timedelta(days=7)
-    upcoming_appointments = ChildVaccineSchedule.objects.filter(
-        due_date__range=[today, next_week],
-        is_taken=False
-    ).count()
     
-    overdue_appointments = ChildVaccineSchedule.objects.filter(
-        due_date__lt=today,
-        is_taken=False
-    ).count()
-    
-    # 4. Completion Rate
-    completed_children = Child.objects.filter(is_completed=True).count()
-    active_children = total_children - completed_children
-    completion_rate = (completed_children / total_children * 100) if total_children > 0 else 0
-
-    # 5. Chart Data: Last 7 Days Activity
-    # Returns list of ints: [Day1, Day2, ..., Today]
-    last_7_days = []
-    days_labels = []
-    for i in range(6, -1, -1):
-        day = today - timedelta(days=i)
-        count = VaccineRecord.objects.filter(date_given=day).count()
-        last_7_days.append(count)
-        days_labels.append(day.strftime("%A")[:3]) # Short day name (e.g., Sat, Sun)
-
-    # 6. Vaccine Coverage (Top 5 Administered)
-    from django.db.models import Count
-    vaccine_dist = VaccineRecord.objects.values('vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:5]
-    dist_labels = [item['vaccine__name_ar'] for item in vaccine_dist]
-    dist_data = [item['count'] for item in vaccine_dist]
-
-    # 7. Appointment Status (Doughnut)
-    # Status: Completed (Taken), Overdue (Late), Upcoming (Future)
-    total_records = VaccineRecord.objects.count()
-    total_overdue = ChildVaccineSchedule.objects.filter(due_date__lt=today, is_taken=False).count()
-    status_data = [total_records, total_overdue] 
-    status_labels = ['جرعات مكتملة', 'جرعات متأخرة']
-
-    # 8. Gender Distribution (Pie Chart)
-    males = Child.objects.filter(gender='M').count()
-    females = Child.objects.filter(gender='F').count()
-    gender_data = [males, females]
-
-    # 9. Dropout Rate (Children with > 2 overdue vaccines)
-    # This is an "Estimate" for the dashboard shape
-    dropout_count = Child.objects.filter(personal_schedule__is_taken=False, personal_schedule__due_date__lt=today - timedelta(days=60)).distinct().count()
-
-    # 10. Today's Expected Appointments (for Table - Kept for compatibility if needed, but old design uses recent_records)
-    today_expected = ChildVaccineSchedule.objects.filter(
+    # --- 1. Today's Efficiency (The Gauge) ---
+    # Target: Scheduled appointments for THIS center today
+    today_target = ChildVaccineSchedule.objects.filter(
         due_date=today, 
-        is_taken=False
-    ).select_related('child', 'child__family', 'vaccine_schedule__vaccine').order_by('child__full_name')
-
-    # 11. Recent Activity (Required for Old Design)
-    recent_records = VaccineRecord.objects.select_related('child', 'vaccine', 'staff').order_by('-date_given', '-id')[:5]
-
-    # --- DEMO DATA LOGIC (If no data exists, show sample) ---
-    is_demo_mode = False
+         # Only count children belonging to this center (Catchment Area)
+        child__health_center=center
+    ).count()
     
-    # Check if we should override with Demo Data
-    # 1. New user with no children
-    # 2. Or children exist but NO actual vaccinations (boring charts)
-    # 3. Or user explicitly asked for ?demo=1
-    should_run_demo = (total_children == 0) or (total_records == 0) or request.GET.get('demo')
+    # Actual: Vaccinations done BY this center's staff today (Unified DB Logic)
+    # We count records created by staff generated from this center
+    today_actual = VaccineRecord.objects.filter(
+        date_given=today,
+        staff__health_center=center
+    ).count()
+    
+    efficiency_rate = int((today_actual / today_target * 100)) if today_target > 0 else 0
+
+    # --- 2. Dropout Rate Funnel (The Funnel) ---
+    # Metric: Compare total Dose 1 vs Dose 3 (Proxy for retention)
+    # We look at records in the last 12 months for better relevance
+    one_year_ago = today - timedelta(days=365)
+    
+    dose_1_count = VaccineRecord.objects.filter(
+        staff__health_center=center,
+        dose_number=1,
+        date_given__gte=one_year_ago
+    ).count()
+    
+    dose_3_count = VaccineRecord.objects.filter(
+        staff__health_center=center,
+        dose_number=3,
+        date_given__gte=one_year_ago
+    ).count()
+    
+    dropout_rate = 0
+    if dose_1_count > 0:
+        dropout_rate = round(((dose_1_count - dose_3_count) / dose_1_count * 100), 1)
+
+    # --- 3. Weekly Peak Activity (Resource Management) ---
+    # Aggregate by Day of Week (1=Sunday, 7=Saturday in Django usually, depends on DB)
+    from django.db.models.functions import ExtractWeekDay
+    from django.db.models import Count
+    
+    peak_data_qs = VaccineRecord.objects.filter(
+        staff__health_center=center,
+        date_given__gte=today - timedelta(days=30) # Last 30 days pattern
+    ).annotate(weekday=ExtractWeekDay('date_given')).values('weekday').annotate(count=Count('id')).order_by('weekday')
+    
+    # Map Django weekday (1=Sunday..7=Saturday) to our list [Sun, Mon, ..., Sat]
+    # Initialize 0 for all 7 days
+    weekly_activity = [0] * 7 
+    # Mappings might vary by DB, but typically 1=Sunday in Django
+    for item in peak_data_qs:
+        # Prevent index error if DB returns unexpected
+        idx = (item['weekday'] - 1) % 7
+        weekly_activity[idx] = item['count']
+        
+    weekly_labels = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+
+    # --- 4. Age Distribution at Enrollment (Community Awareness) ---
+    # Metric: When are they registering? (Birth vs Late)
+    # We compare created_at with date_of_birth
+    from django.db.models import F, ExpressionWrapper, DurationField
+    
+    # Calculate difference
+    age_diff_qs = Child.objects.filter(health_center=center).annotate(
+        enrollment_delay=ExpressionWrapper(F('created_at') - F('date_of_birth'), output_field=DurationField())
+    )
+    
+    # Buckets
+    age_dist = {
+        'neonates': 0, # < 30 days (Ideal)
+        'infants': 0,  # 1 month - 1 year
+        'late': 0      # > 1 year
+    }
+    
+    for child in age_diff_qs:
+        days = child.enrollment_delay.days
+        if days <= 30:
+            age_dist['neonates'] += 1
+        elif days <= 365:
+            age_dist['infants'] += 1
+        else:
+            age_dist['late'] += 1
+            
+    age_labels = ['حديثي الولادة (< شهر)', 'رضّع (< سنة)', 'متأخرين (> سنة)']
+    age_data = [age_dist['neonates'], age_dist['infants'], age_dist['late']]
+
+    # --- 5. Vaccine Demand Forecasting (The Crystal Ball) ---
+    # Metric: Expected doses next month (for Inventory)
+    # We look at Month+1 from today
+    next_month_start = today + timedelta(days=30)
+    # Simple approx for next 30 days window
+    next_month_end = next_month_start + timedelta(days=30)
+    
+    forecast_qs = ChildVaccineSchedule.objects.filter(
+        child__health_center=center,
+        due_date__range=[next_month_start, next_month_end],
+        is_taken=False
+    ).values('vaccine_schedule__vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:5]
+    
+    forecast_labels = [item['vaccine_schedule__vaccine__name_ar'] for item in forecast_qs]
+    forecast_data = [item['count'] for item in forecast_qs]
+
+    # --- 6. Zero-Dose Children (The "Invisible" Children) ---
+    # Metric: Registered children who have received ZERO vaccines ever.
+    # Critical for WHO/UNICEF reporting.
+    zero_dose_count = Child.objects.filter(health_center=center, vaccine_records__isnull=True).count()
+
+    # --- 7. Recent Vaccination Activity (The "Live Feed") ---
+    # Replaced Staff Leaderboard with Actual child records as requested
+    recent_records = VaccineRecord.objects.filter(
+        staff__health_center=center
+    ).select_related('child', 'vaccine').order_by('-date_given', '-id')[:5]
+
+    # --- 8. Simplified Standard Stats ---
+    total_children = Child.objects.filter(health_center=center).count()
+    completed_children = Child.objects.filter(health_center=center, is_completed=True).count()
+    
+    # --- 9. DEMO MODE LOGIC (Enhanced) ---
+    should_run_demo = (total_children == 0) or request.GET.get('demo')
     
     if should_run_demo:
-        is_demo_mode = True
-        # Sample Stats for Visualization
-        total_children = 125
-        today_records = 12
-        upcoming_appointments = 5
-        overdue_appointments = 8
-        completion_rate = 85.5
-        
-        # Charts
-        last_7_days = [5, 8, 12, 7, 15, 10, 12] # Activity
-        
-        dist_labels = ['BCG', 'Hexavalent', 'Pneumococcal', 'Rotavirus', 'Measles']
-        dist_data = [45, 120, 95, 80, 60]
-        
-        status_data = [350, 45] # Completed vs Overdue
-        gender_data = [65, 60] # Males vs Females
-        dropout_count = 14
-        
-        # Demo Table Data (Mock Objects)
+        # Efficiency
+        today_target = 40; today_actual = 35; efficiency_rate = 87
+        # Dropout
+        dose_1_count = 1200; dose_3_count = 1080; dropout_rate = 10.0
+        # Peak
+        weekly_activity = [45, 60, 55, 40, 30, 10, 5] 
+        # Age Dist
+        age_data = [300, 100, 50]
+        # Forecast
+        forecast_labels = ['شكل الأطفال', 'الخماسي', 'السداسي', 'الروتا', 'الحصبة']
+        forecast_data = [150, 120, 110, 90, 85]
+        # Zero-Dose
+        zero_dose_count = 12
+        # Recent Records Mock
         class MockObj:
             def __init__(self, **kwargs): self.__dict__.update(kwargs)
             
-        today_expected = [
+        recent_records = [
             MockObj(
-                child=MockObj(
-                    full_name="أحمد محمد علي", 
-                    gender="M", 
-                    get_gender_display="ذكر",
-                    id=0,
-                    family=MockObj(access_code="F-2024-1234")
-                ),
-                vaccine_schedule=MockObj(
-                    dose_number=1,
-                    vaccine=MockObj(name_ar="لقاح شلل الأطفال (IPV)")
-                )
+                child=MockObj(full_name="أحمد محمد علي"),
+                vaccine=MockObj(name_ar="الخماسي (1)"),
+                dose_number=1,
+                date_given=timezone.now().date()
             ),
-            MockObj(
-                child=MockObj(
-                    full_name="سارة خالد عمر", 
-                    gender="F", 
-                    get_gender_display="أنثى",
-                    id=0,
-                    family=MockObj(access_code="F-2024-5678")
-                ),
-                vaccine_schedule=MockObj(
-                    dose_number=2,
-                    vaccine=MockObj(name_ar="اللقاح السداسي")
-                )
+             MockObj(
+                child=MockObj(full_name="سارة خالد"),
+                vaccine=MockObj(name_ar="شلل الأطفال"),
+                dose_number=2,
+                date_given=timezone.now().date()
             ),
-            MockObj(
-                child=MockObj(
-                    full_name="يوسف عبد الله", 
-                    gender="M", 
-                    get_gender_display="ذكر",
-                    id=0,
-                    family=MockObj(access_code="F-2024-9012")
-                ),
-                vaccine_schedule=MockObj(
-                    dose_number=1,
-                    vaccine=MockObj(name_ar="الروتا")
-                )
+             MockObj(
+                child=MockObj(full_name="يوسف عمر"),
+                vaccine=MockObj(name_ar="الحصبة"),
+                dose_number=1,
+                date_given=timezone.now().date() - timedelta(days=1)
             ),
         ]
-    
+        
+        total_children = 450
+        completed_children = 120
+
     context = {
-        'is_demo_mode': is_demo_mode,
-        'total_children': total_children,
-        'today_records': today_records,
-        'upcoming_appointments': upcoming_appointments,
-        'overdue_appointments': overdue_appointments,
-        'completion_rate': round(completion_rate, 1),
-        'chart_data': last_7_days,
-        'chart_labels': days_labels,
-        'dist_labels': dist_labels,
-        'dist_data': dist_data,
-        'status_data': status_data,
-        'status_labels': status_labels,
-        'gender_data': gender_data,
-        'dropout_count': dropout_count,
-        'dropout_count': dropout_count,
-        'today_expected': today_expected,
+        'is_demo_mode': should_run_demo,
+        
+        # 1. Efficiency Gauge
+        'today_target': today_target,
+        'today_actual': today_actual,
+        'efficiency_rate': efficiency_rate,
+        
+        # 2. Dropout Funnel
+        'dose_1_count': dose_1_count,
+        'dose_3_count': dose_3_count,
+        'dropout_rate': dropout_rate,
+        
+        # 3. Resource Mgmt (Heatmap)
+        'weekly_activity': weekly_activity,
+        'weekly_labels': weekly_labels,
+        
+        # 4. Age Distribution (Pie)
+        'age_data': age_data,
+        'age_labels': age_labels,
+        
+        # 5. Demand Forecast (Area Chart)
+        'forecast_labels': forecast_labels,
+        'forecast_data': forecast_data,
+        
+        # 6. Zero-Dose
+        'zero_dose_count': zero_dose_count,
+        
+        # 7. Recent (Table)
         'recent_records': recent_records,
+        
+        # 8. Generals
+        'total_children': total_children,
+        'completed_children': completed_children,
     }
     return render(request, 'centers/dashboard.html', context)
 
@@ -477,11 +524,9 @@ def add_staff_view(request):
 
 
 @login_required
+@center_manager_required
 def staff_list_view(request):
     """عرض قائمة موظفي المركز للمدير فقط"""
-    if not request.user.role == 'CENTER_MANAGER':
-        messages.error(request, "عذراً، هذه الصفحة مخصصة لمدراء المراكز فقط.")
-        return redirect('centers:dashboard')
 
     # جلب الموظفين التابعين لنفس المركز (باستثناء المدير نفسه)
     staff_members = CustomUser.objects.filter(
@@ -495,11 +540,9 @@ def staff_list_view(request):
 
 
 @login_required
+@center_manager_required
 def toggle_staff_status(request, staff_id):
     """تفعيل/إيقاف حساب موظف"""
-    if not request.user.role == 'CENTER_MANAGER':
-        messages.error(request, "عذراً، هذا الإجراء للمدراء فقط.")
-        return redirect('centers:dashboard')
 
     if request.method == 'POST':
         # التأكد أن الموظف يتبع نفس المركز
@@ -523,11 +566,9 @@ def toggle_staff_status(request, staff_id):
 
 
 @login_required
+@center_manager_required
 def delete_staff(request, staff_id):
     """حذف حساب موظف نهائياً"""
-    if not request.user.role == 'CENTER_MANAGER':
-        messages.error(request, "عذراً، هذا الإجراء للمدراء فقط.")
-        return redirect('centers:dashboard')
 
     if request.method == 'POST':
         from django.contrib.auth import get_user_model

@@ -24,6 +24,7 @@ from .serializers import (
     VaccineListSerializer, VaccineDetailSerializer, VaccineCreateUpdateSerializer,
     VaccineRecordListSerializer, VaccineRecordDetailSerializer, VaccineRecordCreateUpdateSerializer
 )
+from .permissions import IsCenterStaffOrReadOnly
 
 
 # ============== Governorate ViewSet ==============
@@ -158,6 +159,15 @@ class FamilyViewSet(viewsets.ModelViewSet):
     queryset = Family.objects.all()
     # ... (rest of class config) ...
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        # 1. الموظفين والإدارة: يرون كل العائلات (لأغراض البحث والتسجيل)
+        if user.is_superuser or user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+            return Family.objects.all()
+            
+        # 2. العائلات (Customer): يرون بياناتهم فقط
+        return Family.objects.filter(account=user)
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['father_name', 'mother_name', 'access_code']
@@ -200,7 +210,8 @@ class ChildViewSet(viewsets.ModelViewSet):
     API للأطفال
     """
     queryset = Child.objects.all()
-    permission_classes = [IsAuthenticated]
+    # الحماية: العائلات تقرأ فقط، الموظفين يقرأون ويكتبون
+    permission_classes = [IsAuthenticated, IsCenterStaffOrReadOnly]
     
     def get_queryset(self):
         user = self.request.user
@@ -224,11 +235,14 @@ class ChildViewSet(viewsets.ModelViewSet):
         return ChildListSerializer
         
     def perform_create(self, serializer):
-        # ربط الطفل بنفس مركز الموظف الذي سجله
+        # ميزة: ربط الطفل تلقائياً بمركز الموظف الذي أنشأه
+        # ملاحظة: الصلاحيات تم التحقق منها عبر IsCenterStaffOrReadOnly
         serializer.save(
             health_center=self.request.user.health_center,
             created_by=self.request.user
         )
+
+    # perform_update & perform_destroy removed (Handled by Permissions Class)
     
     @action(detail=True, methods=['get'])
     def vaccine_records(self, request, pk=None):
@@ -277,7 +291,24 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
     API لسجلات التطعيمات
     """
     queryset = VaccineRecord.objects.all()
-    permission_classes = [IsAuthenticated]
+    # الحماية: العوائل تقرأ فقط
+    permission_classes = [IsAuthenticated, IsCenterStaffOrReadOnly]
+    
+    def get_queryset(self):
+        user = self.request.user
+        # 1. الموظفين: يرون كل السجلات (Unified Database)
+        if user.is_superuser or user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+            return VaccineRecord.objects.all()
+            
+        # 2. العائلات: يرون سجلات أطفالهم فقط
+        return VaccineRecord.objects.filter(child__family__account=user)
+
+    def perform_create(self, serializer):
+        # الصلاحيات تم التحقق منها عبر IsCenterStaffOrReadOnly
+        serializer.save(staff=self.request.user)
+
+    # perform_update & perform_destroy removed (Handled by Permissions Class)
+
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['child', 'vaccine']

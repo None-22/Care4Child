@@ -3,6 +3,7 @@ Serializers لـ Django REST API
 """
 from rest_framework import serializers
 import datetime
+from .validators import validate_name, validate_phone_number, validate_past_date
 from users.models import CustomUser
 from centers.models import HealthCenter, Governorate, Directorate
 from medical.models import Child, Family, Vaccine, VaccineRecord
@@ -94,6 +95,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'phone', 'password', 
                   'role', 'health_center', 'is_active']
         read_only_fields = ['role', 'health_center', 'is_active']
+        extra_kwargs = {
+            'first_name': {'validators': [validate_name]},
+            'last_name': {'validators': [validate_name]},
+            'phone': {'validators': [validate_phone_number]},
+        }
     
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -107,6 +113,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['first_name', 'last_name', 'phone', 'role', 'health_center', 'is_active']
+        extra_kwargs = {
+            'first_name': {'validators': [validate_name]},
+            'last_name': {'validators': [validate_name]},
+            'phone': {'validators': [validate_phone_number]},
+        }
 
 
 # ============== Family ==============
@@ -122,6 +133,10 @@ class FamilyCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Family
         fields = ['father_name', 'mother_name', 'notes']
+        extra_kwargs = {
+            'father_name': {'validators': [validate_name]},
+            'mother_name': {'validators': [validate_name]},
+        }
 
 
 # ============== Child List (Moved up for dependencies) ==============
@@ -267,8 +282,8 @@ class ChildDetailSerializer(serializers.ModelSerializer):
 
 class ChildCreateUpdateSerializer(serializers.ModelSerializer):
     # أضفنا هذه الحقول لاستقبال الأسماء من الفرونت إند
-    father_name = serializers.CharField(write_only=True)
-    mother_name = serializers.CharField(write_only=True)
+    father_name = serializers.CharField(write_only=True, validators=[validate_name])
+    mother_name = serializers.CharField(write_only=True, validators=[validate_name])
     
     # حقول إضافية للموقع اليدوي (اختياري)
     governorate_text = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -283,6 +298,10 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
             'birth_directorate', 'place_of_birth',
             'governorate_text', 'directorate_text'
         ]
+        extra_kwargs = {
+            'full_name': {'validators': [validate_name]},
+            'date_of_birth': {'validators': [validate_past_date]},
+        }
 
     def create(self, validated_data):
         # 1. استخراج البيانات الإضافية

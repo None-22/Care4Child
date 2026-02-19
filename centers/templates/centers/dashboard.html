@@ -1,290 +1,359 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}لوحة المعلومات والتقارير{% endblock %}
+{% block page_title %}لوحة القيادة الذكية{% endblock %}
 
 {% block content %}
-<!-- KPI Cards Row -->
+
+<!-- Quick Stats & Alerts Row -->
 <div class="row g-4 mb-4">
-    <!-- Total Children -->
+    <!-- 1. Efficiency Gauge -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 card-hover overflow-hidden">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted fw-bold text-uppercase mb-1 small">إجمالي الأطفال</p>
-                        <h2 class="fw-bolder text-primary mb-0">{{ total_children }}</h2>
-                    </div>
-                    <div class="icon-shape bg-light text-primary rounded-circle shadow-sm">
-                        <i class="fas fa-child fa-2x"></i>
+        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase small fw-bold mb-3">كفاءة الإنجاز اليومي</h6>
+                <div class="position-relative" style="height: 150px; width: 100%;">
+                    <canvas id="efficiencyChart"></canvas>
+                    <div class="position-absolute top-50 start-50 translate-middle mt-4">
+                        <h3 class="fw-bolder mb-0 text-dark">{{ efficiency_rate }}%</h3>
+                        <small class="text-muted">{{ today_actual }} / {{ today_target }}</small>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <span class="badge bg-soft-success text-success">
-                        <i class="fas fa-check small me-1"></i> نشط
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center small text-muted">
+                <i class="fas fa-info-circle me-1"></i> نسبة المواعيد المنجزة اليوم
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Zero-Dose Alert (Critical) -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-soft-danger text-danger">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <div class="icon-shape bg-white text-danger rounded-circle shadow-sm mb-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <h2 class="fw-bolder mb-0">{{ zero_dose_count }}</h2>
+                <p class="mb-0 fw-bold small text-uppercase">أطفال "صفر جرعات"</p>
+                <small class="mt-2 opacity-75">يحتاجون متابعة فورية!</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Total Children -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-1">إجمالي الأطفال</h6>
+                    <h2 class="fw-bolder text-primary mb-0">{{ total_children }}</h2>
+                    <span class="badge bg-soft-success text-success mt-2">
+                        <i class="fas fa-check-circle me-1"></i> {{ completed_children }} مكتمل التحصين
                     </span>
-                    <span class="text-muted small ms-2">مسجلين في النظام</span>
                 </div>
-                <!-- Decoration -->
-                <div class="position-absolute bottom-0 start-0 w-100 bg-primary opacity-10" style="height: 4px;"></div>
+                <div class="icon-shape bg-light text-primary rounded-circle shadow-sm ms-3">
+                    <i class="fas fa-child fa-2x"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Today's Vaccines -->
+    <!-- Quick Actions (Manager Focused) -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 card-hover overflow-hidden">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted fw-bold text-uppercase mb-1 small">لقاحات اليوم</p>
-                        <h2 class="fw-bolder text-info mb-0">{{ today_records }}</h2>
-                    </div>
-                    <div class="icon-shape bg-light text-info rounded-circle shadow-sm">
-                        <i class="fas fa-syringe fa-2x"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-muted small">عملية توثيق اليوم</span>
-                </div>
-                <div class="position-absolute bottom-0 start-0 w-100 bg-info opacity-10" style="height: 4px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Overdue -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 card-hover overflow-hidden">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted fw-bold text-uppercase mb-1 small">متأخرين عن الموعد</p>
-                        <h2 class="fw-bolder text-danger mb-0">{{ overdue_appointments }}</h2>
-                    </div>
-                    <div class="icon-shape bg-light text-danger rounded-circle shadow-sm">
-                        <i class="fas fa-user-clock fa-2x"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <a href="{% url 'centers:registry' %}?status=overdue"
-                        class="text-danger small text-decoration-none stretched-link">
-                        عرض التفاصيل <i class="fas fa-arrow-left small"></i>
-                    </a>
-                </div>
-                <div class="position-absolute bottom-0 start-0 w-100 bg-danger opacity-10" style="height: 4px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Completion Rate -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 card-hover overflow-hidden">
-            <div class="card-body position-relative">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted fw-bold text-uppercase mb-1 small">نسبة التحصين</p>
-                        <h2 class="fw-bolder text-success mb-0">{{ completion_rate }}%</h2>
-                    </div>
-                    <div class="icon-shape bg-light text-success rounded-circle shadow-sm">
-                        <i class="fas fa-chart-pie fa-2x"></i>
-                    </div>
-                </div>
-                <div class="progress mt-3" style="height: 6px;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_rate }}%"
-                        aria-valuenow="{{ completion_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                <div class="position-absolute bottom-0 start-0 w-100 bg-success opacity-10" style="height: 4px;"></div>
+        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <h5 class="fw-bold mb-3"><i class="fas fa-bolt me-2"></i> إجراءات سريعة</h5>
+                <a href="{% url 'centers:add_child' %}" class="btn btn-light text-primary w-100 mb-2 fw-bold shadow-sm">
+                    <i class="fas fa-plus me-2"></i> تسجيل طفل جديد
+                </a>
+                <a href="{% url 'centers:registry' %}" class="btn btn-outline-light w-100 fw-bold">
+                    <i class="fas fa-syringe me-2"></i> سجل التطعيمات
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Section -->
+<!-- Main Analytics Row -->
 <div class="row g-4 mb-4">
-    <!-- Activity Chart -->
+    <!-- 4. Dropout Funnel (Bar Chart) -->
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold m-0 text-primary">نشاط التحصين (آخر 7 أيام)</h5>
-                <button class="btn btn-sm btn-light"><i class="fas fa-ellipsis-h"></i></button>
+            <div class="card-header bg-transparent border-0 py-3">
+                <h5 class="fw-bold m-0 text-primary">
+                    <i class="fas fa-filter me-2 text-muted"></i> قمع التسرب (Dropout Funnel)
+                </h5>
             </div>
             <div class="card-body">
-                <canvas id="activityChart" style="max-height: 300px;"></canvas>
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <canvas id="dropoutChart" style="max-height: 250px;"></canvas>
+                    </div>
+                    <div class="col-md-4 text-center border-start">
+                        <h6 class="text-muted small fw-bold text-uppercase">معدل التسرب</h6>
+                        <h2
+                            class="fw-bolder text-{% if dropout_rate > 5 %}danger{% else %}success{% endif %} display-4 mb-0">
+                            {{ dropout_rate }}%
+                        </h2>
+                        <p class="small text-muted mt-2">
+                            الفرق بين الجرعة الأولى والثالثة.
+                            {% if dropout_rate > 5 %}
+                            <br><span class="text-danger fw-bold">يحتاج تحسين!</span>
+                            {% else %}
+                            <br><span class="text-success fw-bold">ممتاز!</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Status Doughnut -->
+    <!-- 5. Age Distribution (Pie) -->
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-transparent border-0 py-3">
-                <h5 class="fw-bold m-0 text-primary">حالة المواعيد القادمة</h5>
+                <h5 class="fw-bold m-0 text-primary">عمر التسجيل</h5>
             </div>
-            <div class="card-body d-flex justify-content-center align-items-center position-relative">
-                <canvas id="statusChart" style="max-height: 250px;"></canvas>
+            <div class="card-body position-relative d-flex justify-content-center align-items-center">
+                <canvas id="ageChart" style="max-height: 250px;"></canvas>
             </div>
-            <div class="card-footer bg-transparent border-0 text-center text-muted small pb-3">
-                <i class="fas fa-info-circle me-1"></i> يظهر هذا الرسم نسبة الالتزام بالمواعيد
+            <div class="card-footer bg-transparent border-0 text-center small text-muted">
+                مدى وعي المجتمع بالتسجيل المبكر
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Activity & Quick Actions -->
+<!-- Operational Analytics Row -->
+<div class="row g-4 mb-4">
+    <!-- 6. Weekly Peak Activity (Heatmap Style Bar) -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h5 class="fw-bold m-0 text-primary">أوقات الذروة الأسبوعية</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="peakChart" style="max-height: 200px;"></canvas>
+                <div class="alert alert-soft-warning mt-3 mb-0 small">
+                    <i class="fas fa-lightbulb me-1"></i> نصيحة: زد عدد الموظفين في الأيام ذات العمود الأطول.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Demand Forecast (Area Chart) -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h5 class="fw-bold m-0 text-primary">
+                    <i class="fas fa-crystal-ball me-2 text-muted"></i> التنبؤ بالاحتياج (الشهر القادم)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="forecastChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Vaccinations (Requested Replacement) -->
 <div class="row g-4">
     <div class="col-lg-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold m-0 text-primary">سجل النشاط الأخير</h5>
+                <h5 class="fw-bold m-0 text-primary">📝 أحدث سجلات التطعيم</h5>
                 <a href="{% url 'centers:registry' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">عرض
                     السجل الكامل</a>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-muted small text-uppercase">
-                        <tr>
-                            <th class="ps-4">الطفل</th>
-                            <th>اللقاح</th>
-                            <th>الجرعة</th>
-                            <th>الموظف</th>
-                            <th>التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for record in recent_records %}
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2"
-                                        style="width: 32px; height: 32px;">
-                                        {{ record.child.full_name|slice:":1" }}
-                                    </div>
-                                    <span class="fw-bold text-dark">{{ record.child.full_name }}</span>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-soft-info text-info">{{ record.vaccine.name_ar }}</span></td>
-                            <td>{{ record.dose_number }}</td>
-                            <td>{{ record.staff.first_name }} {{ record.staff.last_name }}</td>
-                            <td class="text-muted small">{{ record.date_given|date:"Y/m/d" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">لا يوجد نشاط حديث</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-center">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">الطفل</th>
+                                <th>اللقاح</th>
+                                <th>رقم الجرعة</th>
+                                <th>تاريخ التطعيم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_records %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-dark">{{ record.child.full_name }}</td>
+                                <td><span class="badge bg-soft-info text-info">{{ record.vaccine.name_ar }}</span></td>
+                                <td><span class="badge bg-light text-dark border">{{ record.dose_number }}</span></td>
+                                <td class="text-muted">{{ record.date_given|date:"Y/m/d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted py-4">لا توجد سجلات حديثة</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Chart.js Library -->
+<!-- Chart.js Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // --- Chart.js Configuration ---
-
-    // 1. Activity Line Chart
-    const ctxActivity = document.getElementById('activityChart').getContext('2d');
-    const gradient = ctxActivity.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(52, 152, 219, 0.4)'); // Primary Color
-    gradient.addColorStop(1, 'rgba(52, 152, 219, 0.0)');
-
-    new Chart(ctxActivity, {
-        type: 'line',
+    // --- 1. Efficiency Gauge (Doughnut) ---
+    new Chart(document.getElementById('efficiencyChart'), {
+        type: 'doughnut',
         data: {
-            labels: {{ chart_labels| safe }}, // From Django View
-        datasets: [{
-            label: 'عدد التطعيمات',
-            data: {{ chart_data| safe }}, // From Django View
-        borderColor: '#3498db',
-        backgroundColor: gradient,
-        borderWidth: 2,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#3498db',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: true,
-        tension: 0.4
+            labels: ['المنجز', 'المتبقي'],
+            datasets: [{
+                data: [{{ today_actual }}, {{ today_target }} - {{ today_actual }} > 0 ? {{ today_target }} - {{ today_actual }} : 0],
+        backgroundColor: ['#2ecc71', '#ecf0f1'],
+        borderWidth: 0,
+        circumference: 180,
+        rotation: -90,
+        cutout: '85%'
             }]
         },
         options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { borderDash: [2, 4], color: '#f0f0f0' },
-                ticks: { precision: 0 }
-            },
-            x: {
-                grid: { display: false }
-            }
-        }
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
     }
     });
 
-    // 2. Status Doughnut Chart
-    const ctxStatus = document.getElementById('statusChart').getContext('2d');
-    new Chart(ctxStatus, {
-        type: 'doughnut',
+    // --- 4. Dropout Funnel (Bar) ---
+    new Chart(document.getElementById('dropoutChart'), {
+        type: 'bar',
         data: {
-            labels: ['قادم خلال أسبوع', 'متأخر', 'أخرى'],
+            labels: ['الجرعة الأولى (Dose 1)', 'الجرعة الثالثة (Dose 3)'],
             datasets: [{
-                data: [{{ upcoming_appointments }}, {{ overdue_appointments }}, 5], // Added dummy 'other' for visual balance if 0
-        backgroundColor: [
-            '#f1c40f', // Warning/Upcoming
-            '#e74c3c', // Danger/Overdue
-            '#ecf0f1'  // Grey/Other
-        ],
-        hoverOffset: 4,
-        borderWidth: 0
+                label: 'عدد الأطفال',
+                data: [{{ dose_1_count }}, {{ dose_3_count }}],
+        backgroundColor: ['#3498db', '#9b59b6'],
+        borderRadius: 8,
+        barPercentage: 0.6
     }]
+        },
+        options: {
+        indexAxis: 'y', // Horizontal Bar makes it look like a funnel
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { x: { grid: { display: false } }, y: { grid: { display: false } } },
+        plugins: { legend: { display: false } }
+    }
+    });
+
+    // --- 5. Age Distribution (Pie) ---
+    new Chart(document.getElementById('ageChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ age_labels| safe }},
+        datasets: [{
+            data: {{ age_data| safe }},
+        backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c'],
+        borderWidth: 2,
+        borderColor: '#fff'
+            }]
         },
         options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { usePointStyle: true, padding: 20 }
-            }
-        }
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
+    }
+    });
+
+    // --- 6. Weekly Peak (Bar) ---
+    new Chart(document.getElementById('peakChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ weekly_labels| safe }},
+        datasets: [{
+            label: 'الضغط اليومي',
+            data: {{ weekly_activity| safe }},
+        backgroundColor: function (context) {
+            const value = context.raw;
+            // Heatmap colors: Low=Green, High=Red
+            const max = Math.max(...{{ weekly_activity| safe }});
+    const alpha = value / max;
+    if (alpha > 0.8) return '#e74c3c'; // Red
+    if (alpha > 0.4) return '#f39c12'; // Orange
+    return '#2ecc71'; // Green
+                },
+    borderRadius: 4
+            }]
+        },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } },
+        plugins: { legend: { display: false } }
+    }
+    });
+
+    // --- 7. Demand Forecast (Line Area) ---
+    const ctxForecast = document.getElementById('forecastChart').getContext('2d');
+    const gradientForecast = ctxForecast.createLinearGradient(0, 0, 0, 300);
+    gradientForecast.addColorStop(0, 'rgba(155, 89, 182, 0.4)'); // Purple
+    gradientForecast.addColorStop(1, 'rgba(155, 89, 182, 0.0)');
+
+    new Chart(ctxForecast, {
+        type: 'line',
+        data: {
+            labels: {{ forecast_labels| safe }},
+        datasets: [{
+            label: 'الاحتياج المتوقع',
+            data: {{ forecast_data| safe }},
+        borderColor: '#9b59b6',
+        backgroundColor: gradientForecast,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#9b59b6',
+        pointRadius: 5
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } } },
+        plugins: { legend: { display: false } }
     }
     });
 </script>
 
 <style>
-    /* Custom Stylings for Premium Feel */
+    /* Premium Styles */
     .icon-shape {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
     }
 
-    .card-hover:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .08) !important;
-    }
-
-    .bg-soft-info {
-        background-color: rgba(23, 162, 184, 0.1);
+    .bg-soft-danger {
+        background-color: rgba(231, 76, 60, 0.1);
     }
 
     .bg-soft-success {
-        background-color: rgba(40, 167, 69, 0.1);
+        background-color: rgba(46, 204, 113, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(241, 196, 15, 0.1);
     }
 
     .card {
+        transition: transform 0.2s;
         border-radius: 12px;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1) !important;
     }
 </style>
 
