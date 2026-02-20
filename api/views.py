@@ -332,3 +332,27 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
             'total_vaccinations': total,
             'today_vaccinations': today_count,
         })
+
+
+# ============== FCM Token Update View ==============
+from rest_framework.views import APIView
+
+class UpdateFCMTokenView(APIView):
+    """
+    API لتحديث رمز الإشعارات (Token) من تطبيق الجوال
+    Endpoint: /api/update-fcm-token/
+    Method: POST
+    Body: { "token": "abc123..." }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        user.fcm_token = token
+        user.save()
+        
+        return Response({'message': 'FCM Token updated successfully', 'user': user.username})

@@ -11,6 +11,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('username', 'password')}),
         ('المعلومات الشخصية', {'fields': ('first_name', 'last_name')}), # تم حذف email
         ('بيانات المركز', {'fields': ('role', 'health_center', 'phone')}),
+        ('الإشعارات', {'fields': ('fcm_token',)}),
         ('الصلاحيات', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('تواريخ هامة', {'fields': ('last_login', 'date_joined')}),
     )

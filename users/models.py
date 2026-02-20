@@ -23,6 +23,9 @@ class CustomUser(AbstractUser):
     
     # بيانات إضافية
     phone = models.CharField(max_length=15, blank=True, null=True, verbose_name="رقم الهاتف")
+    
+    # للإشعارات (Firebase Cloud Messaging Token)
+    fcm_token = models.TextField(blank=True, null=True, verbose_name="رمز جهاز الإشعارات (FCM Token)")
 
     def __str__(self):
         if self.health_center:

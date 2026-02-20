@@ -7,7 +7,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 from .views import (
     GovernorateViewSet, DirectorateViewSet,
     HealthCenterViewSet, UserViewSet, FamilyViewSet,
-    ChildViewSet, VaccineViewSet, VaccineRecordViewSet
+    ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
+    UpdateFCMTokenView
 )
 
 # إنشاء Router
@@ -29,4 +30,7 @@ urlpatterns = [
     
     # API Routes
     path('', include(router.urls)),
+    
+    # Notification Token
+    path('update-fcm-token/', UpdateFCMTokenView.as_view(), name='update_fcm_token'),
 ]

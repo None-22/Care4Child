@@ -49,6 +49,10 @@ INSTALLED_APPS = [
     'centers.apps.CentersConfig',
     'medical.apps.MedicalConfig',
     'api',
+    'notifications.apps.NotificationsConfig', # إدارة الإشعارات
+
+    'django_extensions', 
+
 ]
 
 MIDDLEWARE = [
