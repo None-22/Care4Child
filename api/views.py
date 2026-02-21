@@ -2,6 +2,7 @@
 ViewSets لـ Django REST API
 """
 from rest_framework import viewsets, status, filters
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -11,9 +12,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from django.shortcuts import render, get_object_or_404
 import datetime
+from datetime import timedelta     # For stats
+from django.utils import timezone  # For stats
+
 from users.models import CustomUser
 from centers.models import HealthCenter, Governorate, Directorate
-from medical.models import Child, Family, Vaccine, VaccineRecord
+from medical.models import Child, Family, Vaccine, VaccineRecord, ChildVaccineSchedule
 
 from .serializers import (
     GovernorateSerializer, DirectorateSerializer,
@@ -29,26 +33,38 @@ from .permissions import IsCenterStaffOrReadOnly
 
 # ============== Governorate ViewSet ==============
 
-class GovernorateViewSet(viewsets.ReadOnlyModelViewSet):
+class GovernorateViewSet(viewsets.ModelViewSet):
     """
-    API للمحافظات
+    API للمحافظات (إدارة كاملة للسوبر أدمن)
     """
     queryset = Governorate.objects.all()
     serializer_class = GovernorateSerializer
-    permission_classes = [AllowAny]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
 
 
 # ============== Directorate ViewSet ==============
 
-class DirectorateViewSet(viewsets.ReadOnlyModelViewSet):
+class DirectorateViewSet(viewsets.ModelViewSet):
     """
-    API للمديريات
+    API للمديريات (إدارة كاملة للسوبر أدمن)
     """
     queryset = Directorate.objects.all()
     serializer_class = DirectorateSerializer
-    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['governorate']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
 
 
 # ============== Health Center ViewSet ==============
@@ -356,3 +372,120 @@ class UpdateFCMTokenView(APIView):
         user.save()
         
         return Response({'message': 'FCM Token updated successfully', 'user': user.username})
+
+class DashboardStatsView(APIView):
+    """
+    API لإرجاع إحصائيات الداشبورد (للمراكز والوزارة)
+    Endpoint: /api/dashboard/stats/
+    Method: GET
+    Returns: JSON with KPIs and Charts Data
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        # 1. تحديد النطاق (Filter Scope)
+        start_date = timezone.now().date() - timedelta(days=30)
+        
+        # Base Querysets
+        children_qs = Child.objects.all()
+        records_qs = VaccineRecord.objects.all()
+        
+        # فلترة حسب صلاحية المستخدم
+        if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
+            children_qs = children_qs.filter(health_center=user.health_center)
+            records_qs = records_qs.filter(staff__health_center=user.health_center)
+        
+        # --- KPIs Calculation ---
+        total_children = children_qs.count()
+        completed_children = children_qs.filter(is_completed=True).count()
+        
+        # Dropout Rate (Logic: Missed > 7 days / Total Scheduled)
+        # (Simplified for API speed: Children with missed vaccines / Total children)
+        late_date = timezone.now().date() - timedelta(days=7)
+        # This is expensive query, optimized for demonstration
+        # In production, use a dedicated field or cache
+        dropout_count = 0 # Placeholder for performance safety in API
+        
+        # Recent Activity (Last 5 records)
+        recent_activity = records_qs.select_related('child', 'vaccine', 'staff').order_by('-date_given', '-id')[:5]
+        activity_data = []
+        for rec in recent_activity:
+            activity_data.append({
+                'id': rec.id,
+                'child_name': rec.child.full_name,
+                'vaccine': rec.vaccine.name_ar,
+                'dose': rec.dose_number,
+                'date': rec.date_given,
+                'staff': rec.staff.username if rec.staff else 'System'
+            })
+            
+        # Upcoming Appointments (Next 2 days)
+        tomorrow = timezone.now().date() + timedelta(days=1)
+        # Note: We need to import ChildVaccineSchedule inside method or at top (checking if imported)
+        from medical.models import ChildVaccineSchedule
+        upcoming_qs = ChildVaccineSchedule.objects.filter(
+            due_date__range=[timezone.now().date(), tomorrow],
+            is_taken=False
+        )
+        if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
+            upcoming_qs = upcoming_qs.filter(child__health_center=user.health_center)
+            
+        upcoming_data = []
+        for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine')[:5]:
+            upcoming_data.append({
+                'child_name': sched.child.full_name,
+                'vaccine': sched.vaccine_schedule.vaccine.name_ar,
+                'due_date': sched.due_date
+            })
+
+        data = {
+            'kpis': {
+                'total_children': total_children,
+                'completed_children': completed_children,
+                'completion_rate': round((completed_children / total_children * 100), 1) if total_children > 0 else 0,
+            },
+            'charts': {
+                'vaccination_trend': [10, 15, 8, 20, 12, 18, 25], # Dummy data for Chart.js (Real logic needs aggregation)
+                'labels': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            'recent_activity': activity_data,
+            'upcoming_appointments': upcoming_data
+        }
+        
+        return Response(data)
+
+class ReportsByCenterView(APIView):
+    """
+    API تقرير أداء المراكز (للوحدة المركزية/الوزارة)
+    Endpoint: /api/reports/by-center/
+    Method: GET
+    Returns: JSON list of centers with stats
+    """
+    permission_classes = [IsAdminUser] # للسوبر أدمن فقط
+
+    def get(self, request):
+        centers = HealthCenter.objects.filter(is_active=True).select_related('governorate', 'directorate')
+        
+        report_data = []
+        for center in centers:
+            # We can use annotation for better performance, but this is clearer for logic
+            total = Child.objects.filter(health_center=center).count()
+            completed = Child.objects.filter(health_center=center, is_completed=True).count()
+            rate = round((completed / total * 100), 1) if total > 0 else 0
+            
+            report_data.append({
+                'id': center.id,
+                'name': center.name_ar,
+                'location': f"{center.governorate.name_ar} - {center.directorate.name_ar}",
+                'total_children': total,
+                'completed_children': completed,
+                'coverage_rate': rate,
+                'status': 'High' if rate > 80 else ('Medium' if rate > 50 else 'Low')
+            })
+            
+        # Sort by rate descending (High to Low)
+        report_data.sort(key=lambda x: x['coverage_rate'], reverse=True)
+        
+        return Response(report_data)

@@ -25,11 +25,13 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" name="username" class="form-control" id="floatingUsername"
-                                placeholder="اسم المستخدم" required>
+                            <input type="text" name="username"
+                                class="form-control {% if username_error %}is-invalid{% endif %}" id="floatingUsername"
+                                placeholder="اسم المستخدم" value="{{ old_username|default:'' }}" required>
                             <label for="floatingUsername">اسم المستخدم (للدخول)</label>
                         </div>
-                        <div class="form-text small ps-2"><i class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية
+                        <div class="form-text small ps-2 {% if username_error %}text-danger{% endif %}"><i
+                                class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية
                             وأرقام.</div>
                     </div>
                     <div class="col-md-6">
@@ -48,21 +50,21 @@
                     <div class="col-md-6">
                         <div class="form-floating">
                             <input type="text" name="first_name" class="form-control" id="floatingFirst"
-                                placeholder="الاسم الأول" required>
+                                placeholder="الاسم الأول" value="{{ old_first|default:'' }}" required>
                             <label for="floatingFirst">الاسم الأول</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating">
                             <input type="text" name="last_name" class="form-control" id="floatingLast"
-                                placeholder="اسم العائلة" required>
+                                placeholder="اسم العائلة" value="{{ old_last|default:'' }}" required>
                             <label for="floatingLast">الاسم الأخير (العائلة)</label>
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="form-floating">
                             <input type="tel" name="phone" class="form-control" id="floatingPhone"
-                                placeholder="رقم الهاتف">
+                                placeholder="رقم الهاتف" value="{{ old_phone|default:'' }}">
                             <label for="floatingPhone">رقم الهاتف (اختياري)</label>
                         </div>
                     </div>

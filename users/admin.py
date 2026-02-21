@@ -6,7 +6,7 @@ from .models import CustomUser
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     # نضيف الحقول الجديدة لتظهر في الداشبورد
-    # تعريف الحقول بدقة لحذف الإيميل
+  
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('المعلومات الشخصية', {'fields': ('first_name', 'last_name')}), # تم حذف email

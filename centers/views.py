@@ -501,24 +501,44 @@ def add_staff_view(request):
         from django.contrib.auth import get_user_model
         User = get_user_model()
         
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "اسم المستخدم هذا موجود مسبقاً، يرجى اختيار اسم آخر.")
-        else:
-            # إنشاء الموظف
-            staff_user = User.objects.create_user(
-                username=username, 
-                password=password, 
-                role='CENTER_STAFF',
-                first_name=first_name,
-                last_name=last_name
-            )
-            # ربط الموظف بنفس مركز المدير
-            staff_user.health_center = request.user.health_center
-            staff_user.phone = phone
-            staff_user.save()
-            
-            messages.success(request, f"تم إضافة الموظف {first_name} {last_name} بنجاح!")
-            return redirect('centers:dashboard')
+        from django.db import IntegrityError
+        
+        try:
+            if User.objects.filter(username__iexact=username).exists():
+                messages.error(request, "اسم المستخدم هذا موجود مسبقاً، يرجى اختيار اسم آخر.")
+                return render(request, 'centers/add_staff.html', {
+                    'old_username': username,
+                    'old_first': first_name,
+                    'old_last': last_name,
+                    'old_phone': phone,
+                    'username_error': True
+                })
+            else:
+                # إنشاء الموظف
+                staff_user = User.objects.create_user(
+                    username=username, 
+                    password=password, 
+                    role='CENTER_STAFF',
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                # ربط الموظف بنفس مركز المدير
+                staff_user.health_center = request.user.health_center
+                staff_user.phone = phone
+                staff_user.save()
+                
+                messages.success(request, f"تم إضافة الموظف {first_name} {last_name} بنجاح!")
+                return redirect('centers:dashboard')
+
+        except IntegrityError:
+            messages.error(request, "اسم المستخدم هذا موجود بالفعل، يرجى اختيار اسم آخر. (حدث تعارض)")
+            return render(request, 'centers/add_staff.html', {
+                'old_username': username,
+                'old_first': first_name,
+                'old_last': last_name,
+                'old_phone': phone,
+                'username_error': True
+            })
 
     return render(request, 'centers/add_staff.html')
 

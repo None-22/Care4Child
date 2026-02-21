@@ -8,7 +8,7 @@ from .views import (
     GovernorateViewSet, DirectorateViewSet,
     HealthCenterViewSet, UserViewSet, FamilyViewSet,
     ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
-    UpdateFCMTokenView
+    UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView
 )
 
 # إنشاء Router
@@ -33,4 +33,9 @@ urlpatterns = [
     
     # Notification Token
     path('update-fcm-token/', UpdateFCMTokenView.as_view(), name='update_fcm_token'),
+    
+    # Dashboard Stats (New)
+    path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard_stats'),
+    # Reports (New)
+    path('reports/by-center/', ReportsByCenterView.as_view(), name='reports_by_center'),
 ]
