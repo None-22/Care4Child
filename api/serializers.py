@@ -14,15 +14,15 @@ from medical.models import Child, Family, Vaccine, VaccineRecord
 class GovernorateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Governorate
-        fields = ['id', 'name_ar', 'name_en']
+        fields = ['id', 'name_ar', 'name_en', 'code']
 
 
 class DirectorateSerializer(serializers.ModelSerializer):
-    governorate = GovernorateSerializer(read_only=True)
+    governorate_details = GovernorateSerializer(source='governorate', read_only=True)
     
     class Meta:
         model = Directorate
-        fields = ['id', 'name_ar', 'name_en', 'governorate']
+        fields = ['id', 'name_ar', 'name_en', 'code', 'governorate', 'governorate_details']
 
 
 # ============== Health Center ==============
@@ -58,10 +58,68 @@ class HealthCenterDetailSerializer(serializers.ModelSerializer):
 
 
 class HealthCenterCreateUpdateSerializer(serializers.ModelSerializer):
+
+    password = serializers.CharField(
+        write_only=True, 
+        min_length=8, 
+        help_text="كلمة المرور الخاصة بحساب المركز (تستخدم لتسجيل الدخول)",
+        required=False  # Not required strictly on updates
+    )
+
     class Meta:
         model = HealthCenter
         fields = ['name_ar', 'name_en', 'address', 'working_hours', 
-                  'license_number', 'governorate', 'directorate', 'is_active']
+                  'license_number', 'governorate', 'directorate', 'is_active', 'password']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        center = super().create(validated_data)
+        
+        # إنشاء حساب مدير المركز تلقائياً
+        if password:
+            from users.models import CustomUser
+            username = center.name_ar.strip() if center.name_ar else f"HC_{center.id}"
+            
+            # التأكد من أن اليوزرنيم غير متكرر لمنع أخطاء الداتابيز
+            if CustomUser.objects.filter(username=username).exists():
+                username = f"{username}_{center.id}"
+                
+            CustomUser.objects.create_user(
+                username=username,
+                password=password,
+                first_name="إدارة",
+                last_name=center.name_ar,
+                role='CENTER_MANAGER',
+                health_center=center,
+                is_active=True
+            )
+        return center
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        center = super().update(instance, validated_data)
+        
+        if password:
+            from users.models import CustomUser
+            manager = CustomUser.objects.filter(health_center=center, role='CENTER_MANAGER').first()
+            if manager:
+                manager.set_password(password)
+                manager.save()
+            else:
+                username = center.name_ar.strip() if center.name_ar else f"HC_{center.id}"
+                if CustomUser.objects.filter(username=username).exists():
+                    username = f"{username}_{center.id}"
+                    
+                CustomUser.objects.create_user(
+                    username=username,
+                    password=password,
+                    first_name="إدارة",
+                    last_name=center.name_ar,
+                    role='CENTER_MANAGER',
+                    health_center=center,
+                    is_active=True
+                )
+        return center
 
 
 # ============== User ==============
@@ -82,9 +140,29 @@ class UserDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'phone', 
-                  'role', 'role_display', 'health_center', 'is_active', 'date_joined', 
-                  'last_login']
+        # الحقول هنا للموظفين فقط، وسيتم تغييرها تماماً للعائلات عبر to_representation
+        fields = ['id', 'username', 'first_name', 'last_name', 'role', 'role_display', 'health_center', 'is_active']
+
+    def to_representation(self, instance):
+        # 1. إذا كان المستخدم ولي أمر (عائلة)
+        if instance.role == 'CUSTOMER':
+            family = getattr(instance, 'family_profile', None)
+            if family:
+                return {
+                    "id": instance.id,
+                    "username": instance.username,  # هذا هو كود الدخول
+                    "father_name": family.father_name,
+                    "mother_name": family.mother_name,
+                    "access_code": family.access_code,
+                    "role_display": "ولي أمر",
+                    "is_active": instance.is_active
+                }
+            # في حال لم يكن هناك عائلة مرتبطة
+            return super().to_representation(instance)
+        
+        # 2. إذا كان موظفاً، نستخدم الرد الطبيعي الموضح في fields
+        data = super().to_representation(instance)
+        return data
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -220,6 +298,7 @@ class VaccineRecordCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = VaccineRecord
         fields = ['child', 'vaccine', 'dose_number', 'staff', 'date_given', 'notes']
+        read_only_fields = ['staff']
 
 
 # ============== Child Detail & Create ==============
@@ -231,6 +310,7 @@ class ChildDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     vaccine_records = VaccineRecordListSerializer(source='vaccine_record_set', many=True, read_only=True)
     upcoming_vaccines = serializers.SerializerMethodField()
+    full_vaccine_schedule = serializers.SerializerMethodField()
     stats = serializers.SerializerMethodField()
     
     class Meta:
@@ -239,7 +319,7 @@ class ChildDetailSerializer(serializers.ModelSerializer):
                   'health_center', 'family',
                   'birth_governorate', 'birth_directorate', 'place_of_birth',
                   'is_completed', 'completed_date',
-                  'vaccine_records', 'upcoming_vaccines', 'stats', 'created_at']
+                  'vaccine_records', 'upcoming_vaccines', 'full_vaccine_schedule', 'stats', 'created_at']
     
     def get_age(self, obj):
         from datetime import date
@@ -251,18 +331,35 @@ class ChildDetailSerializer(serializers.ModelSerializer):
         return age
     
     def get_upcoming_vaccines(self, obj):
-        # جلب اللقاحات المستحقة وغير المأخوذة
+        import datetime
         from medical.models import ChildVaccineSchedule
         schedules = ChildVaccineSchedule.objects.filter(child=obj, is_taken=False).order_by('due_date')
         
-        # نحتاج لعمل سيريالايزر بسيط يدوياً أو استخدام واحد موجود
-        # للتبسيط سنرجع البيانات كـ قائمة قواميس
         return [
             {
+                'id': s.id,
                 'vaccine_name': s.vaccine_schedule.vaccine.name_ar,
                 'dose_number': s.vaccine_schedule.dose_number,
                 'due_date': s.due_date,
-                'is_overdue': s.due_date < datetime.date.today()
+                'is_overdue': s.due_date < datetime.date.today(),
+                'is_taken': s.is_taken
+            }
+            for s in schedules
+        ]
+
+    def get_full_vaccine_schedule(self, obj):
+        import datetime
+        from medical.models import ChildVaccineSchedule
+        schedules = ChildVaccineSchedule.objects.filter(child=obj).order_by('due_date')
+        
+        return [
+            {
+                'id': s.id,
+                'vaccine_name': s.vaccine_schedule.vaccine.name_ar,
+                'dose_number': s.vaccine_schedule.dose_number,
+                'due_date': s.due_date,
+                'is_taken': s.is_taken,
+                'is_overdue': not s.is_taken and s.due_date < datetime.date.today()
             }
             for s in schedules
         ]
@@ -353,3 +450,13 @@ class FamilyDetailSerializer(serializers.ModelSerializer):
     
     def get_children_count(self, obj):
         return Child.objects.filter(family=obj).count()
+
+# ============== Notifications ==============
+
+from notifications.models import NotificationLog
+
+class NotificationLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationLog
+        fields = ['id', 'title', 'body', 'notification_type', 'is_read', 'created_at']
+        read_only_fields = ['id', 'title', 'body', 'notification_type', 'created_at']

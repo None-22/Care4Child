@@ -1,7 +1,7 @@
 """
 ViewSets لـ Django REST API
 """
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, permissions
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -84,7 +84,7 @@ class HealthCenterViewSet(viewsets.ModelViewSet):
         
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['governorate', 'is_active']
+    filterset_fields = ['governorate', 'directorate', 'is_active']
     search_fields = ['name_ar', 'name_en', 'center_code']
     
     def get_serializer_class(self):
@@ -124,9 +124,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if user.is_superuser:
             return CustomUser.objects.all()
             
-        # 2. مدير المركز: يشوف موظفي مركزه فقط
+        # 2. مدير المركز: يشوف موظفي مركزه فقط (باستثناء نفسه، فقط الموظفين)
         if user.role == 'CENTER_MANAGER' and user.health_center:
-            return CustomUser.objects.filter(health_center=user.health_center)
+            return CustomUser.objects.filter(health_center=user.health_center, role='CENTER_STAFF')
             
         # 3. الموظف العادي: لا يرى أي مستخدم (حتى نفسه في القائمة)
         # ملاحظة: بياناته الشخصية تأتي من الـ endpoint المخصص /me/
@@ -358,14 +358,16 @@ class UpdateFCMTokenView(APIView):
     API لتحديث رمز الإشعارات (Token) من تطبيق الجوال
     Endpoint: /api/update-fcm-token/
     Method: POST
-    Body: { "token": "abc123..." }
+    Body: { "fcm_token": "abc123..." }
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        token = request.data.get('token')
+        # الاعتماد على الممارسات الصحيحة (Best Practices)
+        # اسم المتغير مطابق لاسم الحقل في قاعدة البيانات
+        token = request.data.get('fcm_token')
         if not token:
-            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'fcm_token is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         user = request.user
         user.fcm_token = token
@@ -439,6 +441,42 @@ class DashboardStatsView(APIView):
                 'vaccine': sched.vaccine_schedule.vaccine.name_ar,
                 'due_date': sched.due_date
             })
+        # ================= NEW: Merge Centers Report for Super Admin =================
+        centers_report = []
+        if user.is_superuser:
+            centers = HealthCenter.objects.filter(is_active=True).select_related('governorate', 'directorate')
+            for center in centers:
+                ctotal = Child.objects.filter(health_center=center).count()
+                ccompleted = Child.objects.filter(health_center=center, is_completed=True).count()
+                crate = round((ccompleted / ctotal * 100), 1) if ctotal > 0 else 0
+                
+                # Protect against null governorate or directorate
+                gov_name = center.governorate.name_ar if getattr(center, 'governorate', None) else 'غير محدد'
+                dir_name = center.directorate.name_ar if getattr(center, 'directorate', None) else 'غير محدد'
+                
+                centers_report.append({
+                    'id': center.id,
+                    'name': center.name_ar,
+                    'location': f"{gov_name} - {dir_name}",
+                    'total_children': ctotal,
+                    'completed_children': ccompleted,
+                    'coverage_rate': crate,
+                    'status': 'High' if crate > 80 else ('Medium' if crate > 50 else 'Low')
+                })
+            
+            # Sort by rate descending (High to Low)
+            centers_report.sort(key=lambda x: x['coverage_rate'], reverse=True)
+
+        # --- Charts Data: Real 7-Day Trend ---
+        from django.utils import timezone
+        today = timezone.now().date()
+        last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+        chart_labels = [day.strftime('%a') for day in last_7_days] # e.g., 'Mon', 'Tue'
+        
+        vaccination_trend = []
+        for day in last_7_days:
+            count = records_qs.filter(date_given=day).count()
+            vaccination_trend.append(count)
 
         data = {
             'kpis': {
@@ -447,13 +485,17 @@ class DashboardStatsView(APIView):
                 'completion_rate': round((completed_children / total_children * 100), 1) if total_children > 0 else 0,
             },
             'charts': {
-                'vaccination_trend': [10, 15, 8, 20, 12, 18, 25], # Dummy data for Chart.js (Real logic needs aggregation)
-                'labels': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                'vaccination_trend': vaccination_trend, 
+                'labels': chart_labels
             },
             'recent_activity': activity_data,
-            'upcoming_appointments': upcoming_data
+            'upcoming_appointments': upcoming_data,
         }
         
+        # Only attach centers report if the user is a superadmin
+        if user.is_superuser:
+            data['centers_report'] = centers_report
+            
         return Response(data)
 
 class ReportsByCenterView(APIView):
@@ -489,3 +531,32 @@ class ReportsByCenterView(APIView):
         report_data.sort(key=lambda x: x['coverage_rate'], reverse=True)
         
         return Response(report_data)
+
+# ================= Notifications =================
+
+from notifications.models import NotificationLog
+from .serializers import NotificationLogSerializer
+from rest_framework.decorators import action
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API for retrieving user notifications (In-App Inbox).
+    Endpoint: /api/notifications/
+    """
+    serializer_class = NotificationLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # المستخدم يرى فقط الإشعارات المرسلة إليه
+        return NotificationLog.objects.filter(recipient=self.request.user).order_by('-created_at')
+
+    @action(detail=False, methods=['post'], url_path='mark-all-read')
+    def mark_all_read(self, request):
+        """
+        Endpoint to mark all unread notifications as read.
+        POST /api/notifications/mark-all-read/
+        """
+        notifications = self.get_queryset().filter(is_read=False)
+        count = notifications.count()
+        notifications.update(is_read=True)
+        return Response({"message": f"{count} notifications marked as read.", "count": count})

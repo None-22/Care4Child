@@ -1,360 +1,615 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}لوحة القيادة الذكية{% endblock %}
+{% block page_title %}الإدارة المركزية | لوحة القيادة{% endblock %}
 
 {% block content %}
-
-<!-- Quick Stats & Alerts Row -->
-<div class="row g-4 mb-4">
-    <!-- 1. Efficiency Gauge -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
-            <div class="card-body text-center">
-                <h6 class="text-muted text-uppercase small fw-bold mb-3">كفاءة الإنجاز اليومي</h6>
-                <div class="position-relative" style="height: 150px; width: 100%;">
-                    <canvas id="efficiencyChart"></canvas>
-                    <div class="position-absolute top-50 start-50 translate-middle mt-4">
-                        <h3 class="fw-bolder mb-0 text-dark">{{ efficiency_rate }}%</h3>
-                        <small class="text-muted">{{ today_actual }} / {{ today_target }}</small>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer bg-transparent border-0 text-center small text-muted">
-                <i class="fas fa-info-circle me-1"></i> نسبة المواعيد المنجزة اليوم
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Zero-Dose Alert (Critical) -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 bg-soft-danger text-danger">
-            <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <div class="icon-shape bg-white text-danger rounded-circle shadow-sm mb-3">
-                    <i class="fas fa-exclamation-triangle fa-2x"></i>
-                </div>
-                <h2 class="fw-bolder mb-0">{{ zero_dose_count }}</h2>
-                <p class="mb-0 fw-bold small text-uppercase">أطفال "صفر جرعات"</p>
-                <small class="mt-2 opacity-75">يحتاجون متابعة فورية!</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Total Children -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex align-items-center">
-                <div class="flex-grow-1">
-                    <h6 class="text-muted text-uppercase small fw-bold mb-1">إجمالي الأطفال</h6>
-                    <h2 class="fw-bolder text-primary mb-0">{{ total_children }}</h2>
-                    <span class="badge bg-soft-success text-success mt-2">
-                        <i class="fas fa-check-circle me-1"></i> {{ completed_children }} مكتمل التحصين
-                    </span>
-                </div>
-                <div class="icon-shape bg-light text-primary rounded-circle shadow-sm ms-3">
-                    <i class="fas fa-child fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions (Manager Focused) -->
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
-            <div class="card-body d-flex flex-column justify-content-center">
-                <h5 class="fw-bold mb-3"><i class="fas fa-bolt me-2"></i> إجراءات سريعة</h5>
-                <a href="{% url 'centers:add_child' %}" class="btn btn-light text-primary w-100 mb-2 fw-bold shadow-sm">
-                    <i class="fas fa-plus me-2"></i> تسجيل طفل جديد
-                </a>
-                <a href="{% url 'centers:registry' %}" class="btn btn-outline-light w-100 fw-bold">
-                    <i class="fas fa-syringe me-2"></i> سجل التطعيمات
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Analytics Row -->
-<div class="row g-4 mb-4">
-    <!-- 4. Dropout Funnel (Bar Chart) -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h5 class="fw-bold m-0 text-primary">
-                    <i class="fas fa-filter me-2 text-muted"></i> قمع التسرب (Dropout Funnel)
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <canvas id="dropoutChart" style="max-height: 250px;"></canvas>
-                    </div>
-                    <div class="col-md-4 text-center border-start">
-                        <h6 class="text-muted small fw-bold text-uppercase">معدل التسرب</h6>
-                        <h2
-                            class="fw-bolder text-{% if dropout_rate > 5 %}danger{% else %}success{% endif %} display-4 mb-0">
-                            {{ dropout_rate }}%
-                        </h2>
-                        <p class="small text-muted mt-2">
-                            الفرق بين الجرعة الأولى والثالثة.
-                            {% if dropout_rate > 5 %}
-                            <br><span class="text-danger fw-bold">يحتاج تحسين!</span>
-                            {% else %}
-                            <br><span class="text-success fw-bold">ممتاز!</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. Age Distribution (Pie) -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h5 class="fw-bold m-0 text-primary">عمر التسجيل</h5>
-            </div>
-            <div class="card-body position-relative d-flex justify-content-center align-items-center">
-                <canvas id="ageChart" style="max-height: 250px;"></canvas>
-            </div>
-            <div class="card-footer bg-transparent border-0 text-center small text-muted">
-                مدى وعي المجتمع بالتسجيل المبكر
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Operational Analytics Row -->
-<div class="row g-4 mb-4">
-    <!-- 6. Weekly Peak Activity (Heatmap Style Bar) -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h5 class="fw-bold m-0 text-primary">أوقات الذروة الأسبوعية</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="peakChart" style="max-height: 200px;"></canvas>
-                <div class="alert alert-soft-warning mt-3 mb-0 small">
-                    <i class="fas fa-lightbulb me-1"></i> نصيحة: زد عدد الموظفين في الأيام ذات العمود الأطول.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 7. Demand Forecast (Area Chart) -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h5 class="fw-bold m-0 text-primary">
-                    <i class="fas fa-crystal-ball me-2 text-muted"></i> التنبؤ بالاحتياج (الشهر القادم)
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="forecastChart" style="max-height: 250px;"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Vaccinations (Requested Replacement) -->
-<div class="row g-4">
-    <div class="col-lg-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold m-0 text-primary">📝 أحدث سجلات التطعيم</h5>
-                <a href="{% url 'centers:registry' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">عرض
-                    السجل الكامل</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 text-center">
-                        <thead class="bg-light text-muted small text-uppercase">
-                            <tr>
-                                <th class="ps-4">الطفل</th>
-                                <th>اللقاح</th>
-                                <th>رقم الجرعة</th>
-                                <th>تاريخ التطعيم</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in recent_records %}
-                            <tr>
-                                <td class="ps-4 fw-bold text-dark">{{ record.child.full_name }}</td>
-                                <td><span class="badge bg-soft-info text-info">{{ record.vaccine.name_ar }}</span></td>
-                                <td><span class="badge bg-light text-dark border">{{ record.dose_number }}</span></td>
-                                <td class="text-muted">{{ record.date_given|date:"Y/m/d" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-muted py-4">لا توجد سجلات حديثة</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Chart.js Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    // --- 1. Efficiency Gauge (Doughnut) ---
-    new Chart(document.getElementById('efficiencyChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['المنجز', 'المتبقي'],
-            datasets: [{
-                data: [{{ today_actual }}, {{ today_target }} - {{ today_actual }} > 0 ? {{ today_target }} - {{ today_actual }} : 0],
-        backgroundColor: ['#2ecc71', '#ecf0f1'],
-        borderWidth: 0,
-        circumference: 180,
-        rotation: -90,
-        cutout: '85%'
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } }
-    }
-    });
-
-    // --- 4. Dropout Funnel (Bar) ---
-    new Chart(document.getElementById('dropoutChart'), {
-        type: 'bar',
-        data: {
-            labels: ['الجرعة الأولى (Dose 1)', 'الجرعة الثالثة (Dose 3)'],
-            datasets: [{
-                label: 'عدد الأطفال',
-                data: [{{ dose_1_count }}, {{ dose_3_count }}],
-        backgroundColor: ['#3498db', '#9b59b6'],
-        borderRadius: 8,
-        barPercentage: 0.6
-    }]
-        },
-        options: {
-        indexAxis: 'y', // Horizontal Bar makes it look like a funnel
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { x: { grid: { display: false } }, y: { grid: { display: false } } },
-        plugins: { legend: { display: false } }
-    }
-    });
-
-    // --- 5. Age Distribution (Pie) ---
-    new Chart(document.getElementById('ageChart'), {
-        type: 'pie',
-        data: {
-            labels: {{ age_labels| safe }},
-        datasets: [{
-            data: {{ age_data| safe }},
-        backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c'],
-        borderWidth: 2,
-        borderColor: '#fff'
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
-    }
-    });
-
-    // --- 6. Weekly Peak (Bar) ---
-    new Chart(document.getElementById('peakChart'), {
-        type: 'bar',
-        data: {
-            labels: {{ weekly_labels| safe }},
-        datasets: [{
-            label: 'الضغط اليومي',
-            data: {{ weekly_activity| safe }},
-        backgroundColor: function (context) {
-            const value = context.raw;
-            // Heatmap colors: Low=Green, High=Red
-            const max = Math.max(...{{ weekly_activity| safe }});
-    const alpha = value / max;
-    if (alpha > 0.8) return '#e74c3c'; // Red
-    if (alpha > 0.4) return '#f39c12'; // Orange
-    return '#2ecc71'; // Green
-                },
-    borderRadius: 4
-            }]
-        },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } },
-        plugins: { legend: { display: false } }
-    }
-    });
-
-    // --- 7. Demand Forecast (Line Area) ---
-    const ctxForecast = document.getElementById('forecastChart').getContext('2d');
-    const gradientForecast = ctxForecast.createLinearGradient(0, 0, 0, 300);
-    gradientForecast.addColorStop(0, 'rgba(155, 89, 182, 0.4)'); // Purple
-    gradientForecast.addColorStop(1, 'rgba(155, 89, 182, 0.0)');
-
-    new Chart(ctxForecast, {
-        type: 'line',
-        data: {
-            labels: {{ forecast_labels| safe }},
-        datasets: [{
-            label: 'الاحتياج المتوقع',
-            data: {{ forecast_data| safe }},
-        borderColor: '#9b59b6',
-        backgroundColor: gradientForecast,
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#9b59b6',
-        pointRadius: 5
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } } },
-        plugins: { legend: { display: false } }
-    }
-    });
-</script>
-
 <style>
-    /* Premium Styles */
-    .icon-shape {
-        width: 50px;
-        height: 50px;
+    /* --- Soft & Elegant Design System --- */
+    :root {
+        --h-primary: #3b82f6;
+        /* Calmer Blue */
+        --h-secondary: #0ea5e9;
+        /* Sky Blue */
+        --h-accent: #6366f1;
+        /* Soft Indigo */
+        --h-light: #f8fafc;
+        /* Light bg */
+        --h-surface: #FFFFFF;
+        --h-bg: #f1f5f9;
+        --h-text: #334155;
+        --h-muted: #64748b;
+        --h-danger: #f43f5e;
+        /* Soft Rose Red */
+        --h-success: #10b981;
+        /* Soft Emerald Green */
+        --h-warning: #f59e0b;
+        /* Soft Amber */
+    }
+
+    /* Base Body tweaks if necessary */
+    body {
+        background-color: var(--h-bg);
+    }
+
+    /* The Welcome Banner */
+    .hospital-banner {
+        background: linear-gradient(135deg, var(--h-primary) 0%, var(--h-accent) 100%);
+        border-radius: 1.5rem;
+        padding: 2.5rem 2.5rem;
+        color: white;
+        box-shadow: 0 20px 40px rgba(87, 108, 188, 0.2);
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .hospital-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 250px;
+        height: 250px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .hospital-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -80px;
+        left: 10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+    }
+
+    .banner-text {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* KPI Cards */
+    .kpi-card {
+        background: var(--h-surface);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        padding: 1.5rem 1.8rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    .kpi-icon-wrapper {
+        width: 65px;
+        height: 65px;
+        border-radius: 1.2rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.8rem;
+        margin-left: 1.5rem;
     }
 
-    .bg-soft-danger {
-        background-color: rgba(231, 76, 60, 0.1);
+    .kpi-icon-danger {
+        background: #fee2e2;
+        color: var(--h-danger);
     }
 
-    .bg-soft-success {
-        background-color: rgba(46, 204, 113, 0.1);
+    .kpi-icon-primary {
+        background: #e0f2fe;
+        color: var(--h-primary);
     }
 
-    .bg-soft-warning {
-        background-color: rgba(241, 196, 15, 0.1);
+    .kpi-icon-info {
+        background: #d1fae5;
+        color: var(--h-success);
     }
 
-    .card {
-        transition: transform 0.2s;
-        border-radius: 12px;
+    .kpi-icon-warning {
+        background: #fef3c7;
+        color: var(--h-warning);
     }
 
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1) !important;
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--h-primary);
+        line-height: 1;
+        margin-bottom: 0.3rem;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .kpi-label {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--h-muted);
+        margin: 0;
+    }
+
+    .kpi-subtext {
+        font-size: 0.75rem;
+        color: #cbd5e1;
+        margin-top: 5px;
+    }
+
+    /* Chart Cards */
+    .analytic-card {
+        background: var(--h-surface);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        padding: 1.8rem;
+        height: 100%;
+    }
+
+    .analytic-header {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--h-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .analytic-header i {
+        color: var(--h-accent);
+        background: #EFF6FF;
+        padding: 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+    }
+
+    /* Custom Table */
+    .custom-table-wrapper {
+        background: var(--h-surface);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+
+    .custom-table-header {
+        padding: 1.8rem;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .clean-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .clean-table th {
+        background: #F8FAFC;
+        color: var(--h-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        padding: 1.2rem;
+        letter-spacing: 0.5px;
+    }
+
+    .clean-table td {
+        padding: 1.2rem;
+        border-bottom: 1px solid #F1F5F9;
+        color: var(--h-text);
+        vertical-align: middle;
+    }
+
+    .clean-table tbody tr:hover {
+        background: #F8FAFC;
+    }
+
+    .custom-badge {
+        padding: 0.5rem 0.8rem;
+        border-radius: 0.4rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    .custom-badge-blue {
+        background: #E0F2FE;
+        color: #0284C7;
+    }
+
+    .custom-badge-gray {
+        background: #F1F5F9;
+        color: #475569;
+    }
+
+    /* Quick Actions */
+    .action-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.8rem 1.5rem;
+        border-radius: 0.8rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn:hover {
+        background: white;
+        color: var(--h-primary);
+    }
+
+    .action-btn.solid {
+        background: white;
+        color: var(--h-primary);
+        border: none;
+    }
+
+    .action-btn.solid:hover {
+        background: var(--h-light);
+        color: var(--h-primary);
     }
 </style>
+
+<!-- ================= BANNER ================= -->
+<div class="hospital-banner">
+    <div class="banner-text">
+        <h1 class="fw-bolder mb-2" style="font-size: 2rem;">لوحة الإدارة الطبية</h1>
+        <p class="mb-0 text-white-50 fs-6">نظرة شاملة ومباشرة على أداء ومؤشرات المركز الصحي الفعلي</p>
+    </div>
+    <div class="d-flex gap-3 relative z-index-2" style="z-index: 2;">
+        <a href="{% url 'centers:add_child' %}" class="action-btn solid shadow-sm">
+            <i class="fas fa-plus"></i> تسجيل طفل
+        </a>
+        <a href="{% url 'centers:registry' %}" class="action-btn">
+            <i class="fas fa-book-medical"></i> السجل
+        </a>
+    </div>
+</div>
+
+<!-- ================= KPIS ================= -->
+<div class="row g-4 mb-4">
+
+    <!-- Defaulters -->
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card" style="border-bottom: 4px solid var(--h-danger);">
+            <div class="kpi-icon-wrapper kpi-icon-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-grow-1 ms-3 text-end me-3">
+                <p class="kpi-label">تنبيه المتسربين</p>
+                <div class="kpi-value" id="count-defaulters">{{ defaulters_count }}</div>
+                <div class="kpi-subtext text-danger pt-1 fw-bold">أكثر من 3 أيام تأخير!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vaccinated Today -->
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card" style="border-bottom: 4px solid var(--h-primary);">
+            <div class="kpi-icon-wrapper kpi-icon-primary">
+                <i class="fas fa-syringe"></i>
+            </div>
+            <div class="flex-grow-1 ms-3 text-end me-3">
+                <p class="kpi-label">تطعيمات اليوم</p>
+                <div class="kpi-value" id="count-vaccinated-today">{{ vaccinated_today }}</div>
+                <div class="kpi-subtext" style="color: var(--h-primary); font-weight: bold;">أطفال تم تطعيمهم اليوم
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Children -->
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card" style="border-bottom: 4px solid var(--h-success);">
+            <div class="kpi-icon-wrapper kpi-icon-info">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="flex-grow-1 ms-3 text-end me-3">
+                <p class="kpi-label">إجمالي الأطفال</p>
+                <div class="kpi-value" id="count-total">{{ total_children }}</div>
+                <div class="kpi-subtext" style="color: var(--h-success); font-weight: bold;">
+                    +<span id="count-new-week">{{ new_registered_week }}</span> هذا الأسبوع
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Vaccination (The missing 4th card) -->
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card" style="border-bottom: 4px solid var(--h-warning);">
+            <div class="kpi-icon-wrapper kpi-icon-warning">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="flex-grow-1 ms-3 text-end me-3">
+                <p class="kpi-label">مكتملي التحصين</p>
+                <div class="kpi-value" id="count-completed">{{ completed_children }}</div>
+                <div class="kpi-subtext" style="color: var(--h-warning); font-weight: bold;">أنهوا جدولهم بالكامل</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= CHARTS ROW 1 ================= -->
+<div class="row g-4 mb-4">
+    <!-- Weekly Visits -->
+    <div class="col-lg-8">
+        <div class="analytic-card">
+            <div class="analytic-header">
+                <i class="fas fa-chart-line"></i>
+                معدلات الإقبال الفعلية (آخر 7 أيام)
+            </div>
+            <div style="height: 300px; width: 100%;">
+                <canvas id="weeklyVisitsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Reach -->
+    <div class="col-lg-4">
+        <div class="analytic-card">
+            <div class="analytic-header">
+                <i class="fas fa-map-marked-alt"></i>
+                التوزيع الجغرافي
+            </div>
+            <div
+                style="height: 250px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 1rem;">
+                <canvas id="communityReachChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= CHARTS ROW 2 ================= -->
+<div class="row g-4 mb-4">
+    <!-- Upcoming Workload -->
+    <div class="col-lg-12">
+        <div class="analytic-card">
+            <div class="analytic-header d-flex justify-content-between">
+                <div>
+                    <i class="fas fa-calendar-check text-primary bg-soft-primary"></i>
+                    مؤشر الضغط المتوقع (الأسبوع القادم)
+                </div>
+                <span class="badge bg-light text-muted border px-3 py-2">يعتمد على مواعيد الجرعات القادمة</span>
+            </div>
+            <div style="height: 300px; width: 100%;">
+                <canvas id="upcomingWorkloadChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= RECENT ACTIVITY ================= -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="custom-table-wrapper">
+            <div class="custom-table-header">
+                <h5 class="fw-bold m-0" style="color: var(--h-primary);">
+                    <i class="fas fa-history me-2" style="color: var(--h-accent);"></i> آخر السجلات المضافة
+                </h5>
+                <a href="{% url 'centers:registry' %}"
+                    class="btn btn-sm btn-light border fw-bold px-3 py-2 text-primary" style="border-radius: 0.5rem;">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="clean-table text-center">
+                    <thead>
+                        <tr>
+                            <th class="text-start pe-4 ps-4">بيانات الطفل</th>
+                            <th>اللقاح المعطى</th>
+                            <th>رقم الجرعة</th>
+                            <th>تاريخ الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in recent_records %}
+                        <tr>
+                            <td class="text-start pe-4 ps-4 fw-bold" style="color: var(--h-primary);">
+                                {{ record.child.full_name }}
+                            </td>
+                            <td>
+                                <span class="custom-badge custom-badge-blue">
+                                    {{ record.vaccine.name_ar }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="custom-badge custom-badge-gray">
+                                    الجرعة {{ record.dose_number }}
+                                </span>
+                            </td>
+                            <td class="text-muted fw-bold">
+                                {{ record.date_given|date:"Y/m/d" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-5 text-muted fw-bold text-center">لا توجد سجلات تطعيم حديثة حتى
+                                الآن.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // --------------------------------
+        // 1. Vanilla JS Number Animation (To avoid CDN errors)
+        // --------------------------------
+        function animateValue(id, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj || end === 0) {
+                if (obj) obj.innerHTML = end;
+                return;
+            }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * end);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        let dCount = parseInt("{{ defaulters_count|default:0 }}");
+        let vCount = parseInt("{{ vaccinated_today|default:0 }}");
+        let tCount = parseInt("{{ total_children|default:0 }}");
+        let cCount = parseInt("{{ completed_children|default:0 }}");
+        let nCount = parseInt("{{ new_registered_week|default:0 }}");
+
+        animateValue('count-defaulters', dCount, 1500);
+        animateValue('count-vaccinated-today', vCount, 1500);
+        animateValue('count-total', tCount, 1500);
+        animateValue('count-completed', cCount, 1500);
+        animateValue('count-new-week', nCount, 1500);
+
+        // --------------------------------
+        // 2. Chart Global Settings
+        // --------------------------------
+        Chart.defaults.font.family = "'Cairo', sans-serif";
+        Chart.defaults.color = "#64748B"; // slate-500
+
+        // Soft Color Palette to match CSS variables
+        const medColors = {
+            primary: "#3b82f6",
+            secondary: "#0ea5e9",
+            accent: "#6366f1",
+            light: "#818cf8",
+            cyan: "#0ea5e9",
+            teal: "#10b981",
+            warning: "#f59e0b",
+            danger: "#f43f5e"
+        };
+
+        // --------------------------------
+        // 3. Weekly Visits (Line Chart)
+        // --------------------------------
+        const ctxVisits = document.getElementById('weeklyVisitsChart').getContext('2d');
+        const gradVisits = ctxVisits.createLinearGradient(0, 0, 0, 300);
+        gradVisits.addColorStop(0, 'rgba(87, 108, 188, 0.4)'); // accent color with opacity
+        gradVisits.addColorStop(1, 'rgba(87, 108, 188, 0.0)');
+
+        new Chart(ctxVisits, {
+            type: 'line',
+            data: {
+                labels: JSON.parse('{{ weekly_visits_labels|escapejs }}'),
+                datasets: [{
+                    label: ' زيارة',
+                    data: JSON.parse('{{ weekly_visits_data|escapejs }}'),
+                    borderColor: medColors.accent,
+                    backgroundColor: gradVisits,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4, // ultra smooth curve
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: medColors.accent,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: medColors.primary, titleFont: { size: 14 }, padding: 12, cornerRadius: 8 }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
+                    x: { grid: { display: false, drawBorder: false } }
+                }
+            }
+        });
+
+        // --------------------------------
+        // 4. Community Reach (Doughnut)
+        // --------------------------------
+        new Chart(document.getElementById('communityReachChart'), {
+            type: 'doughnut',
+            data: {
+                labels: JSON.parse('{{ community_reach_labels|escapejs }}'),
+                datasets: [{
+                    data: JSON.parse('{{ community_reach_data|escapejs }}'),
+                    backgroundColor: [medColors.secondary, medColors.accent, medColors.light, medColors.cyan, medColors.teal],
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } },
+                    tooltip: { backgroundColor: medColors.primary, padding: 12, cornerRadius: 8 }
+                }
+            }
+        });
+
+        // --------------------------------
+        // 5. Upcoming Workload (Bar)
+        // --------------------------------
+        new Chart(document.getElementById('upcomingWorkloadChart'), {
+            type: 'bar',
+            data: {
+                labels: JSON.parse('{{ upcoming_workload_labels|escapejs }}'),
+                datasets: [{
+                    label: ' طفل متوقع',
+                    data: JSON.parse('{{ upcoming_workload_data|escapejs }}'),
+                    backgroundColor: function (context) {
+                        const value = context.raw;
+                        const workloadData = JSON.parse('{{ upcoming_workload_data|escapejs }}');
+                        const max = Math.max(...workloadData);
+                        if (max === 0) return medColors.cyan;
+
+                        const alpha = value / max;
+                        if (alpha > 0.8) return medColors.danger; // Heaviest workload
+                        if (alpha > 0.5) return medColors.warning;  // Medium workload
+                        return medColors.teal; // Low workload
+                    },
+                    borderRadius: 8,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: medColors.primary, titleFont: { size: 14 }, padding: 12, cornerRadius: 8 }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
+                    x: { grid: { display: false, drawBorder: false } }
+                }
+            }
+        });
+
+    });
+</script>
 
 {% endblock %}

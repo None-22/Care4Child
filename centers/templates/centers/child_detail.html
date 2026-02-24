@@ -9,7 +9,7 @@
             <span class="text-muted small">رقم الملف</span>
             <h3 class="fw-bold">{{ child.family.access_code }}</h3>
         </div>
-        <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary rounded-pill">
+        <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary rounded-pill btn-luxury">
             <i class="fas fa-arrow-left me-2"></i>عودة
         </a>
     </div>
@@ -19,7 +19,7 @@
 <div class="row g-4 mb-5">
     <!-- Main Info -->
     <div class="col-md-8">
-        <div class="card-shine p-4 h-100 position-relative overflow-hidden">
+        <div class="card-shine p-4 h-100 position-relative overflow-hidden animate-slide-up delay-1">
             <div class="position-absolute top-0 end-0 p-3 opacity-10">
                 <i class="fas fa-baby fa-8x text-primary" style="opacity: 0.1;"></i>
             </div>
@@ -54,7 +54,7 @@
     <!-- Status Card -->
     <div class="col-md-4">
         <div
-            class="card-shine p-4 h-100 bg-white text-center d-flex flex-column justify-content-center align-items-center">
+            class="card-luxury p-4 h-100 bg-white text-center d-flex flex-column justify-content-center align-items-center animate-slide-up delay-2">
             <div class="mb-3">
                 {% if child.is_completed %}
                 <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
@@ -78,7 +78,7 @@
         <div class="row g-4">
             {% for visit in visits %}
             <div class="col-md-6 col-lg-4">
-                <div class="card shadow-sm h-100 border-0">
+                <div class="card-luxury h-100 border-0 animate-slide-up delay-3">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h5 class="fw-bold text-primary border-start border-4 border-primary ps-2">
                             {{ visit.label }}

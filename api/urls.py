@@ -8,7 +8,8 @@ from .views import (
     GovernorateViewSet, DirectorateViewSet,
     HealthCenterViewSet, UserViewSet, FamilyViewSet,
     ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
-    UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView
+    UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView,
+    NotificationViewSet
 )
 
 # إنشاء Router
@@ -21,6 +22,7 @@ router.register(r'families', FamilyViewSet)
 router.register(r'children', ChildViewSet)
 router.register(r'vaccines', VaccineViewSet)
 router.register(r'vaccine-records', VaccineRecordViewSet)
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 app_name = 'api'
 

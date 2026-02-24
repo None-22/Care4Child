@@ -54,7 +54,7 @@ class HealthCenterAdmin(admin.ModelAdmin):
         if password:
             try:
                 # Use Center Name as Username (Spaces -> Underscores)
-                username = obj.name_ar.replace(" ", "_")
+                username = obj.name_ar.strip()
                 
                 user, created = User.objects.get_or_create(username=username)
                 

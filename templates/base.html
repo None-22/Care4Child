@@ -38,36 +38,38 @@
             </div>
             <div class="list-group list-group-flush my-3">
                 <a href="{% url 'centers:dashboard' %}"
-                    class="list-group-item list-group-item-action bg-transparent second-text {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    class="list-group-item list-group-item-action bg-transparent second-text hover-bounce {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-tachometer-alt"></i>
                     <span class="link-text ms-2">لوحة المعلومات</span>
                 </a>
 
                 <a href="{% url 'centers:registry' %}"
-                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold {% if request.resolver_match.url_name == 'registry' %}active{% endif %}">
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold hover-bounce {% if request.resolver_match.url_name == 'registry' %}active{% endif %}">
                     <i class="fas fa-book-medical"></i>
                     <span class="link-text ms-2">سجل التحصين</span>
                 </a>
 
-                <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                <a href="#"
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold hover-bounce">
                     <i class="fas fa-project-diagram"></i>
                     <span class="link-text ms-2">التقارير</span>
                 </a>
-                <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+                <a href="#"
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold hover-bounce">
                     <i class="fas fa-cog"></i>
                     <span class="link-text ms-2">الإعدادات</span>
                 </a>
                 <!-- Show 'Add Staff' only for Managers (Logic will be added) -->
                 {% if user.is_center_manager %}
                 <a href="{% url 'centers:staff_list' %}"
-                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold text-warning">
+                    class="list-group-item list-group-item-action bg-transparent second-text fw-bold text-warning hover-bounce">
                     <i class="fas fa-user-plus"></i>
                     <span class="link-text ms-2">إدارة الموظفين</span>
                 </a>
                 {% endif %}
 
                 <a href="{% url 'logout' %}"
-                    class="list-group-item list-group-item-action bg-transparent text-danger fw-bold mt-5">
+                    class="list-group-item list-group-item-action bg-transparent text-danger fw-bold mt-5 hover-bounce">
                     <i class="fas fa-power-off"></i>
                     <span class="link-text ms-2">تسجيل خروج</span>
                 </a>

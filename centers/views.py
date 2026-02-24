@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 from api.serializers import ChildCreateUpdateSerializer
 from users.models import CustomUser
+import json
 
 # ... (Previous views) ...
 
@@ -119,202 +120,103 @@ def dashboard_view(request):
     center = user.health_center
     today = timezone.now().date()
     
-    # --- 1. Today's Efficiency (The Gauge) ---
-    # Target: Scheduled appointments for THIS center today
-    today_target = ChildVaccineSchedule.objects.filter(
-        due_date=today, 
-         # Only count children belonging to this center (Catchment Area)
-        child__health_center=center
-    ).count()
-    
-    # Actual: Vaccinations done BY this center's staff today (Unified DB Logic)
-    # We count records created by staff generated from this center
-    today_actual = VaccineRecord.objects.filter(
-        date_given=today,
-        staff__health_center=center
-    ).count()
-    
-    efficiency_rate = int((today_actual / today_target * 100)) if today_target > 0 else 0
-
-    # --- 2. Dropout Rate Funnel (The Funnel) ---
-    # Metric: Compare total Dose 1 vs Dose 3 (Proxy for retention)
-    # We look at records in the last 12 months for better relevance
-    one_year_ago = today - timedelta(days=365)
-    
-    dose_1_count = VaccineRecord.objects.filter(
-        staff__health_center=center,
-        dose_number=1,
-        date_given__gte=one_year_ago
-    ).count()
-    
-    dose_3_count = VaccineRecord.objects.filter(
-        staff__health_center=center,
-        dose_number=3,
-        date_given__gte=one_year_ago
-    ).count()
-    
-    dropout_rate = 0
-    if dose_1_count > 0:
-        dropout_rate = round(((dose_1_count - dose_3_count) / dose_1_count * 100), 1)
-
-    # --- 3. Weekly Peak Activity (Resource Management) ---
-    # Aggregate by Day of Week (1=Sunday, 7=Saturday in Django usually, depends on DB)
-    from django.db.models.functions import ExtractWeekDay
-    from django.db.models import Count
-    
-    peak_data_qs = VaccineRecord.objects.filter(
-        staff__health_center=center,
-        date_given__gte=today - timedelta(days=30) # Last 30 days pattern
-    ).annotate(weekday=ExtractWeekDay('date_given')).values('weekday').annotate(count=Count('id')).order_by('weekday')
-    
-    # Map Django weekday (1=Sunday..7=Saturday) to our list [Sun, Mon, ..., Sat]
-    # Initialize 0 for all 7 days
-    weekly_activity = [0] * 7 
-    # Mappings might vary by DB, but typically 1=Sunday in Django
-    for item in peak_data_qs:
-        # Prevent index error if DB returns unexpected
-        idx = (item['weekday'] - 1) % 7
-        weekly_activity[idx] = item['count']
-        
-    weekly_labels = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
-
-    # --- 4. Age Distribution at Enrollment (Community Awareness) ---
-    # Metric: When are they registering? (Birth vs Late)
-    # We compare created_at with date_of_birth
-    from django.db.models import F, ExpressionWrapper, DurationField
-    
-    # Calculate difference
-    age_diff_qs = Child.objects.filter(health_center=center).annotate(
-        enrollment_delay=ExpressionWrapper(F('created_at') - F('date_of_birth'), output_field=DurationField())
-    )
-    
-    # Buckets
-    age_dist = {
-        'neonates': 0, # < 30 days (Ideal)
-        'infants': 0,  # 1 month - 1 year
-        'late': 0      # > 1 year
-    }
-    
-    for child in age_diff_qs:
-        days = child.enrollment_delay.days
-        if days <= 30:
-            age_dist['neonates'] += 1
-        elif days <= 365:
-            age_dist['infants'] += 1
-        else:
-            age_dist['late'] += 1
-            
-    age_labels = ['حديثي الولادة (< شهر)', 'رضّع (< سنة)', 'متأخرين (> سنة)']
-    age_data = [age_dist['neonates'], age_dist['infants'], age_dist['late']]
-
-    # --- 5. Vaccine Demand Forecasting (The Crystal Ball) ---
-    # Metric: Expected doses next month (for Inventory)
-    # We look at Month+1 from today
-    next_month_start = today + timedelta(days=30)
-    # Simple approx for next 30 days window
-    next_month_end = next_month_start + timedelta(days=30)
-    
-    forecast_qs = ChildVaccineSchedule.objects.filter(
+      # --- 1. Top KPIs (أرقام سريعة للمدير) ---
+    # 1.1 Defaulters (المتسربين): متأخرين أكثر من 3 أيام
+    from django.db.models import Count, F, ExpressionWrapper, DateField
+    from collections import defaultdict
+    three_days_ago = today - timedelta(days=3)
+    defaulters_count = ChildVaccineSchedule.objects.filter(
         child__health_center=center,
-        due_date__range=[next_month_start, next_month_end],
-        is_taken=False
-    ).values('vaccine_schedule__vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:5]
+        is_taken=False,
+        due_date__lte=three_days_ago
+    ).count()
+
+    # 1.2 Vaccinated Today (المطعمين اليوم)
+    vaccinated_today = VaccineRecord.objects.filter(
+        staff__health_center=center,
+        date_given=today
+    ).count()
+
+    # 1.3 New Registered This Week (أطفال جدد هذا الأسبوع)
+    seven_days_ago = today - timedelta(days=7)
+    new_registered_week = Child.objects.filter(
+        health_center=center,
+        created_at__date__gte=seven_days_ago
+    ).count()
+
+    # --- 2. Weekly Visits Chart (مؤشر الزيارات الأسبوعي - Line Chart) ---
+    # الزيارات الفعلية خلال آخر 7 أيام
+    weekly_visits_labels = []
+    weekly_visits_data = []
+    for i in range(6, -1, -1):
+        day_date = today - timedelta(days=i)
+        # Arabic day name
+        day_name = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"][day_date.weekday()]
+        weekly_visits_labels.append(day_name)
+        count = VaccineRecord.objects.filter(staff__health_center=center, date_given=day_date).count()
+        weekly_visits_data.append(count)
+
+    # --- 3. Upcoming Workload (مؤشر ضغط العمل المتوقع - Bar Chart) ---
+    # الجرعات المستحقة خلال الـ 7 أيام القادمة بناءً على المواعيد
+    upcoming_workload_labels = []
+    upcoming_workload_data = []
+    for i in range(1, 8): # من الغد حتى بعد أسبوع
+        day_date = today + timedelta(days=i)
+        day_name = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"][day_date.weekday()]
+        upcoming_workload_labels.append(day_name)
+        count = ChildVaccineSchedule.objects.filter(
+            child__health_center=center,
+            is_taken=False,
+            due_date=day_date
+        ).count()
+        upcoming_workload_data.append(count)
+
+    # --- 4. Community Reach (التقييم المجتمعي - Pie Chart/Table) ---
+    # توزيع الأطفال النشطين حسب مديرية الميلاد (أو مكان الميلاد)
+    community_reach_qs = Child.objects.filter(health_center=center).values(
+        'birth_directorate__name_ar'
+    ).annotate(count=Count('id')).order_by('-count')[:5]
     
-    forecast_labels = [item['vaccine_schedule__vaccine__name_ar'] for item in forecast_qs]
-    forecast_data = [item['count'] for item in forecast_qs]
+    community_reach_labels = []
+    community_reach_data = []
+    for item in community_reach_qs:
+        label = item['birth_directorate__name_ar'] if item['birth_directorate__name_ar'] else 'غير محدد'
+        community_reach_labels.append(label)
+        community_reach_data.append(item['count'])
 
-    # --- 6. Zero-Dose Children (The "Invisible" Children) ---
-    # Metric: Registered children who have received ZERO vaccines ever.
-    # Critical for WHO/UNICEF reporting.
-    zero_dose_count = Child.objects.filter(health_center=center, vaccine_records__isnull=True).count()
-
-    # --- 7. Recent Vaccination Activity (The "Live Feed") ---
-    # Replaced Staff Leaderboard with Actual child records as requested
+    # --- 5. Recent Vaccination Activity (The "Live Feed") ---
     recent_records = VaccineRecord.objects.filter(
         staff__health_center=center
     ).select_related('child', 'vaccine').order_by('-date_given', '-id')[:5]
 
-    # --- 8. Simplified Standard Stats ---
+    # --- 6. Simplified Standard Stats ---
     total_children = Child.objects.filter(health_center=center).count()
     completed_children = Child.objects.filter(health_center=center, is_completed=True).count()
     
-    # --- 9. DEMO MODE LOGIC (Enhanced) ---
-    should_run_demo = (total_children == 0) or request.GET.get('demo')
-    
-    if should_run_demo:
-        # Efficiency
-        today_target = 40; today_actual = 35; efficiency_rate = 87
-        # Dropout
-        dose_1_count = 1200; dose_3_count = 1080; dropout_rate = 10.0
-        # Peak
-        weekly_activity = [45, 60, 55, 40, 30, 10, 5] 
-        # Age Dist
-        age_data = [300, 100, 50]
-        # Forecast
-        forecast_labels = ['شكل الأطفال', 'الخماسي', 'السداسي', 'الروتا', 'الحصبة']
-        forecast_data = [150, 120, 110, 90, 85]
-        # Zero-Dose
-        zero_dose_count = 12
-        # Recent Records Mock
-        class MockObj:
-            def __init__(self, **kwargs): self.__dict__.update(kwargs)
-            
-        recent_records = [
-            MockObj(
-                child=MockObj(full_name="أحمد محمد علي"),
-                vaccine=MockObj(name_ar="الخماسي (1)"),
-                dose_number=1,
-                date_given=timezone.now().date()
-            ),
-             MockObj(
-                child=MockObj(full_name="سارة خالد"),
-                vaccine=MockObj(name_ar="شلل الأطفال"),
-                dose_number=2,
-                date_given=timezone.now().date()
-            ),
-             MockObj(
-                child=MockObj(full_name="يوسف عمر"),
-                vaccine=MockObj(name_ar="الحصبة"),
-                dose_number=1,
-                date_given=timezone.now().date() - timedelta(days=1)
-            ),
-        ]
-        
-        total_children = 450
-        completed_children = 120
+    # DEMO MODE LOGIC HAS BEEN COMPLETELY REMOVED
 
     context = {
-        'is_demo_mode': should_run_demo,
+        # 1. Top KPIs
+        'defaulters_count': defaulters_count,
+        'vaccinated_today': vaccinated_today,
+        'new_registered_week': new_registered_week,
         
-        # 1. Efficiency Gauge
-        'today_target': today_target,
-        'today_actual': today_actual,
-        'efficiency_rate': efficiency_rate,
+        # 2. Weekly Visits Chart (Line)
+        'weekly_visits_labels': json.dumps(list(weekly_visits_labels)),
+        'weekly_visits_data': json.dumps(list(weekly_visits_data)),
         
-        # 2. Dropout Funnel
-        'dose_1_count': dose_1_count,
-        'dose_3_count': dose_3_count,
-        'dropout_rate': dropout_rate,
+        # 3. Upcoming Workload (Bar)
+        'upcoming_workload_labels': json.dumps(list(upcoming_workload_labels)),
+        'upcoming_workload_data': json.dumps(list(upcoming_workload_data)),
         
-        # 3. Resource Mgmt (Heatmap)
-        'weekly_activity': weekly_activity,
-        'weekly_labels': weekly_labels,
+        # 4. Community Reach (Pie/Table)
+        'community_reach_labels': json.dumps(list(community_reach_labels)),
+        'community_reach_data': json.dumps(list(community_reach_data)),
         
-        # 4. Age Distribution (Pie)
-        'age_data': age_data,
-        'age_labels': age_labels,
-        
-        # 5. Demand Forecast (Area Chart)
-        'forecast_labels': forecast_labels,
-        'forecast_data': forecast_data,
-        
-        # 6. Zero-Dose
-        'zero_dose_count': zero_dose_count,
-        
-        # 7. Recent (Table)
+        # 5. Recent Activity
         'recent_records': recent_records,
         
-        # 8. Generals
+        # 6. Generals
         'total_children': total_children,
         'completed_children': completed_children,
     }

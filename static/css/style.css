@@ -1,39 +1,43 @@
 /* --- Care4Child: Medical Teal & Sidebar Fix --- */
 :root {
-    /* Brand Colors (Medical/Care Palette) */
-    --primary-color: #20c997;
-    /* Medical Teal (The user loved this) */
-    --primary-dark: #0f9d58;
-    --primary-light: #e6fffa;
+    /* Brand Colors (Medical/Care Palette - Blue Theme) */
+    --primary-color: #0d6efd;
+    /* Modern Medical Blue */
+    --primary-dark: #0b5ed7;
+    --primary-light: #e7f1ff;
 
-    --secondary-color: #34495e;
-    /* Navy Blue for Sidebar */
-    --accent-color: #ff9f43;
-    /* Warm Orange for accents */
+    --secondary-color: #0043a8;
+    /* Deep Blue for contrast */
+    --accent-color: #0dcaf0;
+    /* Cyan for accents */
 
-    --success-color: #28a745;
+    --success-color: #20c997;
+    /* Teal for success (healthy) */
     --warning-color: #ffc107;
     --danger-color: #dc3545;
 
     /* Text */
-    --text-dark: #2c3e50;
-    --text-muted: #6c757d;
+    --primary-text: #2b3452;
+    /* Deep blue-gray for main text */
+    --secondary-text: #6b7280;
+    /* Soft gray for secondary text */
 
     /* Backgrounds */
-    --bg-body: #f4f7f6;
-    /* Very soft mint/gray */
+    --bg-body: #f3f6fa;
+    /* Cool light gray-blue */
     --bg-card: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.85);
+    /* For glassmorphism */
 
     /* Gradients */
-    --grad-primary: linear-gradient(135deg, #20c997 0%, #0f9d58 100%);
-    --grad-success: linear-gradient(135deg, #28a745 0%, #218838 100%);
-    --grad-warning: linear-gradient(135deg, #ffc107 0%, #ff9f43 100%);
-    --grad-danger: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    --grad-primary: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    --grad-success: linear-gradient(135deg, #20c997 0%, #198754 100%);
+    --grad-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    --grad-danger: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%);
 
-    /* Shadows */
-    --shadow-soft: 0 5px 15px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 10px 25px rgba(32, 201, 151, 0.15);
-    /* Teal shadow */
+    /* Shadows (Premium SaaS feel) */
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 10px 15px -3px rgba(13, 110, 253, 0.15), 0 4px 6px -4px rgba(13, 110, 253, 0.1);
 }
 
 body {
@@ -270,4 +274,154 @@ body {
 .table-luxury td:last-child {
     border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
+}
+
+/* --- Premium SaaS Aesthetics (Graduation Project WOW Factor) --- */
+
+.card-luxury {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-luxury:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-shine {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    animation: shine 6s infinite;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+
+    20% {
+        left: 200%;
+    }
+
+    100% {
+        left: 200%;
+    }
+}
+
+.btn-luxury {
+    border-radius: 30px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+}
+
+.btn-luxury:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(13, 110, 253, 0.3);
+}
+
+/* 1. Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* 2. Page Load Animations (Slide Up & Fade) */
+.animate-slide-up {
+    animation: slideUpFade 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Staggering delays for cards */
+.delay-1 {
+    animation-delay: 0.1s;
+}
+
+.delay-2 {
+    animation-delay: 0.2s;
+}
+
+.delay-3 {
+    animation-delay: 0.3s;
+}
+
+.delay-4 {
+    animation-delay: 0.4s;
+}
+
+@keyframes slideUpFade {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 3. Micro-Animations for Icons */
+.hover-bounce:hover i {
+    animation: bounce 0.5s ease infinite alternate;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-4px);
+    }
+}
+
+/* Critical Alert Pulse (Zero Dose) */
+.pulse-danger {
+    animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(220, 53, 69, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
 }
