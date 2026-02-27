@@ -31,6 +31,8 @@ class VaccineSchedule(models.Model):
     stage = models.CharField(max_length=10, choices=STAGE_CHOICES, default='BASIC', verbose_name="المرحلة")
 
     def __str__(self):
+        if self.stage == 'SCHOOL':
+            return f"{self.vaccine.name_ar} - جرعة {self.dose_number} (سن دخول المدرسة)"
         return f"{self.vaccine.name_ar} - جرعة {self.dose_number} (شهر {self.age_in_months})"
 
 # --- الكيانات الجديدة (New Unified Logic) ---

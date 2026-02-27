@@ -27,10 +27,10 @@ class ChildAdmin(admin.ModelAdmin):
 class ChildVaccineScheduleAdmin(admin.ModelAdmin):
     list_display = ('child', 'vaccine_schedule', 'due_date', 'is_taken')
     list_filter = ('is_taken', 'due_date')
-    search_fields = ('child__first_name', 'child__family__access_code')
+    search_fields = ('child__full_name', 'child__family__access_code')
 
 @admin.register(VaccineRecord)
 class VaccineRecordAdmin(admin.ModelAdmin):
     list_display = ('child', 'vaccine', 'dose_number', 'date_given', 'staff')
     list_filter = ('vaccine', 'date_given')
-    search_fields = ('child__first_name', 'child__family__access_code')
+    search_fields = ('child__full_name', 'child__family__access_code')
