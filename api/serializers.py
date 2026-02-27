@@ -401,6 +401,10 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        # 0. Retrieve context from save() call
+        center = validated_data.pop('health_center', None)
+        created_by = validated_data.pop('created_by', None)
+
         # 1. استخراج البيانات الإضافية
         f_name = validated_data.pop('father_name')
         m_name = validated_data.pop('mother_name')
@@ -409,7 +413,6 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
         dir_text = validated_data.pop('directorate_text', None)
         
         # 2. منطق الموقع الهجين (Hybrid Location Logic)
-        # إذا تم إرسال نصوص يدوية، ندمجها في place_of_birth ونتجاهل الـ IDs
         if gov_text and dir_text:
             current_place = validated_data.get('place_of_birth', '')
             validated_data['place_of_birth'] = f"{gov_text} - {dir_text} - {current_place}"
@@ -422,11 +425,31 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
             mother_name=m_name
         )
 
-        # 4. نحفظ الطفل
-        child = Child.objects.create(family=family_obj, **validated_data)
-        
-        # ملاحظة: يتم إنشاء حساب المستخدم للعائلة تلقائياً عبر (Signals) في medical/signals.py
-        # بمجرد إنشاء العائلة، يتم إنشاء User بنفس الكود.
+        # 🎯 ربط حساب العائلة بالمركز الصحي (إذا كان الحساب قد أنشئ للتو عبر Signals)
+        # ننتظر قليلاً حتى ينتهي الـ signal من جلب الـ account
+        if family_obj.account and not family_obj.account.health_center:
+            family_obj.account.health_center = center
+            family_obj.account.save()
+
+        # 4. منع التكرار (Idempotency Check)
+        child_name = validated_data.get('full_name')
+        dob = validated_data.get('date_of_birth')
+        existing_child = Child.objects.filter(
+            family=family_obj,
+            full_name=child_name,
+            date_of_birth=dob
+        ).first()
+
+        if existing_child:
+            return existing_child
+
+        # 5. نحفظ الطفل ونربطه بمركز الموظف الحالي
+        child = Child.objects.create(
+            family=family_obj, 
+            health_center=center,
+            created_by=created_by,
+            **validated_data
+        )
         
         return child
 

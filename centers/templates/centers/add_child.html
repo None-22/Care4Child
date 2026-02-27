@@ -15,7 +15,7 @@
                 <p class="text-muted">يرجى تعبئة البيانات بدقة لإصدار الكرت الإلكتروني فوراً</p>
             </div>
 
-            <form method="POST">
+            <form method="POST" id="addChildForm">
                 {% csrf_token %}
 
                 <h5 class="text-primary mb-3 border-bottom pb-2">
@@ -176,7 +176,8 @@
                 </div>
 
                 <div class="border-top pt-4 mt-5">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow btn-luxury">
+                    <button type="submit" id="submitBtn"
+                        class="btn btn-primary btn-lg w-100 rounded-pill shadow btn-luxury">
                         <i class="fas fa-save me-2"></i>حفظ وإصدار الكرت
                     </button>
                 </div>
@@ -258,7 +259,12 @@
         });
 
         // 2. On Directorate Change -> No more Center Fetching needed for Text Field
-        // dirSelect.addEventListener('change', function () { ... });
+        // منع التكرار عند الضغط مرتين
+        document.getElementById('addChildForm').addEventListener('submit', function () {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ وإصدار الكرت...';
+        });
     });
 </script>
 </div>

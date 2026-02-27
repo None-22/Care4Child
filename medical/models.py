@@ -117,6 +117,12 @@ class Child(models.Model):
         return self.full_name
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['family', 'full_name', 'date_of_birth'],
+                name='unique_child_registration'
+            )
+        ]
         verbose_name = "طفل"
         verbose_name_plural = "الأطفال"
 

@@ -57,6 +57,7 @@ def create_family_user(sender, instance, created, **kwargs):
                 username=instance.access_code,
                 password=instance.access_code,
                 role='CUSTOMER',  # دور جديد للأهالي
+                
                 first_name=instance.father_name.split()[0], # الاسم الأول للأب
                 last_name="Family"
             )

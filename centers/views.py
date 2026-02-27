@@ -341,18 +341,23 @@ def add_child_view(request):
         serializer = ChildCreateUpdateSerializer(data=data)
         
         if serializer.is_valid():
-            # 4. الحفظ! (ونمرر له الموظف والمركز تلقائياً)
-            child = serializer.save(
-                created_by=request.user,
-                health_center=request.user.health_center
-            )
-            
-            # رسالة النجاح
-            fam = child.family
-            msg = f"تم تسجيل الطفل {child.full_name} بنجاح! ✅\nكود العائلة: {fam.access_code}"
-            messages.success(request, msg)
-            
-            return redirect('centers:dashboard')
+            try:
+                # 4. الحفظ! (ونمرر له الموظف والمركز تلقائياً)
+                child = serializer.save(
+                    created_by=request.user,
+                    health_center=request.user.health_center
+                )
+                
+                # رسالة النجاح
+                fam = child.family
+                msg = f"تم تسجيل الطفل {child.full_name} بنجاح! ✅\nكود العائلة: {fam.access_code}"
+                messages.success(request, msg)
+                
+                return redirect('centers:dashboard')
+            except Exception as e:
+                # في حال حدث خطأ تكرار (Constraint) أو غيره
+                messages.error(request, "لم نتمكن من حفظ السجل. قد يكون هذا الطفل مسجلاً مسبقاً بنفس الاسم وتاريخ الميلاد.")
+                return render(request, 'centers/add_child.html', {'governorates': Governorate.objects.all()})
         else:
             # لو في أخطاء، نرجعها للمستخدم
             for field, errors in serializer.errors.items():
