@@ -56,9 +56,6 @@ INSTALLED_APPS = [
     'medical.apps.MedicalConfig',
     'api',
     'notifications.apps.NotificationsConfig', # إدارة الإشعارات
-
-    'django_extensions', 
-
 ]
 
 MIDDLEWARE = [
@@ -104,7 +101,7 @@ STATICFILES_DIRS = [
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:1234@localhost:5432/care4child_db',
+        default='postgresql://postgres:Sarovic1922@localhost:5432/care4child_db',
         conn_max_age=600
     )
 }
