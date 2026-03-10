@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'medical.apps.MedicalConfig',
     'api',
     'notifications.apps.NotificationsConfig', # إدارة الإشعارات
+    'ministry.apps.MinistryConfig',           # وزارة الصحة
 ]
 
 MIDDLEWARE = [

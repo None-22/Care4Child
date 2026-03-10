@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('chaining/', include('smart_selects.urls')),
-    path('center/', include('centers.urls')),  # Center Dashboard
+    path('center/', include('centers.urls')),    # Center Dashboard
+    path('ministry/', include('ministry.urls')), # Ministry of Health Dashboard
     path('', RedirectView.as_view(pattern_name='login', permanent=False)), # Redirect root to login
 ]

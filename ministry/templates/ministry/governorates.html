@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}المحافظات والمديريات | وزارة الصحة{% endblock %}
+{% block page_title %}إدارة المحافظات والمديريات{% endblock %}
+
+{% block content %}
+
+<div class="ministry-banner mb-4">
+    <h2><i class="fas fa-map-marked-alt me-2"></i>المحافظات والمديريات</h2>
+    <p>إدارة التقسيمات الجغرافية والإدارية </p>
+</div>
+
+<div class="row g-4">
+
+    <!-- Governorates Column -->
+    <div class="col-lg-6">
+        <div class="ministry-card h-100">
+            <div class="ministry-card-header">
+                <h3><i class="fas fa-map text-primary"></i> المحافظات</h3>
+                <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal"
+                    data-bs-target="#addGovModal">
+                    <i class="fas fa-plus me-1"></i> إضافة
+                </button>
+            </div>
+            <div id="gov-container" class="ministry-card-body p-0">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-primary spinner-border-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Directorates Column -->
+    <div class="col-lg-6">
+        <div class="ministry-card h-100">
+            <div class="ministry-card-header">
+                <h3><i class="fas fa-city text-success"></i> المديريات</h3>
+                <button class="btn btn-success btn-sm rounded-pill" data-bs-toggle="modal"
+                    data-bs-target="#addDirModal">
+                    <i class="fas fa-plus me-1"></i> إضافة
+                </button>
+            </div>
+            <div id="dir-container" class="ministry-card-body p-0">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-success spinner-border-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Governorate Modal -->
+<div class="modal fade" id="addGovModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header"
+                style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-map me-2"></i>إضافة محافظة جديدة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="gov-error" class="alert alert-danger d-none"></div>
+                <div id="gov-success" class="alert alert-success d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
+                    <input type="text" id="g-name-ar" class="form-control" placeholder="مثال: صنعاء">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (English)</label>
+                    <input type="text" id="g-name-en" class="form-control" placeholder="e.g. Sanaa">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الكود <span class="text-danger">*</span></label>
+                    <input type="text" id="g-code" class="form-control" placeholder="مثال: 02">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-primary rounded-pill px-4" onclick="addGovernorate()">
+                    <i class="fas fa-save me-2"></i>حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Directorate Modal -->
+<div class="modal fade" id="addDirModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header" style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-city me-2"></i>إضافة مديرية جديدة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="dir-error" class="alert alert-danger d-none"></div>
+                <div id="dir-success" class="alert alert-success d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
+                    <input type="text" id="d-name-ar" class="form-control" placeholder="مثال: بني مطر">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (English)</label>
+                    <input type="text" id="d-name-en" class="form-control" placeholder="e.g. Bani Matar">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الكود <span class="text-danger">*</span></label>
+                    <input type="text" id="d-code" class="form-control" placeholder="مثال: 07">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">المحافظة التابعة لها <span class="text-danger">*</span></label>
+                    <select id="d-gov" class="form-select">
+                        <option value="">-- اختر المحافظة --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-success rounded-pill px-4" onclick="addDirectorate()">
+                    <i class="fas fa-save me-2"></i>حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let govData = [], dirData = [];
+
+    async function loadAll() {
+        try {
+            [govData, dirData] = await Promise.all([
+                apiFetch('/api/governorates/'),
+                apiFetch('/api/directorates/')
+            ]);
+            renderGovs(); renderDirs();
+            // Populate directorate modal select
+            const sel = document.getElementById('d-gov');
+            govData.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id; opt.textContent = g.name_ar;
+                sel.appendChild(opt);
+            });
+        } catch (e) {
+            document.getElementById('gov-container').innerHTML = '<div class="alert alert-danger m-3">فشل التحميل</div>';
+            document.getElementById('dir-container').innerHTML = '<div class="alert alert-danger m-3">فشل التحميل</div>';
+        }
+    }
+
+    function renderGovs() {
+        const el = document.getElementById('gov-container');
+        if (!govData.length) { el.innerHTML = '<p class="text-center text-muted py-4">لا توجد محافظات.</p>'; return; }
+        el.innerHTML = `<table class="ministry-table">
+        <thead><tr><th>#</th><th>الاسم</th><th>الكود</th><th>المديريات</th></tr></thead>
+        <tbody>${govData.map((g, i) => {
+            const count = dirData.filter(d => d.governorate === g.id).length;
+            return `<tr>
+                <td class="text-muted">${i + 1}</td>
+                <td class="fw-bold">${g.name_ar || '—'}${g.name_en ? `<div class='text-muted small'>${g.name_en}</div>` : ''}</td>
+                <td><span class="badge bg-secondary-subtle text-dark font-monospace">${g.code || '—'}</span></td>
+                <td><span class="badge bg-primary-subtle text-primary">${count} مديريات</span></td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
+    }
+
+    function renderDirs() {
+        const el = document.getElementById('dir-container');
+        if (!dirData.length) { el.innerHTML = '<p class="text-center text-muted py-4">لا توجد مديريات.</p>'; return; }
+        el.innerHTML = `<table class="ministry-table">
+        <thead><tr><th>#</th><th>المديرية</th><th>الكود</th><th>المحافظة</th></tr></thead>
+        <tbody>${dirData.map((d, i) => {
+            const gov = govData.find(g => g.id === d.governorate);
+            return `<tr>
+                <td class="text-muted">${i + 1}</td>
+                <td class="fw-bold">${d.name_ar || '—'}${d.name_en ? `<div class='text-muted small'>${d.name_en}</div>` : ''}</td>
+                <td><span class="badge bg-secondary-subtle text-dark font-monospace">${d.code || '—'}</span></td>
+                <td class="text-muted">${gov ? gov.name_ar : '—'}</td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
+    }
+
+    async function addGovernorate() {
+        const errEl = document.getElementById('gov-error'), sucEl = document.getElementById('gov-success');
+        errEl.classList.add('d-none'); sucEl.classList.add('d-none');
+        const payload = {
+            name_ar: document.getElementById('g-name-ar').value.trim(),
+            name_en: document.getElementById('g-name-en').value.trim() || undefined,
+            code: document.getElementById('g-code').value.trim(),
+        };
+        if (!payload.name_ar || !payload.code) { errEl.textContent = 'يرجى ملء الاسم العربي والكود.'; errEl.classList.remove('d-none'); return; }
+        try {
+            await apiFetch('/api/governorates/', { method: 'POST', body: JSON.stringify(payload) });
+            sucEl.textContent = `تم إضافة محافظة "${payload.name_ar}" ✅`; sucEl.classList.remove('d-none');
+            govData = await apiFetch('/api/governorates/');
+            renderGovs();
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addGovModal')).hide(), 1200);
+        } catch (e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+    }
+
+    async function addDirectorate() {
+        const errEl = document.getElementById('dir-error'), sucEl = document.getElementById('dir-success');
+        errEl.classList.add('d-none'); sucEl.classList.add('d-none');
+        const payload = {
+            name_ar: document.getElementById('d-name-ar').value.trim(),
+            name_en: document.getElementById('d-name-en').value.trim() || undefined,
+            code: document.getElementById('d-code').value.trim(),
+            governorate: parseInt(document.getElementById('d-gov').value),
+        };
+        if (!payload.name_ar || !payload.code || !payload.governorate) {
+            errEl.textContent = 'يرجى ملء جميع الحقول الإلزامية.'; errEl.classList.remove('d-none'); return;
+        }
+        try {
+            await apiFetch('/api/directorates/', { method: 'POST', body: JSON.stringify(payload) });
+            sucEl.textContent = `تم إضافة مديرية "${payload.name_ar}" ✅`; sucEl.classList.remove('d-none');
+            dirData = await apiFetch('/api/directorates/');
+            renderDirs();
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addDirModal')).hide(), 1200);
+        } catch (e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAll);
+</script>
+{% endblock %}

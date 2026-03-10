@@ -1,194 +1,153 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block page_title %}تسجيل طفل جديد{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card-luxury p-5 animate-slide-up delay-1">
-            <div class="text-center mb-5">
-                <div class="bg-primary text-white rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
-                    style="width: 70px; height: 70px;">
-                    <i class="fas fa-baby-carriage fa-2x"></i>
-                </div>
-                <h3 class="fw-bold">بيانات الطفل الجديد</h3>
-                <p class="text-muted">يرجى تعبئة البيانات بدقة لإصدار الكرت الإلكتروني فوراً</p>
-            </div>
+<div class="row justify-content-center fade-in-up">
+    <div class="col-md-9 col-lg-8">
 
+        <div class="text-center mb-4">
+            <h2 class="fw-bolder text-indigo-900 mb-2">تسجيل ملف طبي جديد</h2>
+            <p class="text-muted">يرجى تعبئة البيانات بدقة لإصدار الكرت الإلكتروني للطفل فوراً</p>
+        </div>
+
+        <div class="saas-card p-4 p-md-5">
             <form method="POST" id="addChildForm">
                 {% csrf_token %}
 
-                <h5 class="text-primary mb-3 border-bottom pb-2">
-                    <i class="fas fa-id-card me-2"></i>البيانات الأساسية
-                </h5>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-12">
-                        <div class="form-floating">
-                            <input type="text" name="child_name" class="form-control" id="floatingChildName"
-                                placeholder="الاسم الرباعي" required>
-                            <label for="floatingChildName">اسم الطفل (الرباعي)</label>
-                        </div>
+                <!-- Basic Info Section -->
+                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                    <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center me-3"
+                        style="width: 40px; height: 40px;">
+                        <i class="fas fa-id-card text-primary fs-5"></i>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="dob" class="form-control flatpickr-date" id="floatingDob"
-                                placeholder="تاريخ الميلاد" required>
-                            <label for="floatingDob">تاريخ الميلاد</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <select name="gender" class="form-select" id="floatingGender">
-                                <option value="M">ذكر</option>
-                                <option value="F">أنثى</option>
-                            </select>
-                            <label for="floatingGender">الجنس</label>
-                        </div>
-                    </div>
+                    <h5 class="text-indigo-900 fw-bold m-0">البيانات الأساسية للطفل</h5>
                 </div>
 
-                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
-                    <i class="fas fa-map-marker-alt me-2"></i>بيانات مكان الميلاد
-                </h5>
-
-                <!-- خيار التبديل -->
-                <div class="row mb-2">
+                <div class="row g-4 mb-5">
                     <div class="col-12">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="manualLocationSwitch">
-                            <label class="form-check-label fw-bold" for="manualLocationSwitch">
-                                إدخال المحافظة والمديرية يدوياً (خارج القائمة / خارج اليمن)
-                            </label>
+                        <label class="form-label fw-bold text-muted small">الاسم الكامل المطابق للهوية</label>
+                        <input type="text" name="child_name" class="form-control form-control-lg bg-light"
+                            id="floatingChildName" placeholder="الاسم الرباعي للطفل" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small">تاريخ الميلاد الدقيق</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="fas fa-calendar-alt text-muted"></i></span>
+                            <input type="text" name="dob"
+                                class="form-control form-control-lg bg-light border-start-0 flatpickr-date"
+                                id="floatingDob" placeholder="تاريخ الميلاد" required style="padding-right:0;">
                         </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small">الجنس</label>
+                        <select name="gender" class="form-select form-select-lg bg-light" id="floatingGender">
+                            <option value="M">ذكر</option>
+                            <option value="F">أنثى</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <!-- 1. المحافظة -->
+                <!-- Location Section -->
+                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                    <div class="bg-teal-soft rounded-circle d-flex align-items-center justify-content-center me-3"
+                        style="width: 40px; height: 40px;">
+                        <i class="fas fa-map-marker-alt text-teal-600 fs-5"></i>
+                    </div>
+                    <h5 class="text-indigo-900 fw-bold m-0">مكان وتفاصيل الميلاد</h5>
+                </div>
+
+                <!-- Manual/Dropdown toggle -->
+                <div class="bg-light rounded-md p-3 mb-4 border">
+                    <div class="form-check form-switch m-0 d-flex align-items-center">
+                        <input class="form-check-input ms-0 me-3 mt-0" type="checkbox" id="manualLocationSwitch"
+                            style="transform: scale(1.2);">
+                        <label class="form-check-label fw-bold text-indigo-900 cursor-pointer"
+                            for="manualLocationSwitch">
+                            إدخال المحافظة والمديرية يدوياً (خارج نطاق المنظومة / خارج اليمن)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <!-- 1. Governorate -->
                     <div class="col-md-4">
-                        <!-- Dropdown -->
-                        <div class="form-floating" id="govSelectContainer">
-                            <select name="governorate_select" class="form-select" id="govSelect">
-                                <option value="" selected disabled>اختر المحافظة</option>
-                                {% for gov in governorates %}
-                                <option value="{{ gov.id }}">{{ gov.name_ar }}</option>
-                                {% endfor %}
+                        <label class="form-label fw-bold text-muted small">المحافظة</label>
+                        <div id="govSelectContainer">
+                            <select name="governorate_select" class="form-select bg-light" id="govSelect">
+                                <option value="" selected disabled>جاري التحميل...</option>
                             </select>
-                            <label for="govSelect">المحافظة</label>
                         </div>
-                        <!-- Manual Text (Hidden by default) -->
-                        <div class="form-floating d-none" id="govTextContainer">
-                            <input type="text" name="governorate_text" class="form-control" id="govInput"
-                                placeholder="اسم المحافظة">
-                            <label for="govInput">اسم المحافظة (كتابة)</label>
+                        <div class="d-none" id="govTextContainer">
+                            <input type="text" name="governorate_text" class="form-control bg-light" id="govInput"
+                                placeholder="اكتب اسم المحافظة">
                         </div>
                     </div>
 
-                    <!-- 2. المديرية -->
+                    <!-- 2. Directorate -->
                     <div class="col-md-4">
-                        <!-- Dropdown -->
-                        <div class="form-floating" id="dirSelectContainer">
-                            <select name="directorate_select" class="form-select" id="dirSelect" disabled>
+                        <label class="form-label fw-bold text-muted small">المديرية</label>
+                        <div id="dirSelectContainer">
+                            <select name="directorate_select" class="form-select bg-light" id="dirSelect" disabled>
                                 <option value="" selected disabled>اختر المديرية</option>
                             </select>
-                            <label for="dirSelect">المديرية</label>
                         </div>
-                        <!-- Manual Text (Hidden by default) -->
-                        <div class="form-floating d-none" id="dirTextContainer">
-                            <input type="text" name="directorate_text" class="form-control" id="dirInput"
-                                placeholder="اسم المديرية">
-                            <label for="dirInput">اسم المديرية (كتابة)</label>
+                        <div class="d-none" id="dirTextContainer">
+                            <input type="text" name="directorate_text" class="form-control bg-light" id="dirInput"
+                                placeholder="اكتب اسم المديرية">
                         </div>
                     </div>
 
-                    <!-- 3. المكان المحدد (قرية/منزل) -->
+                    <!-- 3. Place of birth -->
                     <div class="col-md-4">
-                        <div class="form-floating">
-                            <input type="text" name="place_of_birth" class="form-control" id="placeOfBirth"
-                                placeholder="مكان الميلاد " required>
-                            <label for="placeOfBirth">مكان الميلاد (قرية / منزل / مرفق)</label>
-                        </div>
+                        <label class="form-label fw-bold text-muted small">مكان الميلاد (قرية / منزل / مرفق)</label>
+                        <input type="text" name="place_of_birth" class="form-control bg-light" id="placeOfBirth"
+                            placeholder="التفاصيل" required>
                     </div>
                 </div>
 
-                <script>
-                    document.getElementById('manualLocationSwitch').addEventListener('change', function () {
-                        const isManual = this.checked;
+                <!-- Family Section -->
+                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                    <div class="bg-warning-soft rounded-circle d-flex align-items-center justify-content-center me-3"
+                        style="width: 40px; height: 40px;">
+                        <i class="fas fa-users text-warning fs-5"></i>
+                    </div>
+                    <h5 class="text-indigo-900 fw-bold m-0">صِلة القرابة والعائلة</h5>
+                </div>
 
-                        // Containers
-                        const govSelCont = document.getElementById('govSelectContainer');
-                        const govTxtCont = document.getElementById('govTextContainer');
-                        const dirSelCont = document.getElementById('dirSelectContainer');
-                        const dirTxtCont = document.getElementById('dirTextContainer');
-
-                        // Inputs
-                        const govSelect = document.getElementById('govSelect');
-                        const dirSelect = document.getElementById('dirSelect');
-                        const govInput = document.getElementById('govInput');
-                        const dirInput = document.getElementById('dirInput');
-
-                        if (isManual) {
-                            // Show Text, Hide Select
-                            govSelCont.classList.add('d-none');
-                            dirSelCont.classList.add('d-none');
-                            govTxtCont.classList.remove('d-none');
-                            dirTxtCont.classList.remove('d-none');
-
-                            // Require/Enable logic
-                            govSelect.disabled = true;
-                            dirSelect.disabled = true;
-                            govInput.required = true;
-                            dirInput.required = true;
-                        } else {
-                            // Show Select, Hide Text
-                            govSelCont.classList.remove('d-none');
-                            dirSelCont.classList.remove('d-none');
-                            govTxtCont.classList.add('d-none');
-                            dirTxtCont.classList.add('d-none');
-
-                            // Require/Enable logic
-                            govSelect.disabled = false;
-                            // Dir select remains disabled until gov chosen logic handles it
-                            govInput.required = false;
-                            dirInput.required = false;
-                        }
-                    });
-                </script>
-
-                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
-                    <i class="fas fa-users me-2"></i>بيانات العائلة
-                </h5>
-                <div class="row g-3">
+                <div class="row g-4 mb-5">
                     <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="father_name" class="form-control" id="floatingFather"
-                                placeholder="اسم الأب" required>
-                            <label for="floatingFather">اسم الأب (الرباعي)</label>
-                        </div>
+                        <label class="form-label fw-bold text-muted small">اسم الأب (الرباعي)</label>
+                        <input type="text" name="father_name" class="form-control form-control-lg bg-light"
+                            id="floatingFather" placeholder="اسم الأب الكامل" required>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="mother_name" class="form-control" id="floatingMother"
-                                placeholder="اسم الأم" required>
-                            <label for="floatingMother">اسم الأم (الرباعي)</label>
-                        </div>
+                        <label class="form-label fw-bold text-muted small">اسم الأم (الرباعي)</label>
+                        <input type="text" name="mother_name" class="form-control form-control-lg bg-light"
+                            id="floatingMother" placeholder="اسم الأم الكامل" required>
                     </div>
                 </div>
 
-                <div class="border-top pt-4 mt-5">
+                <div class="pt-2">
                     <button type="submit" id="submitBtn"
-                        class="btn btn-primary btn-lg w-100 rounded-pill shadow btn-luxury">
-                        <i class="fas fa-save me-2"></i>حفظ وإصدار الكرت
+                        class="btn btn-primary-action w-100 justify-content-center py-3 fs-5">
+                        <i class="fas fa-save"></i> حفظ وإصدار الكرت الإلكتروني
                     </button>
+                    <p class="text-center text-muted small mt-3 m-0"><i class="fas fa-shield-alt text-success me-1"></i>
+                        جميع البيانات محفوظة بسرية وتخضع لسياسات الخصوصية الطبية</p>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<script src="{% static 'js/api.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Date Picker
+    document.addEventListener('DOMContentLoaded', async function () {
+
+        // ---- Date Picker ----
         flatpickr(".flatpickr-date", {
             locale: "ar",
             dateFormat: "Y-m-d",
@@ -197,77 +156,75 @@
             defaultDate: "today"
         });
 
-        // Dependent Dropdowns Logic
         const govSelect = document.getElementById('govSelect');
         const dirSelect = document.getElementById('dirSelect');
 
-        // 1. On Governorate Change -> Fetch Directorates
-        govSelect.addEventListener('change', function () {
+        // ---- Load Governorates from API ----
+        try {
+            const govData = await apiFetch('/api/governorates/');
+            const govs = Array.isArray(govData) ? govData : (govData.results || []);
+            govSelect.innerHTML = '<option value="" selected disabled>اختر المحافظة</option>';
+            govs.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name_ar;
+                govSelect.appendChild(opt);
+            });
+        } catch (e) {
+            govSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
+            console.error('Failed to load governorates:', e);
+        }
+
+        // ---- On Governorate Change -> Load Directorates ----
+        govSelect.addEventListener('change', async function () {
             const govId = this.value;
-
-            // Reset Directorate
-            dirSelect.innerHTML = '<option value="" selected disabled>جاري جلب البيانات...</option>';
+            dirSelect.innerHTML = '<option value="" selected disabled>جاري جلب المديريات...</option>';
             dirSelect.disabled = true;
+            if (!govId) return;
 
-            if (govId) {
-                const url = `{% url 'centers:api_locations' %}?type=directorate&parent_id=${govId}`;
-                console.log("XHR Request to:", url);
-
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-
-                xhr.onreadystatechange = function () {
-                    console.log("XHR State:", xhr.readyState, "Status:", xhr.status);
-                    if (xhr.readyState === 4) { // Done
-                        if (xhr.status === 200) {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                console.log("Data received:", data);
-                                dirSelect.innerHTML = '<option value="" selected disabled>اختر المديرية</option>';
-
-                                if (data.data && data.data.length > 0) {
-                                    data.data.forEach(function (item) {
-                                        var option = document.createElement('option');
-                                        option.value = item.id;
-                                        option.textContent = item.name_ar;
-                                        dirSelect.appendChild(option);
-                                    });
-                                    dirSelect.disabled = false;
-                                } else {
-                                    dirSelect.innerHTML = '<option value="" selected disabled>لا توجد مديريات مسجلة</option>';
-                                }
-                            } catch (e) {
-                                console.error("JSON Parse Error:", e);
-                                alert("خطأ في معالجة البيانات: " + e.message);
-                            }
-                        } else {
-                            console.error("Server Error:", xhr.statusText);
-                            alert("خطأ من السيرفر: " + xhr.status + " " + xhr.statusText);
-                            dirSelect.innerHTML = '<option value="" selected disabled>فشل التحميل (' + xhr.status + ')</option>';
-                        }
-                    }
-                };
-
-                xhr.onerror = function () {
-                    console.error("Network Error");
-                    alert("خطأ في الاتصال بالشبكة. تأكد لم يتم حظر الرابط.");
-                    dirSelect.innerHTML = '<option value="" selected disabled>خطأ في الشبكة</option>';
-                };
-
-                xhr.send();
+            try {
+                const dirData = await apiFetch(`/api/directorates/?governorate=${govId}`);
+                const dirs = Array.isArray(dirData) ? dirData : (dirData.results || []);
+                dirSelect.innerHTML = '<option value="" selected disabled>اختر المديرية</option>';
+                if (dirs.length > 0) {
+                    dirs.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name_ar;
+                        dirSelect.appendChild(opt);
+                    });
+                    dirSelect.disabled = false;
+                } else {
+                    dirSelect.innerHTML = '<option value="" selected disabled>لا توجد مديريات مسجلة</option>';
+                }
+            } catch (e) {
+                dirSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
+                console.error('Failed to load directorates:', e);
             }
         });
 
-        // 2. On Directorate Change -> No more Center Fetching needed for Text Field
-        // منع التكرار عند الضغط مرتين
+        // ---- Manual location toggle ----
+        document.getElementById('manualLocationSwitch').addEventListener('change', function () {
+            const isManual = this.checked;
+            document.getElementById('govSelectContainer').classList.toggle('d-none', isManual);
+            document.getElementById('govTextContainer').classList.toggle('d-none', !isManual);
+            document.getElementById('dirSelectContainer').classList.toggle('d-none', isManual);
+            document.getElementById('dirTextContainer').classList.toggle('d-none', !isManual);
+
+            govSelect.disabled = isManual;
+            dirSelect.disabled = isManual;
+            document.getElementById('govInput').required = isManual;
+            document.getElementById('dirInput').required = isManual;
+        });
+
+        // ---- Prevent double-submit ----
         document.getElementById('addChildForm').addEventListener('submit', function () {
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ وإصدار الكرت...';
         });
+
     });
 </script>
-</div>
-</div>
-</div>
+
 {% endblock %}

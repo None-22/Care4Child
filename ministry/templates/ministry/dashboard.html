@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة المعلومات الوطنية | وزارة الصحة{% endblock %}
+{% block page_title %}لوحة المعلومات الوطنية{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<!-- Banner -->
+<div class="ministry-banner mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+        <div>
+            <h2><i class="fas fa-chart-pie me-2"></i>لوحة المعلومات </h2>
+            <p>نظرة إجمالية على أداء منظومة التطعيم</p>
+        </div>
+        <div class="mt-3 mt-md-0 text-white-50 small">
+            <i class="fas fa-clock me-1"></i> آخر تحديث: <span id="last-update">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="ministry-kpi">
+            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-baby"></i></div>
+            <div>
+                <p class="kpi-label">إجمالي الأطفال</p>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="small text-muted mt-1">على المستوى الوطني</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ministry-kpi" style="border-right-color: var(--ministry-accent);">
+            <div class="kpi-icon kpi-ministry-green"><i class="fas fa-check-circle"></i></div>
+            <div>
+                <p class="kpi-label">مكتملو التحصين</p>
+                <div class="kpi-value" id="kpi-completed">—</div>
+                <div class="small text-muted mt-1">استكملوا جميع اللقاحات</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ministry-kpi" style="border-right-color: var(--ministry-warning);">
+            <div class="kpi-icon kpi-ministry-orange"><i class="fas fa-percent"></i></div>
+            <div>
+                <p class="kpi-label">نسبة التغطية</p>
+                <div class="kpi-value" id="kpi-rate">—%</div>
+                <div class="small text-muted mt-1">متوسط وطني</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ministry-kpi" style="border-right-color: var(--ministry-danger);">
+            <div class="kpi-icon kpi-ministry-red"><i class="fas fa-hospital"></i></div>
+            <div>
+                <p class="kpi-label">المراكز الصحية</p>
+                <div class="kpi-value" id="kpi-centers">—</div>
+                <div class="small text-muted mt-1">مراكز نشطة</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts + Appointments -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="ministry-card h-100">
+            <div class="ministry-card-header">
+                <h3><i class="fas fa-chart-line text-primary"></i> معدلات التطعيم (آخر 7 أيام)</h3>
+            </div>
+            <div class="ministry-card-body">
+                <div style="height: 300px;"><canvas id="trendChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="ministry-card h-100">
+            <div class="ministry-card-header">
+                <h3><i class="fas fa-calendar-check text-warning"></i> المواعيد القادمة</h3>
+            </div>
+            <div id="upcoming-container" style="padding:0; max-height: 340px; overflow-y:auto;">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-primary spinner-border-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Centers Coverage Table -->
+<div class="ministry-card mb-4">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-table text-success"></i> نسب التغطية بالمراكز</h3>
+        <a href="{% url 'ministry:reports' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="fas fa-external-link-alt me-1"></i> التقرير الكامل
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="ministry-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>المركز الصحي</th>
+                    <th>الموقع</th>
+                    <th>الأطفال</th>
+                    <th>مكتملون</th>
+                    <th>نسبة التغطية</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="centers-table-body">
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary"></div> جاري التحميل...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="ministry-card">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-history text-secondary"></i> آخر سجلات التطعيم</h3>
+    </div>
+    <div id="activity-container" class="table-responsive">
+        <div class="d-flex justify-content-center py-4">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+
+        function animateValue(id, end, suffix = '') {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (end === 0) { el.textContent = '0' + suffix; return; }
+            let start = 0, duration = 1200, startTs = null;
+            const step = ts => {
+                if (!startTs) startTs = ts;
+                const p = Math.min((ts - startTs) / duration, 1);
+                el.textContent = Math.floor(p * end) + suffix;
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        let data;
+        try {
+            data = await apiFetch('/api/dashboard/stats/');
+        } catch (e) {
+            console.error('Ministry dashboard failed:', e);
+            document.getElementById('centers-table-body').innerHTML =
+                '<tr><td colspan="7" class="text-center text-danger py-4"><i class="fas fa-exclamation-circle me-2"></i>فشل تحميل البيانات</td></tr>';
+            return;
+        }
+
+        // KPIs
+        const kpis = data.kpis || {};
+        animateValue('kpi-total', kpis.total_children || 0);
+        animateValue('kpi-completed', kpis.completed_children || 0);
+        animateValue('kpi-rate', kpis.completion_rate || 0, '%');
+        const centers = data.centers_report || [];
+        animateValue('kpi-centers', centers.length);
+
+        // Last update
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('ar-SA');
+
+        // Trend Chart
+        const chartData = data.charts || {};
+        const ctx = document.getElementById('trendChart');
+        if (ctx && chartData.labels) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'التطعيمات اليومية',
+                        data: chartData.vaccination_trend || [],
+                        borderColor: '#1a5276',
+                        backgroundColor: 'rgba(26,82,118,0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#1a5276',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        fill: true, tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Upcoming Appointments
+        const upcomingEl = document.getElementById('upcoming-container');
+        const appts = data.upcoming_appointments || [];
+        if (appts.length === 0) {
+            upcomingEl.innerHTML = '<p class="text-muted text-center py-4 small">لا توجد مواعيد قادمة.</p>';
+        } else {
+            upcomingEl.innerHTML = '<div class="list-group list-group-flush">' +
+                appts.map(a => `
+            <div class="list-group-item border-0 border-bottom px-4 py-3">
+                <div class="fw-bold" style="font-size:0.9rem;">${a.child_name || '—'}</div>
+                <div class="small text-muted"><i class="fas fa-syringe me-1"></i>${a.vaccine || ''}</div>
+                <span class="badge bg-primary-subtle text-primary mt-1">${a.due_date || ''}</span>
+            </div>`).join('') + '</div>';
+        }
+
+        // Centers Table
+        const tbody = document.getElementById('centers-table-body');
+        if (!centers.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">لا توجد بيانات.</td></tr>';
+        } else {
+            tbody.innerHTML = centers.map((c, i) => {
+                const rate = parseFloat(c.coverage_rate || 0);
+                const badgeCls = rate >= 70 ? 'badge-high' : rate >= 40 ? 'badge-medium' : 'badge-low';
+                const label = rate >= 70 ? 'جيد' : rate >= 40 ? 'متوسط' : 'منخفض';
+                const barColor = rate >= 70 ? '#1e8449' : rate >= 40 ? '#9a7d0a' : '#c0392b';
+                return `<tr>
+                <td class="text-muted">${i + 1}</td>
+                <td class="fw-bold">${c.name || '—'}</td>
+                <td class="text-muted small">${c.location || '—'}</td>
+                <td>${c.total_children ?? 0}</td>
+                <td>${c.completed_children ?? 0}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width:80px; background:#eee; border-radius:10px; height:6px;">
+                            <div style="width:${Math.min(rate, 100)}%; background:${barColor}; height:100%; border-radius:10px;"></div>
+                        </div>
+                        <span style="font-size:0.85rem; font-weight:600;">${rate}%</span>
+                    </div>
+                </td>
+                <td><span class="badge ${badgeCls} rounded-pill px-3 py-1">${label}</span></td>
+            </tr>`;
+            }).join('');
+        }
+
+        // Recent Activity
+        const actEl = document.getElementById('activity-container');
+        const activity = data.recent_activity || [];
+        if (!activity.length) {
+            actEl.innerHTML = '<p class="text-center text-muted py-4">لا توجد سجلات حديثة.</p>';
+        } else {
+            actEl.innerHTML = `<table class="ministry-table">
+            <thead><tr><th>اسم الطفل</th><th>اللقاح</th><th>الجرعة</th><th>التاريخ</th><th>المركز / الموظف</th></tr></thead>
+            <tbody>${activity.map(r => `
+            <tr>
+                <td class="fw-bold">${r.child_name || '—'}</td>
+                <td>${r.vaccine || '—'}</td>
+                <td><span class="badge bg-secondary-subtle text-secondary">جرعة ${r.dose ?? ''}</span></td>
+                <td class="text-muted small"><i class="far fa-calendar me-1"></i>${r.date || '—'}</td>
+                <td class="text-muted small">${r.staff || '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+        }
+    });
+</script>
+{% endblock %}

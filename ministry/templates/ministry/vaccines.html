@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}اللقاحات | وزارة الصحة{% endblock %}
+{% block page_title %}إدارة اللقاحات{% endblock %}
+
+{% block content %}
+
+<div class="ministry-banner mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-syringe me-2"></i>اللقاحات المعتمدة</h2>
+            <p>قائمة اللقاحات المدرجة في البرنامج الوطني للتحصين</p>
+        </div>
+        <button class="btn btn-light fw-bold" data-bs-toggle="modal" data-bs-target="#addVaccineModal">
+            <i class="fas fa-plus me-2"></i>إضافة لقاح
+        </button>
+    </div>
+</div>
+
+<!-- Stats row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="ministry-kpi">
+            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-syringe"></i></div>
+            <div>
+                <p class="kpi-label">إجمالي اللقاحات</p>
+                <div class="kpi-value" id="vac-total">—</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vaccines Grid -->
+<div id="vaccines-container" class="row g-3">
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary spinner-border-sm"></div>
+        <span class="ms-3 text-muted">جاري التحميل...</span>
+    </div>
+</div>
+
+<!-- Add Vaccine Modal -->
+<div class="modal fade" id="addVaccineModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header" style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-syringe me-2"></i>إضافة لقاح جديد</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="vac-error" class="alert alert-danger d-none"></div>
+                <div id="vac-success" class="alert alert-success d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
+                    <input type="text" id="v-name-ar" class="form-control" placeholder="مثال: السل (BCG)">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الاسم (English) <span class="text-danger">*</span></label>
+                    <input type="text" id="v-name-en" class="form-control" placeholder="e.g. BCG">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الوصف</label>
+                    <textarea id="v-desc" class="form-control" rows="3" placeholder="وصف مختصر للقاح وطريقة إعطائه..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-primary rounded-pill px-4" onclick="addVaccine()">
+                    <i class="fas fa-save me-2"></i>حفظ اللقاح
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadVaccines() {
+    const container = document.getElementById('vaccines-container');
+    try {
+        const vaccines = await apiFetch('/api/vaccines/');
+        document.getElementById('vac-total').textContent = vaccines.length;
+        if (!vaccines.length) {
+            container.innerHTML = '<p class="text-center text-muted py-5">لا توجد لقاحات مسجلة.</p>';
+            return;
+        }
+        container.innerHTML = vaccines.map(v => `
+        <div class="col-md-6 col-lg-4">
+            <div class="ministry-card h-100">
+                <div class="ministry-card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="kpi-icon kpi-ministry-blue flex-shrink-0">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="color:#1a3a5c; font-size:1rem;">${v.name_ar || '—'}</div>
+                            <div class="text-muted small mb-2">${v.name_en || ''}</div>
+                            ${v.description
+                                ? `<div class="text-muted" style="font-size:0.85rem; line-height:1.5;">${v.description}</div>`
+                                : '<div class="text-muted small fst-italic">لا يوجد وصف</div>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`).join('');
+    } catch(e) {
+        container.innerHTML = '<div class="col-12"><div class="alert alert-danger">فشل تحميل البيانات.</div></div>';
+    }
+}
+
+async function addVaccine() {
+    const errEl = document.getElementById('vac-error'), sucEl = document.getElementById('vac-success');
+    errEl.classList.add('d-none'); sucEl.classList.add('d-none');
+    const payload = {
+        name_ar: document.getElementById('v-name-ar').value.trim(),
+        name_en: document.getElementById('v-name-en').value.trim(),
+        description: document.getElementById('v-desc').value.trim() || undefined,
+    };
+    if (!payload.name_ar || !payload.name_en) {
+        errEl.textContent = 'يرجى ملء الاسم العربي والإنجليزي.'; errEl.classList.remove('d-none'); return;
+    }
+    try {
+        await apiFetch('/api/vaccines/', { method: 'POST', body: JSON.stringify(payload) });
+        sucEl.textContent = `تم إضافة لقاح "${payload.name_ar}" بنجاح! ✅`; sucEl.classList.remove('d-none');
+        await loadVaccines();
+        setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addVaccineModal')).hide(), 1200);
+    } catch(e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+}
+
+document.addEventListener('DOMContentLoaded', loadVaccines);
+</script>
+{% endblock %}

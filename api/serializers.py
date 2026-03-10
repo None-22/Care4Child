@@ -223,11 +223,14 @@ class ChildListSerializer(serializers.ModelSerializer):
     health_center_name = serializers.CharField(source='health_center.name_ar', read_only=True)
     family_name = serializers.SerializerMethodField()
     age = serializers.SerializerMethodField()
+    completion_percentage = serializers.SerializerMethodField()
+    next_vaccine = serializers.SerializerMethodField()
     
     class Meta:
         model = Child
         fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender', 
-                  'health_center_name', 'family_name', 'is_completed', 'created_at']
+                  'health_center_name', 'family_name', 'is_completed', 
+                  'completion_percentage', 'next_vaccine', 'created_at']
 
     def get_family_name(self, obj):
         if obj.family:
@@ -243,23 +246,55 @@ class ChildListSerializer(serializers.ModelSerializer):
             age -= 1
         return age
 
+    def get_completion_percentage(self, obj):
+        from medical.models import ChildVaccineSchedule, VaccineRecord
+        total = ChildVaccineSchedule.objects.filter(child=obj).count()
+        taken = VaccineRecord.objects.filter(child=obj).count()
+        return int((taken / total) * 100) if total > 0 else 0
+
+    def get_next_vaccine(self, obj):
+        from medical.models import ChildVaccineSchedule
+        next_schedule = ChildVaccineSchedule.objects.filter(child=obj, is_taken=False).order_by('due_date').first()
+        
+        if next_schedule:
+            import datetime
+            return {
+                'id': next_schedule.id,
+                'vaccine_name': next_schedule.vaccine_schedule.vaccine.name_ar,
+                'due_date': next_schedule.due_date,
+                'is_overdue': next_schedule.due_date < datetime.date.today(),
+            }
+        return None
+
 
 # ============== Vaccine ==============
 
+class VaccineScheduleSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    dose_number = serializers.IntegerField()
+    age_in_months = serializers.FloatField()
+
+
 class VaccineListSerializer(serializers.ModelSerializer):
+    schedules = serializers.SerializerMethodField()
+
     class Meta:
         model = Vaccine
-        fields = ['id', 'name_ar', 'name_en', 'description']
+        fields = ['id', 'name_ar', 'name_en', 'description', 'schedules']
+
+    def get_schedules(self, obj):
+        from medical.models import VaccineSchedule
+        qs = VaccineSchedule.objects.filter(vaccine=obj).order_by('dose_number')
+        return [{'id': s.id, 'dose_number': s.dose_number, 'age_in_months': s.age_in_months} for s in qs]
 
 
 class VaccineDetailSerializer(serializers.ModelSerializer):
     total_records = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Vaccine
-        fields = ['id', 'name_ar', 'name_en', 'description', 
-                  'total_records']
-    
+        fields = ['id', 'name_ar', 'name_en', 'description', 'total_records']
+
     def get_total_records(self, obj):
         return VaccineRecord.objects.filter(vaccine=obj).count()
 
@@ -305,19 +340,21 @@ class VaccineRecordCreateUpdateSerializer(serializers.ModelSerializer):
 
 class ChildDetailSerializer(serializers.ModelSerializer):
     health_center = HealthCenterListSerializer(read_only=True)
-    # birth_health_center removed
     family = FamilyListSerializer(read_only=True)
     age = serializers.SerializerMethodField()
     vaccine_records = VaccineRecordListSerializer(source='vaccine_record_set', many=True, read_only=True)
     upcoming_vaccines = serializers.SerializerMethodField()
     full_vaccine_schedule = serializers.SerializerMethodField()
     stats = serializers.SerializerMethodField()
-    
+    birth_governorate_name = serializers.CharField(source='birth_governorate.name_ar', read_only=True, default='')
+    birth_directorate_name = serializers.CharField(source='birth_directorate.name_ar', read_only=True, default='')
+
     class Meta:
         model = Child
-        fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender', 
+        fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender',
                   'health_center', 'family',
-                  'birth_governorate', 'birth_directorate', 'place_of_birth',
+                  'birth_governorate', 'birth_governorate_name',
+                  'birth_directorate', 'birth_directorate_name', 'place_of_birth',
                   'is_completed', 'completed_date',
                   'vaccine_records', 'upcoming_vaccines', 'full_vaccine_schedule', 'stats', 'created_at']
     
@@ -349,20 +386,34 @@ class ChildDetailSerializer(serializers.ModelSerializer):
 
     def get_full_vaccine_schedule(self, obj):
         import datetime
-        from medical.models import ChildVaccineSchedule
-        schedules = ChildVaccineSchedule.objects.filter(child=obj).order_by('due_date')
-        
-        return [
-            {
-                'id': s.id,
-                'vaccine_name': s.vaccine_schedule.vaccine.name_ar,
-                'dose_number': s.vaccine_schedule.dose_number,
-                'due_date': s.due_date,
+        from medical.models import ChildVaccineSchedule, VaccineRecord
+        schedules = ChildVaccineSchedule.objects.filter(child=obj).select_related(
+            'vaccine_schedule__vaccine'
+        ).order_by('vaccine_schedule__age_in_months', 'vaccine_schedule__dose_number')
+
+        vaccine_records = {
+            (vr.vaccine_id, vr.dose_number): vr.date_given
+            for vr in VaccineRecord.objects.filter(child=obj)
+        }
+
+        result = []
+        for s in schedules:
+            vs = s.vaccine_schedule
+            vaccine_id = vs.vaccine_id
+            dose_number = vs.dose_number
+            date_given = vaccine_records.get((vaccine_id, dose_number))
+            result.append({
+                'schedule_id': vs.id,        # for the 'record vaccine' link
+                'age_in_months': vs.age_in_months,
+                'vaccine_name_ar': vs.vaccine.name_ar,
+                'vaccine_name': vs.vaccine.name_ar,
+                'dose_number': dose_number,
+                'due_date': str(s.due_date) if s.due_date else None,
                 'is_taken': s.is_taken,
-                'is_overdue': not s.is_taken and s.due_date < datetime.date.today()
-            }
-            for s in schedules
-        ]
+                'is_overdue': not s.is_taken and s.due_date is not None and s.due_date < datetime.date.today(),
+                'date_given': str(date_given) if date_given else None,
+            })
+        return result
 
     def get_stats(self, obj):
         from medical.models import ChildVaccineSchedule

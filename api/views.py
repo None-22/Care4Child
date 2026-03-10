@@ -13,7 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import render, get_object_or_404
 import datetime
 from datetime import timedelta     # For stats
-from django.utils import timezone  # For stats
+from django.utils import timezone  # For stats (هنا الاستدعاء الصحيح)
 
 from users.models import CustomUser
 from centers.models import HealthCenter, Governorate, Directorate
@@ -26,9 +26,11 @@ from .serializers import (
     FamilyListSerializer, FamilyDetailSerializer, FamilyCreateUpdateSerializer,
     ChildListSerializer, ChildDetailSerializer, ChildCreateUpdateSerializer,
     VaccineListSerializer, VaccineDetailSerializer, VaccineCreateUpdateSerializer,
-    VaccineRecordListSerializer, VaccineRecordDetailSerializer, VaccineRecordCreateUpdateSerializer
+    VaccineRecordListSerializer, VaccineRecordDetailSerializer, VaccineRecordCreateUpdateSerializer,
+    NotificationLogSerializer
 )
 from .permissions import IsCenterStaffOrReadOnly
+from notifications.models import NotificationLog
 
 
 # ============== Governorate ViewSet ==============
@@ -120,12 +122,12 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         
-        # 1. السوبر أدمن: يشوف الكل
-        if user.is_superuser:
+        # 1. السوبر أدمن والوزارة: يشوف الكل
+        if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
             return CustomUser.objects.all()
             
         # 2. مدير المركز: يشوف موظفي مركزه فقط (باستثناء نفسه، فقط الموظفين)
-        if user.role == 'CENTER_MANAGER' and user.health_center:
+        if getattr(user, 'role', None) == 'CENTER_MANAGER' and getattr(user, 'health_center', None):
             return CustomUser.objects.filter(health_center=user.health_center, role='CENTER_STAFF')
             
         # 3. الموظف العادي: لا يرى أي مستخدم (حتى نفسه في القائمة)
@@ -155,7 +157,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # ميزة الأتمتة الذكية:
-        # إذا كان المستخدم "مدير مركز"، نربط الموظف الجديد بمركزه تلقائياً ونعطيه صلاحية موظف
         if self.request.user.role == 'CENTER_MANAGER' and self.request.user.health_center:
             serializer.save(
                 health_center=self.request.user.health_center,
@@ -163,8 +164,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 is_active=True
             )
         else:
-            # في حال كان السوبر أدمن هو من يضيف، نترك له الحرية (أو نحفظ كما جاء)
             serializer.save()
+
 
 # ============== Family ViewSet ==============
 
@@ -173,17 +174,17 @@ class FamilyViewSet(viewsets.ModelViewSet):
     API للعائلات
     """
     queryset = Family.objects.all()
-    # ... (rest of class config) ...
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         # 1. الموظفين والإدارة: يرون كل العائلات (لأغراض البحث والتسجيل)
-        if user.is_superuser or user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+        if user.is_superuser or getattr(user, 'role', None) in ['CENTER_MANAGER', 'CENTER_STAFF', 'MINISTRY']:
             return Family.objects.all()
             
         # 2. العائلات (Customer): يرون بياناتهم فقط
         return Family.objects.filter(account=user)
+        
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['father_name', 'mother_name', 'access_code']
@@ -226,18 +227,14 @@ class ChildViewSet(viewsets.ModelViewSet):
     API للأطفال
     """
     queryset = Child.objects.all()
-    # الحماية: العائلات تقرأ فقط، الموظفين يقرأون ويكتبون
     permission_classes = [IsAuthenticated, IsCenterStaffOrReadOnly]
     
     def get_queryset(self):
         user = self.request.user
-        
-        # 1. السوبر أدمن ومدراء المراكز والموظفين: يرون كل الأطفال (لأغراض البحث والتطعيم)
-        if user.is_superuser or user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+        if user.is_superuser or getattr(user, 'role', None) in ['CENTER_MANAGER', 'CENTER_STAFF', 'MINISTRY']:
             return Child.objects.all()
-            
-        # 2. العائلات (Customer): يرون أطفالهم فقط
         return Child.objects.filter(family__account=user)
+        
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['health_center', 'family', 'gender', 'is_completed']
@@ -251,15 +248,11 @@ class ChildViewSet(viewsets.ModelViewSet):
         return ChildListSerializer
         
     def perform_create(self, serializer):
-        # ميزة: ربط الطفل تلقائياً بمركز الموظف الذي أنشأه
-        # ملاحظة: الصلاحيات تم التحقق منها عبر IsCenterStaffOrReadOnly
         serializer.save(
             health_center=self.request.user.health_center,
             created_by=self.request.user
         )
 
-    # perform_update & perform_destroy removed (Handled by Permissions Class)
-    
     @action(detail=True, methods=['get'])
     def vaccine_records(self, request, pk=None):
         """سجلات التطعيمات للطفل"""
@@ -278,16 +271,12 @@ class VaccineViewSet(viewsets.ModelViewSet):
     queryset = Vaccine.objects.all()
     
     def get_permissions(self):
-        """
-        الوصول:
-        - قراءة (GET): مسموح لأي موظف مسجل دخول
-        - تعديل (POST, PUT, DELETE): مسموح للسوبر أدمن فقط
-        """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+        
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name_ar', 'name_en']
@@ -307,23 +296,16 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
     API لسجلات التطعيمات
     """
     queryset = VaccineRecord.objects.all()
-    # الحماية: العوائل تقرأ فقط
     permission_classes = [IsAuthenticated, IsCenterStaffOrReadOnly]
     
     def get_queryset(self):
         user = self.request.user
-        # 1. الموظفين: يرون كل السجلات (Unified Database)
-        if user.is_superuser or user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+        if user.is_superuser or getattr(user, 'role', None) in ['CENTER_MANAGER', 'CENTER_STAFF', 'MINISTRY']:
             return VaccineRecord.objects.all()
-            
-        # 2. العائلات: يرون سجلات أطفالهم فقط
         return VaccineRecord.objects.filter(child__family__account=user)
 
     def perform_create(self, serializer):
-        # الصلاحيات تم التحقق منها عبر IsCenterStaffOrReadOnly
         serializer.save(staff=self.request.user)
-
-    # perform_update & perform_destroy removed (Handled by Permissions Class)
 
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -339,11 +321,8 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """إحصائيات التطعيمات"""
         total = VaccineRecord.objects.count()
-        # إحصائيات بسيطة لأن الموديل الجديد لا يحتوي على حالة (status)
         today_count = VaccineRecord.objects.filter(date_given=datetime.date.today()).count()
-        
         return Response({
             'total_vaccinations': total,
             'today_vaccinations': today_count,
@@ -351,20 +330,14 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
 
 
 # ============== FCM Token Update View ==============
-from rest_framework.views import APIView
 
 class UpdateFCMTokenView(APIView):
     """
-    API لتحديث رمز الإشعارات (Token) من تطبيق الجوال
-    Endpoint: /api/update-fcm-token/
-    Method: POST
-    Body: { "fcm_token": "abc123..." }
+    API لتحديث رمز الإشعارات
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # الاعتماد على الممارسات الصحيحة (Best Practices)
-        # اسم المتغير مطابق لاسم الحقل في قاعدة البيانات
         token = request.data.get('fcm_token')
         if not token:
             return Response({'error': 'fcm_token is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -372,29 +345,24 @@ class UpdateFCMTokenView(APIView):
         user = request.user
         user.fcm_token = token
         user.save()
-        
         return Response({'message': 'FCM Token updated successfully', 'user': user.username})
+
+
+# ============== Dashboard Stats View ==============
 
 class DashboardStatsView(APIView):
     """
     API لإرجاع إحصائيات الداشبورد (للمراكز والوزارة)
-    Endpoint: /api/dashboard/stats/
-    Method: GET
-    Returns: JSON with KPIs and Charts Data
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
+        today = timezone.now().date()
         
-        # 1. تحديد النطاق (Filter Scope)
-        start_date = timezone.now().date() - timedelta(days=30)
-        
-        # Base Querysets
         children_qs = Child.objects.all()
         records_qs = VaccineRecord.objects.all()
         
-        # فلترة حسب صلاحية المستخدم
         if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
             children_qs = children_qs.filter(health_center=user.health_center)
             records_qs = records_qs.filter(staff__health_center=user.health_center)
@@ -402,15 +370,9 @@ class DashboardStatsView(APIView):
         # --- KPIs Calculation ---
         total_children = children_qs.count()
         completed_children = children_qs.filter(is_completed=True).count()
+        dropout_count = 0 
+        vaccinated_today = records_qs.filter(date_given=today).count()
         
-        # Dropout Rate (Logic: Missed > 7 days / Total Scheduled)
-        # (Simplified for API speed: Children with missed vaccines / Total children)
-        late_date = timezone.now().date() - timedelta(days=7)
-        # This is expensive query, optimized for demonstration
-        # In production, use a dedicated field or cache
-        dropout_count = 0 # Placeholder for performance safety in API
-        
-        # Recent Activity (Last 5 records)
         recent_activity = records_qs.select_related('child', 'vaccine', 'staff').order_by('-date_given', '-id')[:5]
         activity_data = []
         for rec in recent_activity:
@@ -423,12 +385,9 @@ class DashboardStatsView(APIView):
                 'staff': rec.staff.username if rec.staff else 'System'
             })
             
-        # Upcoming Appointments (Next 2 days)
-        tomorrow = timezone.now().date() + timedelta(days=1)
-        # Note: We need to import ChildVaccineSchedule inside method or at top (checking if imported)
-        from medical.models import ChildVaccineSchedule
+        tomorrow = today + timedelta(days=1)
         upcoming_qs = ChildVaccineSchedule.objects.filter(
-            due_date__range=[timezone.now().date(), tomorrow],
+            due_date__range=[today, tomorrow],
             is_taken=False
         )
         if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
@@ -441,16 +400,14 @@ class DashboardStatsView(APIView):
                 'vaccine': sched.vaccine_schedule.vaccine.name_ar,
                 'due_date': sched.due_date
             })
-        # ================= NEW: Merge Centers Report for Super Admin =================
+
         centers_report = []
-        if user.is_superuser:
+        if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
             centers = HealthCenter.objects.filter(is_active=True).select_related('governorate', 'directorate')
             for center in centers:
                 ctotal = Child.objects.filter(health_center=center).count()
                 ccompleted = Child.objects.filter(health_center=center, is_completed=True).count()
                 crate = round((ccompleted / ctotal * 100), 1) if ctotal > 0 else 0
-                
-                # Protect against null governorate or directorate
                 gov_name = center.governorate.name_ar if getattr(center, 'governorate', None) else 'غير محدد'
                 dir_name = center.directorate.name_ar if getattr(center, 'directorate', None) else 'غير محدد'
                 
@@ -463,15 +420,10 @@ class DashboardStatsView(APIView):
                     'coverage_rate': crate,
                     'status': 'High' if crate > 80 else ('Medium' if crate > 50 else 'Low')
                 })
-            
-            # Sort by rate descending (High to Low)
             centers_report.sort(key=lambda x: x['coverage_rate'], reverse=True)
 
-        # --- Charts Data: Real 7-Day Trend ---
-        from django.utils import timezone
-        today = timezone.now().date()
         last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
-        chart_labels = [day.strftime('%a') for day in last_7_days] # e.g., 'Mon', 'Tue'
+        chart_labels = [day.strftime('%a') for day in last_7_days] 
         
         vaccination_trend = []
         for day in last_7_days:
@@ -483,6 +435,8 @@ class DashboardStatsView(APIView):
                 'total_children': total_children,
                 'completed_children': completed_children,
                 'completion_rate': round((completed_children / total_children * 100), 1) if total_children > 0 else 0,
+                'defaulters_count': dropout_count,
+                'vaccinated_today': vaccinated_today,
             },
             'charts': {
                 'vaccination_trend': vaccination_trend, 
@@ -492,27 +446,25 @@ class DashboardStatsView(APIView):
             'upcoming_appointments': upcoming_data,
         }
         
-        # Only attach centers report if the user is a superadmin
-        if user.is_superuser:
+        if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
             data['centers_report'] = centers_report
             
         return Response(data)
 
+
+# ============== Reports By Center View ==============
+
 class ReportsByCenterView(APIView):
     """
-    API تقرير أداء المراكز (للوحدة المركزية/الوزارة)
-    Endpoint: /api/reports/by-center/
-    Method: GET
-    Returns: JSON list of centers with stats
+    API تقرير أداء المراكز
     """
-    permission_classes = [IsAdminUser] # للسوبر أدمن فقط
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         centers = HealthCenter.objects.filter(is_active=True).select_related('governorate', 'directorate')
         
         report_data = []
         for center in centers:
-            # We can use annotation for better performance, but this is clearer for logic
             total = Child.objects.filter(health_center=center).count()
             completed = Child.objects.filter(health_center=center, is_completed=True).count()
             rate = round((completed / total * 100), 1) if total > 0 else 0
@@ -527,35 +479,24 @@ class ReportsByCenterView(APIView):
                 'status': 'High' if rate > 80 else ('Medium' if rate > 50 else 'Low')
             })
             
-        # Sort by rate descending (High to Low)
         report_data.sort(key=lambda x: x['coverage_rate'], reverse=True)
-        
         return Response(report_data)
+
 
 # ================= Notifications =================
 
-from notifications.models import NotificationLog
-from .serializers import NotificationLogSerializer
-from rest_framework.decorators import action
-
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API for retrieving user notifications (In-App Inbox).
-    Endpoint: /api/notifications/
+    API للإشعارات
     """
     serializer_class = NotificationLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # المستخدم يرى فقط الإشعارات المرسلة إليه
         return NotificationLog.objects.filter(recipient=self.request.user).order_by('-created_at')
 
     @action(detail=False, methods=['post'], url_path='mark-all-read')
     def mark_all_read(self, request):
-        """
-        Endpoint to mark all unread notifications as read.
-        POST /api/notifications/mark-all-read/
-        """
         notifications = self.get_queryset().filter(is_read=False)
         count = notifications.count()
         notifications.update(is_read=True)

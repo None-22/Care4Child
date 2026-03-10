@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مستخدمو النظام | وزارة الصحة{% endblock %}
+{% block page_title %}مستخدمو النظام{% endblock %}
+
+{% block content %}
+
+<div class="ministry-banner mb-4">
+    <h2><i class="fas fa-users-cog me-2"></i>إدارة مستخدمي النظام</h2>
+    <p>عرض شامل لجميع المستخدمين حسب أدوارهم الوظيفية</p>
+</div>
+
+<!-- Role KPIs -->
+<div class="row g-3 mb-4" id="role-kpis">
+    <div class="col-md-3 col-6">
+        <div class="ministry-kpi">
+            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-shield-alt"></i></div>
+            <div><p class="kpi-label">مديرو النظام</p><div class="kpi-value" id="r-admin">—</div></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="ministry-kpi" style="border-right-color:#8e44ad;">
+            <div class="kpi-icon" style="background:#ede0f7;color:#8e44ad;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;"><i class="fas fa-hospital-user"></i></div>
+            <div><p class="kpi-label">مديرو المراكز</p><div class="kpi-value" id="r-manager">—</div></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="ministry-kpi" style="border-right-color:var(--ministry-accent);">
+            <div class="kpi-icon kpi-ministry-green"><i class="fas fa-user-nurse"></i></div>
+            <div><p class="kpi-label">موظفو المراكز</p><div class="kpi-value" id="r-staff">—</div></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="ministry-kpi" style="border-right-color:var(--ministry-warning);">
+            <div class="kpi-icon kpi-ministry-orange"><i class="fas fa-family"></i></div>
+            <div><p class="kpi-label">أولياء الأمور</p><div class="kpi-value" id="r-customer">—</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Search + Filter -->
+<div class="row g-3 mb-3">
+    <div class="col-md-5">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="u-search" class="form-control border-start-0" placeholder="ابحث باسم المستخدم...">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <select id="u-role-filter" class="form-select">
+            <option value="all">جميع الأدوار</option>
+            <option value="ADMIN">مدير النظام</option>
+            <option value="MINISTRY">وزارة الصحة</option>
+            <option value="CENTER_MANAGER">مدير مركز</option>
+            <option value="CENTER_STAFF">موظف مركز</option>
+            <option value="CUSTOMER">ولي أمر</option>
+        </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-center">
+        <span class="text-muted small">يُعرض: <strong id="u-count">—</strong> مستخدم</span>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="ministry-card">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-users text-primary"></i> قائمة المستخدمين</h3>
+    </div>
+    <div id="users-container" class="table-responsive">
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <span class="ms-3 text-muted">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let allUsers = [];
+
+const roleConfig = {
+    'ADMIN':          { label: 'مدير النظام',  cls: 'bg-danger-subtle text-danger' },
+    'MINISTRY':       { label: 'وزارة الصحة', cls: 'bg-primary-subtle text-primary' },
+    'CENTER_MANAGER': { label: 'مدير مركز',   cls: 'bg-purple-subtle text-purple', style: 'background:#ede0f7;color:#8e44ad;' },
+    'CENTER_STAFF':   { label: 'موظف مركز',   cls: 'bg-success-subtle text-success' },
+    'CUSTOMER':       { label: 'ولي أمر',      cls: 'bg-warning-subtle text-warning' },
+};
+
+async function loadUsers() {
+    const container = document.getElementById('users-container');
+    try {
+        allUsers = await apiFetch('/api/users/');
+        // Update KPIs
+        document.getElementById('r-admin').textContent    = allUsers.filter(u => u.role === 'ADMIN').length;
+        document.getElementById('r-manager').textContent  = allUsers.filter(u => u.role === 'CENTER_MANAGER').length;
+        document.getElementById('r-staff').textContent    = allUsers.filter(u => u.role === 'CENTER_STAFF').length;
+        document.getElementById('r-customer').textContent = allUsers.filter(u => u.role === 'CUSTOMER').length;
+        applyUserFilter();
+    } catch(e) {
+        container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
+    }
+}
+
+function applyUserFilter() {
+    const search = document.getElementById('u-search').value.trim().toLowerCase();
+    const role   = document.getElementById('u-role-filter').value;
+    let result = allUsers;
+    if (role !== 'all') result = result.filter(u => u.role === role);
+    if (search) result = result.filter(u =>
+        (u.username||'').toLowerCase().includes(search) ||
+        (u.first_name||'').toLowerCase().includes(search) ||
+        (u.last_name||'').toLowerCase().includes(search) ||
+        (u.health_center_name||'').toLowerCase().includes(search)
+    );
+    renderUsers(result);
+}
+
+function renderUsers(users) {
+    document.getElementById('u-count').textContent = users.length;
+    const container = document.getElementById('users-container');
+    if (!users.length) {
+        container.innerHTML = '<p class="text-center text-muted py-5">لا توجد نتائج.</p>'; return;
+    }
+    container.innerHTML = `<table class="ministry-table">
+        <thead><tr>
+            <th>#</th><th>اسم المستخدم</th><th>الاسم الكامل</th>
+            <th>الدور</th><th>المركز الصحي</th><th>الحالة</th><th>تاريخ الانضمام</th>
+        </tr></thead>
+        <tbody>${users.map((u,i) => {
+            const rc = roleConfig[u.role] || { label: u.role, cls: 'bg-secondary-subtle text-secondary' };
+            return `<tr>
+                <td class="text-muted">${i+1}</td>
+                <td><div class="fw-bold font-monospace">${u.username || '—'}</div></td>
+                <td>${(u.first_name || u.last_name) ? `${u.first_name} ${u.last_name}`.trim() : '<em class="text-muted">—</em>'}</td>
+                <td><span class="badge rounded-pill px-3 ${rc.cls}" ${rc.style ? `style="${rc.style}"` : ''}>${rc.label}</span></td>
+                <td class="text-muted small">${u.health_center_name || '—'}</td>
+                <td>${u.is_active
+                    ? '<span class="badge badge-high">نشط</span>'
+                    : '<span class="badge badge-low">موقوف</span>'}</td>
+                <td class="text-muted small">${u.date_joined ? u.date_joined.substring(0,10) : '—'}</td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    document.getElementById('u-search').addEventListener('input', applyUserFilter);
+    document.getElementById('u-role-filter').addEventListener('change', applyUserFilter);
+});
+</script>
+{% endblock %}

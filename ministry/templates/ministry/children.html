@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}سجل الأطفال | وزارة الصحة{% endblock %}
+{% block page_title %}سجل الأطفال {% endblock %}
+
+{% block content %}
+
+<div class="ministry-banner mb-4">
+    <h2><i class="fas fa-baby me-2"></i>السجل الوطني للأطفال</h2>
+    <p>عرض شامل لجميع الأطفال المسجلين في المنظومة الصحية</p>
+</div>
+
+<!-- Stats + Search -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="ministry-kpi">
+            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-baby"></i></div>
+            <div>
+                <p class="kpi-label">إجمالي الأطفال</p>
+                <div class="kpi-value" id="ch-total">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ministry-kpi" style="border-right-color: var(--ministry-accent);">
+            <div class="kpi-icon kpi-ministry-green"><i class="fas fa-check-circle"></i></div>
+            <div>
+                <p class="kpi-label">مكتملو التحصين</p>
+                <div class="kpi-value" id="ch-completed">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ministry-kpi" style="border-right-color: var(--ministry-danger);">
+            <div class="kpi-icon kpi-ministry-red"><i class="fas fa-hourglass-half"></i></div>
+            <div>
+                <p class="kpi-label">غير مكتملين</p>
+                <div class="kpi-value" id="ch-pending">—</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="ch-search" class="form-control border-start-0"
+                placeholder="ابحث باسم الطفل أو اسم الأسرة...">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <select id="ch-filter" class="form-select">
+            <option value="all">جميع الأطفال</option>
+            <option value="completed">مكتملو التحصين</option>
+            <option value="pending">غير مكتملين</option>
+        </select>
+    </div>
+</div>
+
+<!-- Children Table -->
+<div class="ministry-card">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-list text-primary"></i> قائمة الأطفال</h3>
+        <span class="badge bg-secondary-subtle text-dark">يُعرض: <span id="ch-count">—</span></span>
+    </div>
+    <div id="children-container" class="table-responsive">
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <span class="ms-3 text-muted">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let allChildren = [];
+
+    async function loadChildren() {
+        const container = document.getElementById('children-container');
+        try {
+            allChildren = await apiFetch('/api/children/');
+            const completed = allChildren.filter(c => c.is_completed).length;
+            document.getElementById('ch-total').textContent = allChildren.length;
+            document.getElementById('ch-completed').textContent = completed;
+            document.getElementById('ch-pending').textContent = allChildren.length - completed;
+            applyFilter();
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
+        }
+    }
+
+    function applyFilter() {
+        const search = document.getElementById('ch-search').value.trim().toLowerCase();
+        const filter = document.getElementById('ch-filter').value;
+        let result = allChildren;
+        if (filter === 'completed') result = result.filter(c => c.is_completed);
+        if (filter === 'pending') result = result.filter(c => !c.is_completed);
+        if (search) result = result.filter(c =>
+            (c.full_name || '').toLowerCase().includes(search) ||
+            (c.family_name || '').toLowerCase().includes(search) ||
+            (c.health_center_name || '').toLowerCase().includes(search)
+        );
+        renderChildren(result);
+    }
+
+    function renderChildren(children) {
+        document.getElementById('ch-count').textContent = children.length;
+        const container = document.getElementById('children-container');
+        if (!children.length) {
+            container.innerHTML = '<p class="text-center text-muted py-5">لا توجد نتائج.</p>'; return;
+        }
+        container.innerHTML = `<table class="ministry-table">
+        <thead><tr>
+            <th>#</th><th>اسم الطفل</th><th>تاريخ الميلاد</th><th>النوع</th>
+            <th>الأسرة</th><th>المركز الصحي</th><th>الحالة</th>
+        </tr></thead>
+        <tbody>${children.map((c, i) => `
+        <tr>
+            <td class="text-muted">${i + 1}</td>
+            <td class="fw-bold">${c.full_name || '—'}</td>
+            <td class="text-muted small">${c.date_of_birth || '—'}</td>
+            <td>${c.gender === 'M' ? '<span class="badge bg-primary-subtle text-primary">ذكر</span>'
+                : '<span class="badge bg-danger-subtle text-danger">أنثى</span>'}</td>
+            <td class="text-muted small">${c.family_name || '—'}</td>
+            <td class="text-muted small">${c.health_center_name || '<em>غير مسجل</em>'}</td>
+            <td>${c.is_completed
+                ? '<span class="badge badge-high rounded-pill px-3">مكتمل ✓</span>'
+                : '<span class="badge badge-low rounded-pill px-3">غير مكتمل</span>'}</td>
+        </tr>`).join('')}
+        </tbody>
+    </table>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadChildren();
+        document.getElementById('ch-search').addEventListener('input', applyFilter);
+        document.getElementById('ch-filter').addEventListener('change', applyFilter);
+    });
+</script>
+{% endblock %}

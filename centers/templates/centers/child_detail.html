@@ -1,127 +1,219 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block page_title %}بطاقة الطفل الرقمية{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <span class="text-muted small">رقم الملف</span>
-            <h3 class="fw-bold">{{ child.family.access_code }}</h3>
-        </div>
-        <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary rounded-pill btn-luxury">
-            <i class="fas fa-arrow-left me-2"></i>عودة
-        </a>
-    </div>
-</div>
 
-<!-- بطاقة معلومات الطفل -->
-<div class="row g-4 mb-5">
-    <!-- Main Info -->
-    <div class="col-md-8">
-        <div class="card-shine p-4 h-100 position-relative overflow-hidden animate-slide-up delay-1">
-            <div class="position-absolute top-0 end-0 p-3 opacity-10">
-                <i class="fas fa-baby fa-8x text-primary" style="opacity: 0.1;"></i>
+<!-- ===== Container with child ID injected by Django ===== -->
+<div id="child-page" data-child-id="{{ child_id }}">
+
+    <!-- Back Button & Header -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted small">رقم الملف</span>
+                <h3 class="fw-bold" id="detail-access-code">—</h3>
             </div>
+            <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary rounded-pill">
+                <i class="fas fa-arrow-left me-2"></i>عودة
+            </a>
+        </div>
+    </div>
 
-            <div class="d-flex align-items-start">
-                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fs-1 me-4 shadow"
-                    style="width: 80px; height: 80px;">
-                    <i class="fas fa-baby"></i>
-                </div>
-                <div>
-                    <h2 class="fw-bold mb-1">{{ child.full_name }}</h2>
-                    <p class="text-muted mb-3"><i class="fas fa-female me-2"></i>والدته: {{ child.family.mother_name }}
-                    </p>
+    <!-- Loading State -->
+    <div id="child-loading" style="display:flex; justify-content:center; align-items:center; padding:3rem;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span class="ms-3 text-muted fw-bold">جاري تحميل بيانات الطفل...</span>
+    </div>
 
-                    <div class="d-flex gap-3">
-                        <span class="badge bg-light text-dark border px-3 py-2">
-                            <i class="fas fa-calendar-alt me-2 text-primary"></i>{{ child.date_of_birth }}
-                        </span>
-                        <span class="badge bg-light text-dark border px-3 py-2">
-                            <i class="fas fa-venus-mars me-2 text-danger"></i>{{ child.get_gender_display }}
-                        </span>
-                        <span class="badge bg-light text-dark border px-3 py-2">
-                            <i class="fas fa-map-marker-alt me-2 text-success"></i>{{ child.birth_governorate.name_ar }}
-                            - {{ child.birth_directorate.name_ar }}
-                        </span>
+    <!-- Content (hidden until loaded) -->
+    <div id="child-content" style="display:none;">
+
+        <!-- Child Info Row -->
+        <div class="row g-4 mb-5">
+            <!-- Main Info Card -->
+            <div class="col-md-8">
+                <div class="saas-card p-4 h-100 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3">
+                        <i class="fas fa-baby fa-8x text-primary" style="opacity: 0.05;"></i>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fs-1 me-4 shadow"
+                            style="width: 80px; height: 80px;">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-bold mb-1" id="detail-name">—</h2>
+                            <p class="text-muted mb-3"><i class="fas fa-female me-2"></i>والدته: <span
+                                    id="detail-mother">—</span></p>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <span class="badge bg-light text-dark border px-3 py-2 mb-2">
+                                    <i class="fas fa-calendar-alt me-2 text-primary"></i><span id="detail-dob">—</span>
+                                </span>
+                                <span class="badge bg-light text-dark border px-3 py-2 mb-2">
+                                    <i class="fas fa-venus-mars me-2 text-danger"></i><span id="detail-gender">—</span>
+                                </span>
+                                <span class="badge bg-light text-dark border px-3 py-2 mb-2">
+                                    <i class="fas fa-map-marker-alt me-2 text-success"></i><span
+                                        id="detail-location">—</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Status Card -->
-    <div class="col-md-4">
-        <div
-            class="card-luxury p-4 h-100 bg-white text-center d-flex flex-column justify-content-center align-items-center animate-slide-up delay-2">
-            <div class="mb-3">
-                {% if child.is_completed %}
-                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                <h4 class="text-success">مكتمل التحصين</h4>
-                <p class="text-muted small">تم أخذ جميع اللقاحات المقررة</p>
-                {% else %}
-                <i class="fas fa-hourglass-half fa-4x text-warning mb-3"></i>
-                <h4 class="text-warning text-dark">نشط / قيد المتابعة</h4>
-                <p class="text-muted small">ما زال هناك لقاحات مستحقة</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- جدول التطعيمات -->
-<div class="row">
-    <div class="col-12">
-        <h3 class="mb-4"><i class="fas fa-syringe text-primary me-2"></i>جدول الزيارات واللقاحات</h3>
-
-        <div class="row g-4">
-            {% for visit in visits %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card-luxury h-100 border-0 animate-slide-up delay-3">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                        <h5 class="fw-bold text-primary border-start border-4 border-primary ps-2">
-                            {{ visit.label }}
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            {% for item in visit.vaccines %}
-                            <li class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold">{{ item.schedule.vaccine.name_ar }}</div>
-                                    <div class="text-muted small">
-                                        جرعة {{ item.schedule.dose_number }}
-                                        <!-- <span class="badge bg-light text-dark ms-1">{{ item.schedule.vaccine.name_en }}</span> -->
-                                    </div>
-                                </div>
-
-                                <div class="text-end">
-                                    {% if item.is_taken %}
-                                    <div class="text-success small fw-bold mb-1">
-                                        <i class="fas fa-check-circle me-1"></i>تم التحصين
-                                    </div>
-                                    <div class="text-muted small" style="font-size: 0.75rem;">
-                                        {{ item.date_taken|date:"Y/m/d" }}
-                                    </div>
-                                    {% else %}
-                                    <a href="{% url 'centers:record_vaccine' child.id item.schedule.id %}"
-                                        class="btn btn-outline-primary btn-sm rounded-pill py-0 px-3 small">
-                                        تسجيل
-                                    </a>
-                                    {% if item.status == 'مستحق' %}
-                                    <!-- <div class="text-warning small mt-1">مستحق</div> -->
-                                    {% endif %}
-                                    {% endif %}
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+            <!-- Status Card -->
+            <div class="col-md-4">
+                <div
+                    class="saas-card p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                    <div id="detail-status-icon" class="w-100"></div>
                 </div>
             </div>
-            {% endfor %}
         </div>
+
+        <!-- Vaccine Schedule -->
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4"><i class="fas fa-syringe text-primary me-2"></i>جدول الزيارات واللقاحات</h3>
+                <div class="row g-4" id="visits-container"></div>
+            </div>
+        </div>
+
+    </div><!-- /#child-content -->
+
+    <!-- Error State -->
+    <div id="child-error" style="display:none;" class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>تعذر تحميل بيانات الطفل. يرجى تحديث الصفحة.
     </div>
-</div>
+
+</div><!-- /#child-page -->
+
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const childId = document.getElementById('child-page').dataset.childId;
+        if (!childId) return;
+
+        try {
+            const child = await apiFetch(`/api/children/${childId}/`);
+            renderChild(child);
+        } catch (e) {
+            console.error(e);
+            document.getElementById('child-loading').style.display = 'none';
+            document.getElementById('child-error').style.display = '';
+        }
+    });
+
+    function renderChild(child) {
+        document.getElementById('child-loading').style.display = 'none';
+        document.getElementById('child-content').style.display = '';
+
+        // Basic info
+        const fam = child.family || {};
+        document.getElementById('detail-access-code').textContent = fam.access_code || '—';
+        document.getElementById('detail-name').textContent = child.full_name || '—';
+        document.getElementById('detail-mother').textContent = fam.mother_name || '—';
+        document.getElementById('detail-dob').textContent = child.date_of_birth || '—';
+        document.getElementById('detail-gender').textContent = child.gender === 'M' ? 'ذكر' : 'أنثى';
+
+        const gov = child.birth_governorate_name || '';
+        const dir = child.birth_directorate_name || '';
+        document.getElementById('detail-location').textContent = [gov, dir].filter(Boolean).join(' - ') || '—';
+
+        // Status icon
+        const statusEl = document.getElementById('detail-status-icon');
+        if (child.is_completed) {
+            statusEl.innerHTML = `
+            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+            <h4 class="text-success">مكتمل التحصين</h4>
+            <p class="text-muted small">تم أخذ جميع اللقاحات المقررة</p>`;
+        } else {
+            statusEl.innerHTML = `
+            <i class="fas fa-hourglass-half fa-4x text-warning mb-3"></i>
+            <h4 class="text-warning text-dark">نشط / قيد المتابعة</h4>
+            <p class="text-muted small">ما زال هناك لقاحات مستحقة</p>`;
+        }
+
+        const schedule = child.full_vaccine_schedule || [];
+        const visitsMap = {};
+
+        schedule.forEach(item => {
+            const age = item.age_in_months;
+            if (!visitsMap[age]) {
+                let label;
+                if (age === 0) label = 'عند الولادة';
+                else if (age === 72) label = 'سن دخول المدرسة (6 سنوات)';
+                else label = `عمر ${age} أشهر`;
+                visitsMap[age] = { label, vaccines: [] };
+            }
+            visitsMap[age].vaccines.push(item);
+        });
+
+        const visitsList = Object.keys(visitsMap).map(Number).sort((a, b) => a - b);
+        let visitsHtml = '';
+
+        visitsList.forEach(age => {
+            const visit = visitsMap[age];
+            let vaccineItems = '';
+
+            visit.vaccines.forEach(item => {
+                const taken = item.is_taken;
+
+                let actionEl = '';
+                if (taken) {
+                    actionEl = `
+                    <div class="text-end" style="min-width: 90px;">
+                        <span class="text-success small fw-bold d-block mb-1"><i class="fas fa-check-circle me-1"></i>مكتمل</span>
+                        <span class="text-muted small" style="font-size:0.75rem;"><i class="fas fa-calendar-alt me-1"></i>${item.date_given || '—'}</span>
+                    </div>`;
+                } else {
+                    actionEl = `
+                    <div class="text-end" style="min-width: 90px;">
+                        <a href="/center/vaccine/record/${child.id}/${item.schedule_id}/" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                            تسجيل
+                        </a>
+                    </div>`;
+                }
+
+                vaccineItems += `
+                <div class="border border-light p-3 mb-2 bg-white shadow-sm d-flex justify-content-between align-items-center" style="border-radius: 12px;">
+                    <div class="d-flex align-items-center pe-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-primary border" style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <i class="fas fa-vial fs-6"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1 text-dark fs-6 lh-base">${item.vaccine_name_ar || item.vaccine_name || '—'}</h6>
+                            <div class="text-muted small">جرعة ${item.dose_number}</div>
+                        </div>
+                    </div>
+                    ${actionEl}
+                </div>`;
+            });
+
+            visitsHtml += `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="saas-card h-100 border-0 px-3 py-4 bg-light">
+                <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-light">
+                    <div class="bg-white text-primary rounded d-flex align-items-center justify-content-center me-3 shadow-sm border" style="width: 45px; height: 45px; flex-shrink: 0;">
+                        <i class="fas fa-calendar-check fs-5"></i>
+                    </div>
+                    <h5 class="fw-bold text-primary mb-0 lh-base">${visit.label}</h5>
+                </div>
+                <div class="vaccine-list">
+                    ${vaccineItems}
+                </div>
+            </div>
+        </div>`;
+        });
+
+        document.getElementById('visits-container').innerHTML = visitsHtml || `
+        <div class="col-12 text-center text-muted py-4">
+            <i class="fas fa-syringe fa-2x mb-2 opacity-25"></i>
+            <p>لا يوجد جدول تطعيمات مسجل لهذا الطفل.</p>
+        </div>`;
+    }
+</script>
+
 {% endblock %}

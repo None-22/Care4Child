@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}المراكز الصحية | وزارة الصحة{% endblock %}
+{% block page_title %}إدارة المراكز الصحية{% endblock %}
+
+{% block content %}
+
+<div class="ministry-banner mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-hospital me-2"></i>المراكز الصحية</h2>
+            <p>عرض وإدارة جميع المراكز الصحية</p>
+        </div>
+        <button class="btn btn-light fw-bold" data-bs-toggle="modal" data-bs-target="#addCenterModal">
+            <i class="fas fa-plus me-2"></i>إضافة مركز جديد
+        </button>
+    </div>
+</div>
+
+<!-- Search + Stats row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="search-input" class="form-control border-start-0"
+                placeholder="ابحث باسم المركز أو المحافظة...">
+        </div>
+    </div>
+    <div class="col-md-6 d-flex align-items-center gap-3">
+        <span class="text-muted small">عدد المراكز: <strong id="centers-count">—</strong></span>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="ministry-card">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-hospital text-primary"></i> قائمة المراكز الصحية</h3>
+    </div>
+    <div id="centers-container" class="table-responsive">
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <span class="ms-3 text-muted">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Add Center Modal -->
+<div class="modal fade" id="addCenterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header"
+                style="background: var(--ministry-primary); color:#fff; border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-hospital me-2"></i>إضافة مركز صحي جديد</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="add-error" class="alert alert-danger d-none"></div>
+                <div id="add-success" class="alert alert-success d-none"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">اسم المركز (عربي) <span class="text-danger">*</span></label>
+                        <input type="text" id="c-name-ar" class="form-control" placeholder="مثال: مستشفى الثورة">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">اسم المركز (English)</label>
+                        <input type="text" id="c-name-en" class="form-control" placeholder="e.g. Al-Thawra Hospital">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">المحافظة <span class="text-danger">*</span></label>
+                        <select id="c-governorate" class="form-select">
+                            <option value="">-- اختر المحافظة --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">المديرية</label>
+                        <select id="c-directorate" class="form-select">
+                            <option value="">-- اختر المديرية --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">العنوان</label>
+                        <input type="text" id="c-address" class="form-control" placeholder="العنوان التفصيلي">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">ساعات العمل</label>
+                        <input type="text" id="c-hours" class="form-control"
+                            placeholder="مثال: 8:00 صباحاً - 2:00 مساءً">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">رقم الترخيص</label>
+                        <input type="text" id="c-license" class="form-control" placeholder="LIC-2026-XXX">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">كلمة مرور حساب المدير <span
+                                class="text-danger">*</span></label>
+                        <input type="password" id="c-password" class="form-control" placeholder="كلمة مرور قوية">
+                        <small class="text-muted">ستُستخدم لحساب مدير المركز تلقائياً</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" id="add-center-btn"
+                    onclick="addCenter()">
+                    <i class="fas fa-save me-2"></i>حفظ المركز
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let allCenters = [];
+
+    async function loadCenters() {
+        const container = document.getElementById('centers-container');
+        try {
+            allCenters = await apiFetch('/api/health-centers/');
+            document.getElementById('centers-count').textContent = allCenters.length;
+            renderCenters(allCenters);
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
+        }
+    }
+
+    function renderCenters(centers) {
+        const container = document.getElementById('centers-container');
+        if (!centers.length) {
+            container.innerHTML = '<p class="text-center text-muted py-5">لا توجد مراكز مسجلة.</p>';
+            return;
+        }
+        container.innerHTML = `<table class="ministry-table">
+        <thead><tr>
+            <th>#</th><th>المركز الصحي</th><th>كود المركز</th>
+            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th>
+        </tr></thead>
+        <tbody>${centers.map((c, i) => `
+        <tr>
+            <td class="text-muted">${i + 1}</td>
+            <td><div class="fw-bold">${c.name_ar || '—'}</div>
+                ${c.name_en ? `<div class="text-muted small">${c.name_en}</div>` : ''}</td>
+            <td><span class="badge bg-secondary-subtle text-dark font-monospace">${c.center_code || '—'}</span></td>
+            <td>${c.governorate_name || '—'}</td>
+            <td>${c.directorate_name || '—'}</td>
+            <td>${c.is_active
+                ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
+                : '<span class="badge badge-low rounded-pill px-3">غير نشط</span>'}</td>
+            <td class="text-muted small">${c.created_at ? c.created_at.substring(0, 10) : '—'}</td>
+        </tr>`).join('')}
+        </tbody>
+    </table>`;
+    }
+
+    // Search
+    document.getElementById('search-input').addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        if (!q) { renderCenters(allCenters); return; }
+        renderCenters(allCenters.filter(c =>
+            (c.name_ar || '').toLowerCase().includes(q) ||
+            (c.name_en || '').toLowerCase().includes(q) ||
+            (c.governorate_name || '').toLowerCase().includes(q) ||
+            (c.center_code || '').toLowerCase().includes(q)
+        ));
+    });
+
+    // Load governorates for modal
+    async function loadGovernorates() {
+        try {
+            const govs = await apiFetch('/api/governorates/');
+            const sel = document.getElementById('c-governorate');
+            govs.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id; opt.textContent = g.name_ar;
+                sel.appendChild(opt);
+            });
+            sel.addEventListener('change', async function () {
+                const dirSel = document.getElementById('c-directorate');
+                dirSel.innerHTML = '<option value="">-- اختر المديرية --</option>';
+                if (!this.value) return;
+                const dirs = await apiFetch('/api/directorates/');
+                dirs.filter(d => d.governorate == this.value).forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id; opt.textContent = d.name_ar;
+                    dirSel.appendChild(opt);
+                });
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    async function addCenter() {
+        const btn = document.getElementById('add-center-btn');
+        const errEl = document.getElementById('add-error');
+        const sucEl = document.getElementById('add-success');
+        errEl.classList.add('d-none');
+        sucEl.classList.add('d-none');
+
+        const payload = {
+            name_ar: document.getElementById('c-name-ar').value.trim(),
+            name_en: document.getElementById('c-name-en').value.trim() || undefined,
+            governorate: document.getElementById('c-governorate').value || undefined,
+            directorate: document.getElementById('c-directorate').value || undefined,
+            address: document.getElementById('c-address').value.trim() || undefined,
+            working_hours: document.getElementById('c-hours').value.trim() || undefined,
+            license_number: document.getElementById('c-license').value.trim() || undefined,
+            password: document.getElementById('c-password').value,
+        };
+
+        if (!payload.name_ar || !payload.password) {
+            errEl.textContent = 'يرجى ملء الحقول الإلزامية (الاسم العربي وكلمة المرور).';
+            errEl.classList.remove('d-none'); return;
+        }
+
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ...';
+        try {
+            await apiFetch('/api/health-centers/', { method: 'POST', body: JSON.stringify(payload) });
+            sucEl.textContent = `تم إضافة مركز "${payload.name_ar}" بنجاح! ✅`;
+            sucEl.classList.remove('d-none');
+            await loadCenters();
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addCenterModal')).hide(), 1500);
+        } catch (e) {
+            errEl.textContent = 'حدث خطأ: ' + e.message;
+            errEl.classList.remove('d-none');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>حفظ المركز';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadCenters();
+        loadGovernorates();
+    });
+</script>
+{% endblock %}

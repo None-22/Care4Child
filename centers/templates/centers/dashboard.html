@@ -1,450 +1,148 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}الإدارة المركزية | لوحة القيادة{% endblock %}
+{% block page_title %}لوحة المعلومات والقيادة{% endblock %}
 
 {% block content %}
-<style>
-    /* --- Soft & Elegant Design System --- */
-    :root {
-        --h-primary: #3b82f6;
-        /* Calmer Blue */
-        --h-secondary: #0ea5e9;
-        /* Sky Blue */
-        --h-accent: #6366f1;
-        /* Soft Indigo */
-        --h-light: #f8fafc;
-        /* Light bg */
-        --h-surface: #FFFFFF;
-        --h-bg: #f1f5f9;
-        --h-text: #334155;
-        --h-muted: #64748b;
-        --h-danger: #f43f5e;
-        /* Soft Rose Red */
-        --h-success: #10b981;
-        /* Soft Emerald Green */
-        --h-warning: #f59e0b;
-        /* Soft Amber */
-    }
-
-    /* Base Body tweaks if necessary */
-    body {
-        background-color: var(--h-bg);
-    }
-
-    /* The Welcome Banner */
-    .hospital-banner {
-        background: linear-gradient(135deg, var(--h-primary) 0%, var(--h-accent) 100%);
-        border-radius: 1.5rem;
-        padding: 2.5rem 2.5rem;
-        color: white;
-        box-shadow: 0 20px 40px rgba(87, 108, 188, 0.2);
-        margin-bottom: 2.5rem;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .hospital-banner::before {
-        content: '';
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 250px;
-        height: 250px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 50%;
-    }
-
-    .hospital-banner::after {
-        content: '';
-        position: absolute;
-        bottom: -80px;
-        left: 10%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 50%;
-    }
-
-    .banner-text {
-        position: relative;
-        z-index: 2;
-    }
-
-    /* KPI Cards */
-    .kpi-card {
-        background: var(--h-surface);
-        border-radius: 1.25rem;
-        border: 1px solid rgba(0, 0, 0, 0.03);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-        padding: 1.5rem 1.8rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 100%;
-        display: flex;
-        align-items: center;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
-    }
-
-    .kpi-icon-wrapper {
-        width: 65px;
-        height: 65px;
-        border-radius: 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        margin-left: 1.5rem;
-    }
-
-    .kpi-icon-danger {
-        background: #fee2e2;
-        color: var(--h-danger);
-    }
-
-    .kpi-icon-primary {
-        background: #e0f2fe;
-        color: var(--h-primary);
-    }
-
-    .kpi-icon-info {
-        background: #d1fae5;
-        color: var(--h-success);
-    }
-
-    .kpi-icon-warning {
-        background: #fef3c7;
-        color: var(--h-warning);
-    }
-
-    .kpi-value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: var(--h-primary);
-        line-height: 1;
-        margin-bottom: 0.3rem;
-        font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    .kpi-label {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--h-muted);
-        margin: 0;
-    }
-
-    .kpi-subtext {
-        font-size: 0.75rem;
-        color: #cbd5e1;
-        margin-top: 5px;
-    }
-
-    /* Chart Cards */
-    .analytic-card {
-        background: var(--h-surface);
-        border-radius: 1.25rem;
-        border: 1px solid rgba(0, 0, 0, 0.03);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-        padding: 1.8rem;
-        height: 100%;
-    }
-
-    .analytic-header {
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: var(--h-primary);
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .analytic-header i {
-        color: var(--h-accent);
-        background: #EFF6FF;
-        padding: 0.6rem;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-    }
-
-    /* Custom Table */
-    .custom-table-wrapper {
-        background: var(--h-surface);
-        border-radius: 1.25rem;
-        border: 1px solid rgba(0, 0, 0, 0.03);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-        overflow: hidden;
-    }
-
-    .custom-table-header {
-        padding: 1.8rem;
-        border-bottom: 1px solid #F1F5F9;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .clean-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .clean-table th {
-        background: #F8FAFC;
-        color: var(--h-muted);
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        padding: 1.2rem;
-        letter-spacing: 0.5px;
-    }
-
-    .clean-table td {
-        padding: 1.2rem;
-        border-bottom: 1px solid #F1F5F9;
-        color: var(--h-text);
-        vertical-align: middle;
-    }
-
-    .clean-table tbody tr:hover {
-        background: #F8FAFC;
-    }
-
-    .custom-badge {
-        padding: 0.5rem 0.8rem;
-        border-radius: 0.4rem;
-        font-weight: 700;
-        font-size: 0.8rem;
-    }
-
-    .custom-badge-blue {
-        background: #E0F2FE;
-        color: #0284C7;
-    }
-
-    .custom-badge-gray {
-        background: #F1F5F9;
-        color: #475569;
-    }
-
-    /* Quick Actions */
-    .action-btn {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 0.8rem 1.5rem;
-        border-radius: 0.8rem;
-        font-weight: 600;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .action-btn:hover {
-        background: white;
-        color: var(--h-primary);
-    }
-
-    .action-btn.solid {
-        background: white;
-        color: var(--h-primary);
-        border: none;
-    }
-
-    .action-btn.solid:hover {
-        background: var(--h-light);
-        color: var(--h-primary);
-    }
-</style>
 
 <!-- ================= BANNER ================= -->
-<div class="hospital-banner">
-    <div class="banner-text">
-        <h1 class="fw-bolder mb-2" style="font-size: 2rem;">لوحة الإدارة الطبية</h1>
-        <p class="mb-0 text-white-50 fs-6">نظرة شاملة ومباشرة على أداء ومؤشرات المركز الصحي الفعلي</p>
-    </div>
-    <div class="d-flex gap-3 relative z-index-2" style="z-index: 2;">
-        <a href="{% url 'centers:add_child' %}" class="action-btn solid shadow-sm">
-            <i class="fas fa-plus"></i> تسجيل طفل
-        </a>
-        <a href="{% url 'centers:registry' %}" class="action-btn">
-            <i class="fas fa-book-medical"></i> السجل
-        </a>
+<div class="saas-wave-banner mb-4 border-0">
+    <div
+        class="p-4 p-md-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-index-1">
+        <div class="mb-4 mb-md-0 text-white">
+            <h2 class="fw-bolder mb-2" style="font-size: 1.8rem;">لوحة الإدارة الطبية</h2>
+            <p class="mb-0 text-white-50" style="font-size: 1rem;">نظرة شاملة ومباشرة على أداء ومؤشرات المركز الصحي
+                الفعلي</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{% url 'centers:add_child' %}" class="btn bg-white text-primary fw-bold px-4 py-2"
+                style="border-radius: var(--radius-full); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <i class="fas fa-plus me-2"></i> تسجيل طفل جديد
+            </a>
+            <a href="{% url 'centers:registry' %}" class="btn btn-outline-light fw-bold px-4 py-2"
+                style="border-radius: var(--radius-full);">
+                <i class="fas fa-book-medical me-2"></i> السجل الرقمي
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- ================= KPIS ================= -->
 <div class="row g-4 mb-4">
-
-    <!-- Defaulters -->
+    <!-- KPI 1 -->
     <div class="col-xl-3 col-md-6">
-        <div class="kpi-card" style="border-bottom: 4px solid var(--h-danger);">
-            <div class="kpi-icon-wrapper kpi-icon-danger">
+        <div class="kpi-card fade-in-up">
+            <div class="kpi-icon bg-danger-soft">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <div class="flex-grow-1 ms-3 text-end me-3">
+            <div class="kpi-info">
                 <p class="kpi-label">تنبيه المتسربين</p>
-                <div class="kpi-value" id="count-defaulters">{{ defaulters_count }}</div>
-                <div class="kpi-subtext text-danger pt-1 fw-bold">أكثر من 3 أيام تأخير!</div>
+                <div class="kpi-value" id="kpi-defaulters">—</div>
+                <div class="text-danger mt-1 fw-bold" style="font-size: 0.75rem;">أكثر من 3 أيام تأخير!</div>
             </div>
         </div>
     </div>
 
-    <!-- Vaccinated Today -->
+    <!-- KPI 2 -->
     <div class="col-xl-3 col-md-6">
-        <div class="kpi-card" style="border-bottom: 4px solid var(--h-primary);">
-            <div class="kpi-icon-wrapper kpi-icon-primary">
+        <div class="kpi-card fade-in-up delay-100">
+            <div class="kpi-icon bg-primary-soft">
                 <i class="fas fa-syringe"></i>
             </div>
-            <div class="flex-grow-1 ms-3 text-end me-3">
+            <div class="kpi-info">
                 <p class="kpi-label">تطعيمات اليوم</p>
-                <div class="kpi-value" id="count-vaccinated-today">{{ vaccinated_today }}</div>
-                <div class="kpi-subtext" style="color: var(--h-primary); font-weight: bold;">أطفال تم تطعيمهم اليوم
-                </div>
+                <div class="kpi-value" id="kpi-vaccinated-today">—</div>
+                <div class="text-primary mt-1 fw-bold" style="font-size: 0.75rem;">إجمالي أطفال اليوم</div>
             </div>
         </div>
     </div>
 
-    <!-- Total Children -->
+    <!-- KPI 3 -->
     <div class="col-xl-3 col-md-6">
-        <div class="kpi-card" style="border-bottom: 4px solid var(--h-success);">
-            <div class="kpi-icon-wrapper kpi-icon-info">
+        <div class="kpi-card fade-in-up delay-200">
+            <div class="kpi-icon bg-teal-soft">
                 <i class="fas fa-users"></i>
             </div>
-            <div class="flex-grow-1 ms-3 text-end me-3">
+            <div class="kpi-info">
                 <p class="kpi-label">إجمالي الأطفال</p>
-                <div class="kpi-value" id="count-total">{{ total_children }}</div>
-                <div class="kpi-subtext" style="color: var(--h-success); font-weight: bold;">
-                    +<span id="count-new-week">{{ new_registered_week }}</span> هذا الأسبوع
-                </div>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="text-teal-600 mt-1 fw-bold" style="font-size: 0.75rem; color: var(--c-teal-600);">مسجلون في
+                    المركز</div>
             </div>
         </div>
     </div>
 
-    <!-- Completed Vaccination (The missing 4th card) -->
+    <!-- KPI 4 -->
     <div class="col-xl-3 col-md-6">
-        <div class="kpi-card" style="border-bottom: 4px solid var(--h-warning);">
-            <div class="kpi-icon-wrapper kpi-icon-warning">
+        <div class="kpi-card fade-in-up delay-300">
+            <div class="kpi-icon bg-warning-soft">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <div class="flex-grow-1 ms-3 text-end me-3">
+            <div class="kpi-info">
                 <p class="kpi-label">مكتملي التحصين</p>
-                <div class="kpi-value" id="count-completed">{{ completed_children }}</div>
-                <div class="kpi-subtext" style="color: var(--h-warning); font-weight: bold;">أنهوا جدولهم بالكامل</div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- ================= CHARTS ROW 1 ================= -->
-<div class="row g-4 mb-4">
-    <!-- Weekly Visits -->
-    <div class="col-lg-8">
-        <div class="analytic-card">
-            <div class="analytic-header">
-                <i class="fas fa-chart-line"></i>
-                معدلات الإقبال الفعلية (آخر 7 أيام)
-            </div>
-            <div style="height: 300px; width: 100%;">
-                <canvas id="weeklyVisitsChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Community Reach -->
-    <div class="col-lg-4">
-        <div class="analytic-card">
-            <div class="analytic-header">
-                <i class="fas fa-map-marked-alt"></i>
-                التوزيع الجغرافي
-            </div>
-            <div
-                style="height: 250px; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 1rem;">
-                <canvas id="communityReachChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ================= CHARTS ROW 2 ================= -->
-<div class="row g-4 mb-4">
-    <!-- Upcoming Workload -->
-    <div class="col-lg-12">
-        <div class="analytic-card">
-            <div class="analytic-header d-flex justify-content-between">
-                <div>
-                    <i class="fas fa-calendar-check text-primary bg-soft-primary"></i>
-                    مؤشر الضغط المتوقع (الأسبوع القادم)
+                <div class="kpi-value" id="kpi-completed">—</div>
+                <div class="text-warning mt-1 fw-bold" style="font-size: 0.75rem;">
+                    نسبة الإنجاز: <span id="kpi-rate">0</span>%
                 </div>
-                <span class="badge bg-light text-muted border px-3 py-2">يعتمد على مواعيد الجرعات القادمة</span>
-            </div>
-            <div style="height: 300px; width: 100%;">
-                <canvas id="upcomingWorkloadChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ================= RECENT ACTIVITY ================= -->
+<!-- ================= CHARTS AND APPOINTMENTS ================= -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="saas-card h-100">
+            <div class="card-header-styled">
+                <h3 class="card-title-styled">
+                    <div class="card-title-icon"><i class="fas fa-chart-line"></i></div>
+                    معدلات الإقبال الفعلية (آخر 7 أيام)
+                </h3>
+            </div>
+            <div class="card-body-styled">
+                <div style="height: 320px; width: 100%;">
+                    <canvas id="weeklyVisitsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="saas-card h-100">
+            <div class="card-header-styled">
+                <h3 class="card-title-styled">
+                    <div class="card-title-icon"><i class="fas fa-calendar-check text-warning"></i></div>
+                    المواعيد القادمة
+                </h3>
+            </div>
+            <div class="card-body-styled p-0" id="upcoming-appointments-container">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= RECENT ACTIVITY TABLE ================= -->
 <div class="row g-4">
     <div class="col-12">
-        <div class="custom-table-wrapper">
-            <div class="custom-table-header">
-                <h5 class="fw-bold m-0" style="color: var(--h-primary);">
-                    <i class="fas fa-history me-2" style="color: var(--h-accent);"></i> آخر السجلات المضافة
-                </h5>
+        <div class="saas-card">
+            <div class="card-header-styled">
+                <h3 class="card-title-styled">
+                    <div class="card-title-icon"><i class="fas fa-history text-indigo-500"></i></div>
+                    آخر السجلات المضافة
+                </h3>
                 <a href="{% url 'centers:registry' %}"
-                    class="btn btn-sm btn-light border fw-bold px-3 py-2 text-primary" style="border-radius: 0.5rem;">
-                    عرض الكل
+                    class="btn btn-sm btn-light border fw-bold text-primary px-3 rounded-pill">
+                    عرض السجل كاملاً
                 </a>
             </div>
-            <div class="table-responsive">
-                <table class="clean-table text-center">
-                    <thead>
-                        <tr>
-                            <th class="text-start pe-4 ps-4">بيانات الطفل</th>
-                            <th>اللقاح المعطى</th>
-                            <th>رقم الجرعة</th>
-                            <th>تاريخ الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for record in recent_records %}
-                        <tr>
-                            <td class="text-start pe-4 ps-4 fw-bold" style="color: var(--h-primary);">
-                                {{ record.child.full_name }}
-                            </td>
-                            <td>
-                                <span class="custom-badge custom-badge-blue">
-                                    {{ record.vaccine.name_ar }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="custom-badge custom-badge-gray">
-                                    الجرعة {{ record.dose_number }}
-                                </span>
-                            </td>
-                            <td class="text-muted fw-bold">
-                                {{ record.date_given|date:"Y/m/d" }}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="py-5 text-muted fw-bold text-center">لا توجد سجلات تطعيم حديثة حتى
-                                الآن.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div id="recent-activity-container" class="table-responsive">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <span class="ms-3 text-muted fw-bold">جاري التحميل...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -452,162 +150,155 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/api.js' %}"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // --------------------------------
-        // 1. Vanilla JS Number Animation (To avoid CDN errors)
-        // --------------------------------
-        function animateValue(id, end, duration) {
+    document.addEventListener("DOMContentLoaded", async function () {
+
+        // -----------------------------------------------
+        // 1. Animated Number Counter
+        // -----------------------------------------------
+        function animateValue(id, end, duration = 1200) {
             const obj = document.getElementById(id);
-            if (!obj || end === 0) {
-                if (obj) obj.innerHTML = end;
-                return;
-            }
+            if (!obj) return;
+            if (end === 0) { obj.innerHTML = '0'; return; }
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 obj.innerHTML = Math.floor(progress * end);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
+                if (progress < 1) window.requestAnimationFrame(step);
             };
             window.requestAnimationFrame(step);
         }
 
-        let dCount = parseInt("{{ defaulters_count|default:0 }}");
-        let vCount = parseInt("{{ vaccinated_today|default:0 }}");
-        let tCount = parseInt("{{ total_children|default:0 }}");
-        let cCount = parseInt("{{ completed_children|default:0 }}");
-        let nCount = parseInt("{{ new_registered_week|default:0 }}");
+        // -----------------------------------------------
+        // 2. Fetch Dashboard Stats
+        // -----------------------------------------------
+        let dashData;
+        try {
+            dashData = await apiFetch('/api/dashboard/stats/');
+        } catch (e) {
+            console.error('Dashboard stats fetch failed:', e);
+            document.getElementById('recent-activity-container').innerHTML =
+                `<div class="alert alert-danger m-4 border-0 rounded-4"><i class="fas fa-exclamation-circle me-2"></i>فشل تحميل البيانات. يرجى تحديث الصفحة.</div>`;
+            document.getElementById('upcoming-appointments-container').innerHTML =
+                `<p class="text-danger small text-center p-4">فشل التحميل</p>`;
+            return;
+        }
 
-        animateValue('count-defaulters', dCount, 1500);
-        animateValue('count-vaccinated-today', vCount, 1500);
-        animateValue('count-total', tCount, 1500);
-        animateValue('count-completed', cCount, 1500);
-        animateValue('count-new-week', nCount, 1500);
+        // -----------------------------------------------
+        // 3. Render KPIs
+        // -----------------------------------------------
+        const kpis = dashData.kpis || dashData;
+        animateValue('kpi-defaulters', kpis.defaulters_count ?? 0);
+        animateValue('kpi-vaccinated-today', kpis.vaccinated_today ?? 0);
+        animateValue('kpi-total', kpis.total_children ?? 0);
+        animateValue('kpi-completed', kpis.completed_children ?? 0);
+        const rateEl = document.getElementById('kpi-rate');
+        if (rateEl) rateEl.textContent = kpis.completion_rate ?? 0;
 
-        // --------------------------------
-        // 2. Chart Global Settings
-        // --------------------------------
-        Chart.defaults.font.family = "'Cairo', sans-serif";
-        Chart.defaults.color = "#64748B"; // slate-500
+        // -----------------------------------------------
+        // 4. Chart.js — Weekly Visits
+        // -----------------------------------------------
+        const chartSection = dashData.charts || {};
+        const labels = chartSection.labels || [];
+        const values = chartSection.vaccination_trend || [];
 
-        // Soft Color Palette to match CSS variables
-        const medColors = {
-            primary: "#3b82f6",
-            secondary: "#0ea5e9",
-            accent: "#6366f1",
-            light: "#818cf8",
-            cyan: "#0ea5e9",
-            teal: "#10b981",
-            warning: "#f59e0b",
-            danger: "#f43f5e"
-        };
-
-        // --------------------------------
-        // 3. Weekly Visits (Line Chart)
-        // --------------------------------
-        const ctxVisits = document.getElementById('weeklyVisitsChart').getContext('2d');
-        const gradVisits = ctxVisits.createLinearGradient(0, 0, 0, 300);
-        gradVisits.addColorStop(0, 'rgba(87, 108, 188, 0.4)'); // accent color with opacity
-        gradVisits.addColorStop(1, 'rgba(87, 108, 188, 0.0)');
-
-        new Chart(ctxVisits, {
-            type: 'line',
-            data: {
-                labels: JSON.parse('{{ weekly_visits_labels|escapejs }}'),
-                datasets: [{
-                    label: ' زيارة',
-                    data: JSON.parse('{{ weekly_visits_data|escapejs }}'),
-                    borderColor: medColors.accent,
-                    backgroundColor: gradVisits,
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4, // ultra smooth curve
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: medColors.accent,
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { backgroundColor: medColors.primary, titleFont: { size: 14 }, padding: 12, cornerRadius: 8 }
+        const ctx = document.getElementById('weeklyVisitsChart');
+        if (ctx && labels.length) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'التطعيمات اليومية',
+                        data: values,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#4f46e5',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
-                    x: { grid: { display: false, drawBorder: false } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
                 }
-            }
-        });
+            });
+        } else if (ctx) {
+            ctx.parentElement.innerHTML = '<p class="text-muted text-center py-5">لا توجد بيانات كافية لعرض الرسم البياني.</p>';
+        }
 
-        // --------------------------------
-        // 4. Community Reach (Doughnut)
-        // --------------------------------
-        new Chart(document.getElementById('communityReachChart'), {
-            type: 'doughnut',
-            data: {
-                labels: JSON.parse('{{ community_reach_labels|escapejs }}'),
-                datasets: [{
-                    data: JSON.parse('{{ community_reach_data|escapejs }}'),
-                    backgroundColor: [medColors.secondary, medColors.accent, medColors.light, medColors.cyan, medColors.teal],
-                    borderWidth: 0,
-                    hoverOffset: 6
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } },
-                    tooltip: { backgroundColor: medColors.primary, padding: 12, cornerRadius: 8 }
-                }
-            }
-        });
+        // -----------------------------------------------
+        // 5. Upcoming Appointments
+        // -----------------------------------------------
+        const apptContainer = document.getElementById('upcoming-appointments-container');
+        const appts = dashData.upcoming_appointments || [];
+        if (appts.length === 0) {
+            apptContainer.innerHTML = '<p class="text-muted text-center py-5 small">لا توجد مواعيد قادمة.</p>';
+        } else {
+            let apptHtml = '<div class="list-group list-group-flush rounded-bottom">';
+            appts.forEach(a => {
+                apptHtml += `<div class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center border-bottom-0 border-top">
+                <div>
+                    <div class="fw-bold mb-1" style="color: var(--c-blue-900); font-size: 0.95rem;">${a.child_name || '—'}</div>
+                    <div class="text-muted" style="font-size:0.8rem;"><i class="fas fa-syringe me-1 text-teal-600"></i> ${a.vaccine || ''}</div>
+                </div>
+                <span class="badge badge-saas badge-saas-primary">${a.due_date || ''}</span>
+            </div>`;
+            });
+            apptHtml += '</div>';
+            apptContainer.innerHTML = apptHtml;
+        }
 
-        // --------------------------------
-        // 5. Upcoming Workload (Bar)
-        // --------------------------------
-        new Chart(document.getElementById('upcomingWorkloadChart'), {
-            type: 'bar',
-            data: {
-                labels: JSON.parse('{{ upcoming_workload_labels|escapejs }}'),
-                datasets: [{
-                    label: ' طفل متوقع',
-                    data: JSON.parse('{{ upcoming_workload_data|escapejs }}'),
-                    backgroundColor: function (context) {
-                        const value = context.raw;
-                        const workloadData = JSON.parse('{{ upcoming_workload_data|escapejs }}');
-                        const max = Math.max(...workloadData);
-                        if (max === 0) return medColors.cyan;
+        // -----------------------------------------------
+        // 6. Recent Activity Table
+        // -----------------------------------------------
+        const activityContainer = document.getElementById('recent-activity-container');
+        const activity = dashData.recent_activity || [];
+        if (activity.length === 0) {
+            activityContainer.innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 text-border"></i>
+                <p>لا توجد سجلات حديثة.</p>
+            </div>`;
+        } else {
+            let rows = '';
+            activity.forEach(item => {
+                rows += `<tr>
+                <td>
+                    <div class="fw-bold text-blue-900" style="color:var(--c-blue-900); font-size: 1.05rem;">${item.child_name || '—'}</div>
+                    <div class="text-muted" style="font-size: 0.85rem;">${item.staff || ''}</div>
+                </td>
+                <td class="fw-semibold text-blue-700" style="color:var(--c-blue-700);">${item.vaccine || '—'}</td>
+                <td><span class="badge badge-saas badge-saas-muted border-0 bg-light text-dark">جرعة ${item.dose || ''}</span></td>
+                <td class="text-muted" style="font-size: 0.85rem;"><i class="far fa-calendar-alt me-1"></i> ${item.date || '—'}</td>
+            </tr>`;
+            });
 
-                        const alpha = value / max;
-                        if (alpha > 0.8) return medColors.danger; // Heaviest workload
-                        if (alpha > 0.5) return medColors.warning;  // Medium workload
-                        return medColors.teal; // Low workload
-                    },
-                    borderRadius: 8,
-                    barPercentage: 0.5
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { backgroundColor: medColors.primary, titleFont: { size: 14 }, padding: 12, cornerRadius: 8 }
-                },
-                scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0', drawBorder: false } },
-                    x: { grid: { display: false, drawBorder: false } }
-                }
-            }
-        });
+            activityContainer.innerHTML = `
+            <table class="saas-table">
+                <thead>
+                    <tr>
+                        <th>اسم الطفل</th>
+                        <th>اللقاح</th>
+                        <th>الجرعة</th>
+                        <th>التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
 
     });
 </script>

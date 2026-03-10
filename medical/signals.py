@@ -1,8 +1,9 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Child, VaccineSchedule, ChildVaccineSchedule, Family
+from .models import Child, VaccineSchedule, ChildVaccineSchedule, Family, VaccineRecord
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
+from django.utils import timezone
 
 @receiver(post_save, sender=Child)
 def generate_child_schedule(sender, instance, created, **kwargs):
@@ -65,3 +66,77 @@ def create_family_user(sender, instance, created, **kwargs):
             # ربط الحساب بالعائلة
             instance.account = user
             instance.save()
+
+
+@receiver(post_save, sender=VaccineRecord)
+def sync_vaccine_record_to_child(sender, instance, created, **kwargs):
+    """
+    عند إضافة أو تعديل سجل تطعيم (VaccineRecord):
+    1. نحدث جدول الطفل (ChildVaccineSchedule) لنجعله is_taken = True
+    2. نتحقق ما إذا كان الطفل قد أكمل جميع التلقيحات الأساسية (BASIC)
+    3. إذا أكمل الأساسي، نحدّث حالة الطفل (is_completed = True)
+    """
+    child = instance.child
+    vaccine = instance.vaccine
+    dose = instance.dose_number
+    
+    # 1. Update ChildVaccineSchedule
+    schedule_item = ChildVaccineSchedule.objects.filter(
+        child=child,
+        vaccine_schedule__vaccine=vaccine,
+        vaccine_schedule__dose_number=dose
+    ).first()
+    
+    if schedule_item and not schedule_item.is_taken:
+        schedule_item.is_taken = True
+        schedule_item.save(update_fields=['is_taken'])
+        
+    # 2. Check complete status
+    all_basic_schedules = ChildVaccineSchedule.objects.filter(
+        child=child,
+        vaccine_schedule__stage='BASIC'
+    )
+    
+    if all_basic_schedules.exists():
+        has_pending_basic = all_basic_schedules.filter(is_taken=False).exists()
+        
+        if not has_pending_basic and not child.is_completed:
+            child.is_completed = True
+            child.completed_date = timezone.now().date()
+            child.save(update_fields=['is_completed', 'completed_date'])
+        elif has_pending_basic and child.is_completed:
+            child.is_completed = False
+            child.completed_date = None
+            child.save(update_fields=['is_completed', 'completed_date'])
+
+
+@receiver(post_delete, sender=VaccineRecord)
+def handle_vaccine_record_deletion(sender, instance, **kwargs):
+    """
+    عند حذف سجل تطعيم بالخطأ، نعيد حالة الجدول للطفل كغير مكتمل
+    """
+    child = instance.child
+    vaccine = instance.vaccine
+    dose = instance.dose_number
+    
+    # 1. Revert ChildVaccineSchedule
+    schedule_item = ChildVaccineSchedule.objects.filter(
+        child=child,
+        vaccine_schedule__vaccine=vaccine,
+        vaccine_schedule__dose_number=dose
+    ).first()
+    
+    if schedule_item and schedule_item.is_taken:
+        schedule_item.is_taken = False
+        schedule_item.save(update_fields=['is_taken'])
+        
+    # 2. Check complete status
+    if child.is_completed:
+        all_basic_schedules = ChildVaccineSchedule.objects.filter(
+            child=child,
+            vaccine_schedule__stage='BASIC'
+        )
+        if all_basic_schedules.filter(is_taken=False).exists():
+            child.is_completed = False
+            child.completed_date = None
+            child.save(update_fields=['is_completed', 'completed_date'])

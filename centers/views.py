@@ -113,217 +113,33 @@ def child_detail_view(request, child_id):
 @login_required
 def dashboard_view(request):
     """
-    Premium Dashboard with Engineering KPIs.
-    "Smart Data" for "Smart Decisions".
+    Dashboard shell view. All data is fetched client-side from /api/dashboard/stats/
     """
-    user = request.user
-    center = user.health_center
-    today = timezone.now().date()
-    
-      # --- 1. Top KPIs (أرقام سريعة للمدير) ---
-    # 1.1 Defaulters (المتسربين): متأخرين أكثر من 3 أيام
-    from django.db.models import Count, F, ExpressionWrapper, DateField
-    from collections import defaultdict
-    three_days_ago = today - timedelta(days=3)
-    defaulters_count = ChildVaccineSchedule.objects.filter(
-        child__health_center=center,
-        is_taken=False,
-        due_date__lte=three_days_ago
-    ).count()
+    return render(request, 'centers/dashboard.html')
 
-    # 1.2 Vaccinated Today (المطعمين اليوم)
-    vaccinated_today = VaccineRecord.objects.filter(
-        staff__health_center=center,
-        date_given=today
-    ).count()
-
-    # 1.3 New Registered This Week (أطفال جدد هذا الأسبوع)
-    seven_days_ago = today - timedelta(days=7)
-    new_registered_week = Child.objects.filter(
-        health_center=center,
-        created_at__date__gte=seven_days_ago
-    ).count()
-
-    # --- 2. Weekly Visits Chart (مؤشر الزيارات الأسبوعي - Line Chart) ---
-    # الزيارات الفعلية خلال آخر 7 أيام
-    weekly_visits_labels = []
-    weekly_visits_data = []
-    for i in range(6, -1, -1):
-        day_date = today - timedelta(days=i)
-        # Arabic day name
-        day_name = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"][day_date.weekday()]
-        weekly_visits_labels.append(day_name)
-        count = VaccineRecord.objects.filter(staff__health_center=center, date_given=day_date).count()
-        weekly_visits_data.append(count)
-
-    # --- 3. Upcoming Workload (مؤشر ضغط العمل المتوقع - Bar Chart) ---
-    # الجرعات المستحقة خلال الـ 7 أيام القادمة بناءً على المواعيد
-    upcoming_workload_labels = []
-    upcoming_workload_data = []
-    for i in range(1, 8): # من الغد حتى بعد أسبوع
-        day_date = today + timedelta(days=i)
-        day_name = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"][day_date.weekday()]
-        upcoming_workload_labels.append(day_name)
-        count = ChildVaccineSchedule.objects.filter(
-            child__health_center=center,
-            is_taken=False,
-            due_date=day_date
-        ).count()
-        upcoming_workload_data.append(count)
-
-    # --- 4. Community Reach (التقييم المجتمعي - Pie Chart/Table) ---
-    # توزيع الأطفال النشطين حسب مديرية الميلاد (أو مكان الميلاد)
-    community_reach_qs = Child.objects.filter(health_center=center).values(
-        'birth_directorate__name_ar'
-    ).annotate(count=Count('id')).order_by('-count')[:5]
-    
-    community_reach_labels = []
-    community_reach_data = []
-    for item in community_reach_qs:
-        label = item['birth_directorate__name_ar'] if item['birth_directorate__name_ar'] else 'غير محدد'
-        community_reach_labels.append(label)
-        community_reach_data.append(item['count'])
-
-    # --- 5. Recent Vaccination Activity (The "Live Feed") ---
-    recent_records = VaccineRecord.objects.filter(
-        staff__health_center=center
-    ).select_related('child', 'vaccine').order_by('-date_given', '-id')[:5]
-
-    # --- 6. Simplified Standard Stats ---
-    total_children = Child.objects.filter(health_center=center).count()
-    completed_children = Child.objects.filter(health_center=center, is_completed=True).count()
-    
-    # DEMO MODE LOGIC HAS BEEN COMPLETELY REMOVED
-
-    context = {
-        # 1. Top KPIs
-        'defaulters_count': defaulters_count,
-        'vaccinated_today': vaccinated_today,
-        'new_registered_week': new_registered_week,
-        
-        # 2. Weekly Visits Chart (Line)
-        'weekly_visits_labels': json.dumps(list(weekly_visits_labels)),
-        'weekly_visits_data': json.dumps(list(weekly_visits_data)),
-        
-        # 3. Upcoming Workload (Bar)
-        'upcoming_workload_labels': json.dumps(list(upcoming_workload_labels)),
-        'upcoming_workload_data': json.dumps(list(upcoming_workload_data)),
-        
-        # 4. Community Reach (Pie/Table)
-        'community_reach_labels': json.dumps(list(community_reach_labels)),
-        'community_reach_data': json.dumps(list(community_reach_data)),
-        
-        # 5. Recent Activity
-        'recent_records': recent_records,
-        
-        # 6. Generals
-        'total_children': total_children,
-        'completed_children': completed_children,
-    }
-    return render(request, 'centers/dashboard.html', context)
 
 @login_required
 def registry_view(request):
     """
-    Detached Vaccination Registry Page.
+    Registry shell view. Children and vaccine grid headers
+    are fetched client-side from /api/children/ and /api/vaccines/
     """
-    # 1. Fetch Vaccines and Schedules (Group by VACCINE)
-    from medical.models import Vaccine
-    vaccines = Vaccine.objects.prefetch_related('schedules').all()
-    
-    grouped_headers_list = []
-    flat_header = []
+    return render(request, 'centers/registry.html')
 
-    for vac in vaccines:
-        doses = list(vac.schedules.all().order_by('dose_number'))
-        if doses:
-            grouped_headers_list.append({
-                'label': vac.name_ar,
-                'doses': doses
-            })
-            for i, sch in enumerate(doses):
-                sch.is_group_end = (i == len(doses) - 1)
-                flat_header.append(sch)
-        
-    # 2. Fetch Children (With Search)
-    children = Child.objects.filter(is_completed=False).select_related('family').order_by('-created_at')
 
-    query = request.GET.get('q')
-    if query:
-        from django.db.models import Q
-        children = children.filter(
-            Q(full_name__icontains=query) |
-            Q(family__father_name__icontains=query) |
-            Q(family__mother_name__icontains=query) |
-            Q(family__access_code__icontains=query)
-        )
-    
-    total_count = children.count()
+@login_required
+def child_detail_view(request, child_id):
+    """
+    Child detail shell view. Passes only the child_id to the template.
+    All detail data is fetched client-side from /api/children/<id>/
+    """
+    return render(request, 'centers/child_detail.html', {'child_id': child_id})
 
-    if not query:
-        # Pagination could be added here
-        children = children[:50] # Limit default view for performance
-
-    # 3. Build Rows
-    child_rows = []
-    today = timezone.now().date()
-
-    for child in children:
-        records_map = {
-            (rec.vaccine_id, rec.dose_number): rec 
-            for rec in child.vaccine_records.all()
-        }
-        
-        cells = []
-        for col in flat_header:
-            key = (col.vaccine.id, col.dose_number)
-            is_taken = key in records_map
-            
-            status = 'future'
-            date_val = None
-            
-            if is_taken:
-                rec = records_map[key]
-                status = 'taken'
-                date_val = rec.date_given
-            else:
-                # Calculate Due Date
-                if child.date_of_birth:
-                    import math
-                    months_int = int(col.age_in_months)
-                    days_extra = int((col.age_in_months - months_int) * 30)
-                    due_date = child.date_of_birth + relativedelta(months=months_int) + timedelta(days=days_extra)
-                    date_val = due_date
-                    
-                    if today > due_date:
-                        status = 'overdue'
-                    elif today >= due_date - timedelta(days=14):
-                         status = 'due'
-                
-            cells.append({
-                'status': status,
-                'date': date_val,
-                'is_group_end': getattr(col, 'is_group_end', False)
-            })
-
-        child_rows.append({
-            'child': child,
-            'cells': cells
-        })
-
-    context = {
-        'grouped_headers': grouped_headers_list,
-        'flat_header': flat_header, 
-        'child_rows': child_rows,
-        'total_children_count': total_count,
-        'search_query': query
-    }
-    return render(request, 'centers/registry.html', context)
 
 @login_required
 def add_child_view(request):
     """
-    إضافة طفل جديد (النسخة الاحترافية باستخدام السيريالايزر)
+    Add Child - Form POST (unchanged). GET loads governorates from API.
     """
     if request.method == 'POST':
         # 1. نجهز البيانات (نسخة قابلة للتعديل)
@@ -368,9 +184,8 @@ def add_child_view(request):
             governorates = Governorate.objects.all()
             return render(request, 'centers/add_child.html', {'governorates': governorates})
 
-    # GET Request
-    governorates = Governorate.objects.all()
-    return render(request, 'centers/add_child.html', {'governorates': governorates})
+    # GET Request — governorates are now loaded client-side via /api/governorates/
+    return render(request, 'centers/add_child.html')
 
 def get_locations_api(request):
     # API to fetch Directorates and Health Centers
@@ -453,17 +268,9 @@ def add_staff_view(request):
 @login_required
 @center_manager_required
 def staff_list_view(request):
-    """عرض قائمة موظفي المركز للمدير فقط"""
+    """Staff list shell view. Data fetched client-side from /api/users/"""
+    return render(request, 'centers/staff_list.html')
 
-    # جلب الموظفين التابعين لنفس المركز (باستثناء المدير نفسه)
-    staff_members = CustomUser.objects.filter(
-        health_center=request.user.health_center
-    ).exclude(id=request.user.id).order_by('-date_joined')
-
-    context = {
-        'staff_members': staff_members
-    }
-    return render(request, 'centers/staff_list.html', context)
 
 
 @login_required

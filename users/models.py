@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
         ('CENTER_MANAGER', 'مدير مركز'), # مدير المركز (جديد)
         ('CENTER_STAFF', 'موظف مركز'),   # الموظف داخل المركز
         ('CUSTOMER', 'ولي أمر'),         # (اختياري)
+        ('MINISTRY', 'وزارة الصحة'),     # وزارة الصحة
     )
     
     role = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='CENTER_STAFF', verbose_name="نوع الحساب")
@@ -39,6 +40,10 @@ class CustomUser(AbstractUser):
     @property
     def is_center_staff(self):
         return self.role == 'CENTER_STAFF'
+
+    @property
+    def is_ministry(self):
+        return self.role == 'MINISTRY'
 
     class Meta:
         verbose_name = "مستخدم"
