@@ -148,10 +148,20 @@
             if (!el) return;
             if (end === 0) { el.textContent = '0' + suffix; return; }
             let start = 0, duration = 1200, startTs = null;
+            const isFloat = !Number.isInteger(parseFloat(end));
+            const target = parseFloat(end);
+            
             const step = ts => {
                 if (!startTs) startTs = ts;
                 const p = Math.min((ts - startTs) / duration, 1);
-                el.textContent = Math.floor(p * end) + suffix;
+                const currentVal = p * target;
+                
+                if (isFloat) {
+                    el.textContent = currentVal.toFixed(1) + suffix;
+                } else {
+                    el.textContent = Math.floor(currentVal) + suffix;
+                }
+                
                 if (p < 1) requestAnimationFrame(step);
             };
             requestAnimationFrame(step);

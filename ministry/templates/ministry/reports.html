@@ -105,14 +105,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Pie Chart
     const completed   = kpis.completed_children || 0;
-    const uncompleted = (kpis.total_children || 0) - completed;
+    const totals      = kpis.total_children || 0;
+    const defaulters  = kpis.defaulters_count || 0;
+    // In progress is total minus completed and minus defaulters
+    const in_progress = Math.max(0, totals - completed - defaulters);
+
     new Chart(document.getElementById('completionPie'), {
         type: 'doughnut',
         data: {
-            labels: ['مكتملو التطعيم', 'قيد التطعيم'],
+            labels: ['مكتملو التطعيم', 'قيد التطعيم', 'متأخرون'],
             datasets: [{
-                data: [completed, uncompleted],
-                backgroundColor: ['#148f77', '#e74c3c'],
+                data: [completed, in_progress, defaulters],
+                backgroundColor: ['#10b981', '#3aaafc', '#ef4444'], // Green, Blue, Red
                 borderWidth: 0,
                 hoverOffset: 10
             }]

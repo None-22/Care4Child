@@ -37,14 +37,15 @@ from notifications.models import NotificationLog
 
 class GovernorateViewSet(viewsets.ModelViewSet):
     """
-    API للمحافظات (إدارة كاملة للسوبر أدمن)
+    API للمحافظات (إدارة كاملة للسوبر أدمن والوزارة)
     """
     queryset = Governorate.objects.all()
     serializer_class = GovernorateSerializer
     
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminUser]
+            from api.permissions import IsAdminOrMinistry
+            permission_classes = [IsAdminOrMinistry]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -54,7 +55,7 @@ class GovernorateViewSet(viewsets.ModelViewSet):
 
 class DirectorateViewSet(viewsets.ModelViewSet):
     """
-    API للمديريات (إدارة كاملة للسوبر أدمن)
+    API للمديريات (إدارة كاملة للسوبر أدمن والوزارة)
     """
     queryset = Directorate.objects.all()
     serializer_class = DirectorateSerializer
@@ -63,7 +64,8 @@ class DirectorateViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminUser]
+            from api.permissions import IsAdminOrMinistry
+            permission_classes = [IsAdminOrMinistry]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -79,7 +81,8 @@ class HealthCenterViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminUser]
+            from api.permissions import IsAdminOrMinistry
+            permission_classes = [IsAdminOrMinistry]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -270,9 +273,22 @@ class VaccineViewSet(viewsets.ModelViewSet):
     """
     queryset = Vaccine.objects.all()
     
+    def get_queryset(self):
+        user = self.request.user
+        qs = Vaccine.objects.all()
+        # Ministry and admins see all vaccines including inactive ones
+        is_ministry = getattr(user, 'role', None) == 'MINISTRY' or getattr(user, 'is_superuser', False)
+        if not is_ministry:
+            qs = qs.filter(is_active=True)
+        # Allow filtering to only show vaccines that have a description (Rich Data)
+        if self.request.query_params.get('has_description') == 'true':
+            qs = qs.exclude(description__isnull=True).exclude(description__exact='')
+        return qs
+    
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminUser]
+            from api.permissions import IsAdminOrMinistry
+            permission_classes = [IsAdminOrMinistry]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -370,7 +386,15 @@ class DashboardStatsView(APIView):
         # --- KPIs Calculation ---
         total_children = children_qs.count()
         completed_children = children_qs.filter(is_completed=True).count()
-        dropout_count = 0 
+        
+        # Calculate defaulters: children who are not completed AND have at least one past due schedule not taken
+        defaulters_qs = ChildVaccineSchedule.objects.filter(
+            child__in=children_qs.filter(is_completed=False),
+            due_date__lt=today,
+            is_taken=False
+        ).values('child').distinct()
+        dropout_count = defaulters_qs.count()
+        
         vaccinated_today = records_qs.filter(date_given=today).count()
         
         recent_activity = records_qs.select_related('child', 'vaccine', 'staff').order_by('-date_given', '-id')[:5]

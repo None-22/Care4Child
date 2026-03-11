@@ -28,8 +28,12 @@ def center_staff_required(view_func):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
              return JsonResponse({'error': 'Permission Denied'}, status=403)
         
-        messages.error(request, "عذراً، هذه الصفحة مخصصة لموظفي المراكز فقط.")
-        return redirect('centers:dashboard')
+        if getattr(request.user, 'role', None) == 'MINISTRY':
+            messages.error(request, "عذراً، هذه الصفحة مخصصة لموظفي المراكز فقط.")
+            return redirect('ministry:dashboard')
+            
+        messages.error(request, "عذراً، تحتاج لتسجيل الدخول بحساب له صلاحيات.")
+        return redirect('login')
         
     return _wrapped_view
 
@@ -56,7 +60,15 @@ def center_manager_required(view_func):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
              return JsonResponse({'error': 'Permission Denied'}, status=403)
         
-        messages.error(request, "عذراً، هذه الصفحة مخصصة لمدراء المراكز فقط.")
-        return redirect('centers:dashboard')
+        if getattr(request.user, 'role', None) == 'MINISTRY':
+            messages.error(request, "عذراً، هذه الصفحة مخصصة لمدراء المراكز فقط.")
+            return redirect('ministry:dashboard')
+            
+        if getattr(request.user, 'role', None) == 'CENTER_STAFF':
+            messages.error(request, "عذراً، هذه الصفحة مخصصة لمدراء المراكز فقط.")
+            return redirect('centers:dashboard')
+
+        messages.error(request, "عذراً، تحتاج لتسجيل الدخول بحساب له صلاحيات.")
+        return redirect('login')
         
     return _wrapped_view

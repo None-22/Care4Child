@@ -13,7 +13,7 @@ def ministry_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         # 1. Check Authentication
         if not request.user.is_authenticated:
-            return redirect('users:login')
+            return redirect('login')
 
         # 2. Check Role
         is_authorized = (
@@ -29,6 +29,6 @@ def ministry_required(view_func):
             return JsonResponse({'error': 'غير مصرح لك بالوصول. هذه الصفحة مخصصة لوزارة الصحة.'}, status=403)
 
         messages.error(request, 'عذراً، هذه الصفحة مخصصة لمستخدمي وزارة الصحة فقط.')
-        return redirect('users:login')
+        return redirect('login')
 
     return _wrapped_view

@@ -6,6 +6,7 @@ class Vaccine(models.Model):
     name_ar = models.CharField(max_length=100, verbose_name="اسم اللقاح (عربي)")
     name_en = models.CharField(max_length=100, blank=True, null=True, verbose_name="اسم اللقاح (إنجليزي)")
     description = models.TextField(blank=True, null=True, verbose_name="وصف اللقاح")
+    is_active = models.BooleanField(default=True, verbose_name="نشط")
 
     def __str__(self):
         return f"{self.name_ar} / {self.name_en}"

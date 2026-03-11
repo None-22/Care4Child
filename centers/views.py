@@ -15,6 +15,7 @@ import json
 # ... (Previous views) ...
 
 @login_required
+@center_staff_required
 def record_vaccine(request, child_id, schedule_id):
     schedule = get_object_or_404(VaccineSchedule, pk=schedule_id)
     child = get_object_or_404(Child, pk=child_id)
@@ -63,6 +64,7 @@ def record_vaccine(request, child_id, schedule_id):
     return redirect('centers:child_detail', child_id=child.id)
 
 @login_required
+@center_staff_required
 def child_detail_view(request, child_id):
     child = get_object_or_404(Child, pk=child_id)
     
@@ -111,6 +113,7 @@ def child_detail_view(request, child_id):
 
 
 @login_required
+@center_staff_required
 def dashboard_view(request):
     """
     Dashboard shell view. All data is fetched client-side from /api/dashboard/stats/
@@ -119,6 +122,7 @@ def dashboard_view(request):
 
 
 @login_required
+@center_staff_required
 def registry_view(request):
     """
     Registry shell view. Children and vaccine grid headers
@@ -128,6 +132,7 @@ def registry_view(request):
 
 
 @login_required
+@center_staff_required
 def child_detail_view(request, child_id):
     """
     Child detail shell view. Passes only the child_id to the template.
@@ -137,6 +142,7 @@ def child_detail_view(request, child_id):
 
 
 @login_required
+@center_staff_required
 def add_child_view(request):
     """
     Add Child - Form POST (unchanged). GET loads governorates from API.
@@ -206,6 +212,7 @@ def get_locations_api(request):
     return JsonResponse({'data': data})
 
 @login_required
+@center_manager_required
 def add_staff_view(request):
     # الحماية: التأكد أن المستخدم هو "مدير مركز"
     if not request.user.is_center_manager:

@@ -14,3 +14,15 @@ class IsCenterStaffOrReadOnly(permissions.BasePermission):
             request.user.is_authenticated and 
             (request.user.is_superuser or request.user.role in ['CENTER_MANAGER', 'CENTER_STAFF'])
         )
+
+
+class IsAdminOrMinistry(permissions.BasePermission):
+    """
+    يسمح للسوبر أدمن أو موظفي الوزارة (MINISTRY role) بالعمليات.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user and
+            request.user.is_authenticated and
+            (request.user.is_superuser or getattr(request.user, 'role', None) == 'MINISTRY')
+        )

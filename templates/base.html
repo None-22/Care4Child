@@ -27,19 +27,17 @@
 
     <!-- Ministry-specific styles (only active when user.is_ministry) -->
     <style>
-        .ministry-sidebar {
-            background: linear-gradient(180deg, #1a3a5c 0%, #1a5276 100%) !important;
-        }
-
+        /* ministry-sidebar removed to match center sidebar */
         .ministry-badge {
-            background: rgba(255, 255, 255, 0.18);
-            color: #fff;
+            background: var(--c-blue-50);
+            color: var(--c-blue-700);
             font-size: 0.68rem;
             padding: 2px 10px;
             border-radius: 20px;
             margin-top: 2px;
             display: inline-block;
             letter-spacing: 0.3px;
+            font-weight: 700;
         }
 
         /* Ministry KPI cards */
@@ -50,14 +48,14 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            box-shadow: 0 2px 12px rgba(26, 82, 118, 0.08);
-            border-right: 4px solid #1a5276;
+            box-shadow: 0 2px 12px rgba(29, 116, 196, 0.08); /* Derived from c-blue-700 */
+            border-right: 4px solid var(--c-blue-600);
             transition: transform .2s, box-shadow .2s;
         }
 
         .ministry-kpi:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(26, 82, 118, 0.14);
+            box-shadow: 0 8px 24px rgba(29, 116, 196, 0.14);
         }
 
         .ministry-kpi .kpi-icon {
@@ -72,8 +70,8 @@
         }
 
         .kpi-ministry-blue {
-            background: #d6eaf8;
-            color: #1a5276;
+            background: var(--c-blue-50);
+            color: var(--c-blue-600);
         }
 
         .kpi-ministry-green {
@@ -100,13 +98,13 @@
         .ministry-kpi .kpi-value {
             font-size: 1.85rem;
             font-weight: 800;
-            color: #1a3a5c;
+            color: var(--c-blue-800);
             line-height: 1;
         }
 
         /* Ministry banner */
         .ministry-banner {
-            background: linear-gradient(135deg, #1a5276 0%, #148f77 100%);
+            background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%);
             border-radius: 16px;
             padding: 26px 30px;
             color: #fff;
@@ -145,7 +143,7 @@
             margin: 0;
             font-size: 1rem;
             font-weight: 700;
-            color: #1a3a5c;
+            color: var(--c-blue-900);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -205,17 +203,23 @@
 </head>
 
 <body>
+    <script>
+        // Restore state immediately before the rest of the application loads to prevent jitter
+        if (localStorage.getItem('sidebarClosed') === 'true') {
+            document.body.classList.add('sidebar-closed');
+        }
+    </script>
     <div id="app-container">
 
         <!-- ====================================================
          FIXED SIDEBAR — Role-Aware
          ==================================================== -->
-        <aside class="saas-sidebar {% if user.is_ministry %}ministry-sidebar{% endif %}" id="mainSidebar">
+        <aside class="saas-sidebar" id="mainSidebar">
 
             {% if user.is_ministry or user.is_superuser and request.resolver_match.app_name == 'ministry' %}
             <!-- ===== MINISTRY SIDEBAR ===== -->
             <a href="{% url 'ministry:dashboard' %}" class="sidebar-header">
-                <div class="brand-icon" style="background:rgba(255,255,255,0.15);">
+                <div class="brand-icon">
                     <i class="fas fa-landmark"></i>
                 </div>
                 <div>
@@ -232,7 +236,7 @@
                 </a>
                 <a href="{% url 'ministry:reports' %}"
                     class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-                    <i class="fas fa-file-chart-column"></i><span class="si-text">التقارير الوطنية</span>
+                    <i class="fas fa-chart-bar"></i><span class="si-text">التقارير الوطنية</span>
                 </a>
                 <div class="nav-label">إدارة البيانات</div>
                 <a href="{% url 'ministry:health_centers' %}"
@@ -308,13 +312,15 @@
 
             <!-- User Footer — shared -->
             <div class="sidebar-footer">
-                <a href="{% url 'logout' %}" class="user-profile" title="تسجيل خروج">
-                    <div class="avatar">
-                        {{ user.get_full_name|first|default:user.username|first|upper }}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
-                        <div class="user-role">{{ user.get_role_display|default:"مستخدم" }} • خروج</div>
+                <a href="{% url 'logout' %}" class="user-profile text-danger w-100" title="تسجيل خروج" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-danger-soft text-danger" style="border-radius: 50%; width: 44px; height: 44px; font-size: 1.2rem;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="user-details ms-3">
+                            <div class="user-name text-danger fw-bold">تسجيل خروج</div>
+                            <div class="user-role text-danger opacity-75" style="color: inherit;">إنهاء الجلسة</div>
+                        </div>
                     </div>
                 </a>
             </div>
@@ -334,17 +340,11 @@
             <div class="header-actions">
                 <!-- Add Child Shortcut Button Removed per user request -->
 
-                <!-- Notification Bell -->
-                <button class="header-icon-btn position-relative">
-                    <i class="fas fa-bell"></i>
-                    <span
-                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                </button>
 
                 <!-- User Menu -->
                 <div class="dropdown">
                     <div class="avatar shadow-sm" data-bs-toggle="dropdown" aria-expanded="false"
-                        style="cursor:pointer; width:40px; height:40px; border-radius:12px;">
+                        style="cursor:pointer; width:45px; height:45px; border-radius:50%; background-color: var(--c-primary); color: white;">
                         {{ user.get_full_name|first|default:user.username|first|upper }}
                     </div>
                     <ul class="dropdown-menu dropdown-menu-start shadow border-0 mt-2"
@@ -358,7 +358,7 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item py-2" href="#"><i
+                        <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i
                                     class="fas fa-user-circle me-2 text-primary"></i>الملف الشخصي</a></li>
                         <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i
                                     class="fas fa-sign-out-alt me-2"></i>تسجيل خروج</a></li>
@@ -397,11 +397,6 @@
             const sidebarToggle = document.getElementById('sidebarToggle');
             const body = document.body;
 
-            // Restore state from localStorage
-            if (localStorage.getItem('sidebarClosed') === 'true') {
-                body.classList.add('sidebar-closed');
-            }
-
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', () => {
                     body.classList.toggle('sidebar-closed');
@@ -423,17 +418,8 @@
             {% endfor %}
             {% endif %}
 
-            // Restore scroll position after a reload (e.g. after vaccination)
-            const savedScroll = sessionStorage.getItem('scrollPos');
-            if (savedScroll) {
-                window.scrollTo(0, parseInt(savedScroll, 10));
-                sessionStorage.removeItem('scrollPos');
-            }
-
-            // Save scroll position before leaving the page
-            window.addEventListener('beforeunload', () => {
-                sessionStorage.setItem('scrollPos', window.scrollY);
-            });
+            // ---- Smooth page transition on sidebar nav clicks ----
+            // Removed as per user request (was causing jittery behavior).
         });
     </script>
 

@@ -18,9 +18,9 @@
     </div>
 </div>
 
-<!-- Stats row -->
+<!-- Stats + Search row -->
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="ministry-kpi">
             <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-syringe"></i></div>
             <div>
@@ -29,19 +29,30 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- Vaccines Grid -->
-<div id="vaccines-container" class="row g-3">
-    <div class="col-12 text-center py-5">
-        <div class="spinner-border text-primary spinner-border-sm"></div>
-        <span class="ms-3 text-muted">جاري التحميل...</span>
+    <div class="col-md-9 d-flex align-items-center">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="vac-search" class="form-control border-start-0" placeholder="ابحث باسم اللقاح...">
+        </div>
     </div>
 </div>
 
-<!-- Add Vaccine Modal -->
+<!-- Table -->
+<div class="ministry-card">
+    <div class="ministry-card-header">
+        <h3><i class="fas fa-syringe text-primary"></i> جدول اللقاحات</h3>
+    </div>
+    <div id="vaccines-container" class="table-responsive">
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <span class="ms-3 text-muted">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Add Vaccine Modal ===== -->
 <div class="modal fade" id="addVaccineModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header" style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0;">
                 <h5 class="modal-title fw-bold"><i class="fas fa-syringe me-2"></i>إضافة لقاح جديد</h5>
@@ -50,18 +61,28 @@
             <div class="modal-body p-4">
                 <div id="vac-error" class="alert alert-danger d-none"></div>
                 <div id="vac-success" class="alert alert-success d-none"></div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
-                    <input type="text" id="v-name-ar" class="form-control" placeholder="مثال: السل (BCG)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
+                        <input type="text" id="v-name-ar" class="form-control" placeholder="مثال: السل (BCG)">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الاسم (English) <span class="text-danger">*</span></label>
+                        <input type="text" id="v-name-en" class="form-control" placeholder="e.g. BCG">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">الوصف</label>
+                        <textarea id="v-desc" class="form-control" rows="3" placeholder="وصف مختصر للقاح وطريقة إعطائه..."></textarea>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">الاسم (English) <span class="text-danger">*</span></label>
-                    <input type="text" id="v-name-en" class="form-control" placeholder="e.g. BCG">
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-bold mb-0">جدول الجرعات (اختياري)</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addDoseRow('doses-container')">
+                        <i class="fas fa-plus"></i> إضافة جرعة
+                    </button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">الوصف</label>
-                    <textarea id="v-desc" class="form-control" rows="3" placeholder="وصف مختصر للقاح وطريقة إعطائه..."></textarea>
-                </div>
+                <div id="doses-container"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
@@ -73,43 +94,166 @@
     </div>
 </div>
 
+<!-- ===== Edit Vaccine Modal ===== -->
+<div class="modal fade" id="editVaccineModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header" style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل اللقاح</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="edit-vac-error" class="alert alert-danger d-none"></div>
+                <div id="edit-vac-success" class="alert alert-success d-none"></div>
+                <input type="hidden" id="edit-vac-id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
+                        <input type="text" id="edit-v-name-ar" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الاسم (English)</label>
+                        <input type="text" id="edit-v-name-en" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">الوصف</label>
+                        <textarea id="edit-v-desc" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-bold mb-0">جدول الجرعات</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addDoseRow('edit-doses-container')">
+                        <i class="fas fa-plus"></i> إضافة جرعة
+                    </button>
+                </div>
+                <div id="edit-doses-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-warning rounded-pill px-4" onclick="saveEditVaccine()">
+                    <i class="fas fa-save me-2"></i>حفظ التعديلات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+let allVaccines = [];
+
 async function loadVaccines() {
     const container = document.getElementById('vaccines-container');
     try {
-        const vaccines = await apiFetch('/api/vaccines/');
-        document.getElementById('vac-total').textContent = vaccines.length;
-        if (!vaccines.length) {
-            container.innerHTML = '<p class="text-center text-muted py-5">لا توجد لقاحات مسجلة.</p>';
-            return;
-        }
-        container.innerHTML = vaccines.map(v => `
-        <div class="col-md-6 col-lg-4">
-            <div class="ministry-card h-100">
-                <div class="ministry-card-body">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="kpi-icon kpi-ministry-blue flex-shrink-0">
-                            <i class="fas fa-syringe"></i>
-                        </div>
-                        <div>
-                            <div class="fw-bold" style="color:#1a3a5c; font-size:1rem;">${v.name_ar || '—'}</div>
-                            <div class="text-muted small mb-2">${v.name_en || ''}</div>
-                            ${v.description
-                                ? `<div class="text-muted" style="font-size:0.85rem; line-height:1.5;">${v.description}</div>`
-                                : '<div class="text-muted small fst-italic">لا يوجد وصف</div>'}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`).join('');
+        // Ministry sees all vaccines including inactive (no has_description filter here so we see all)
+        allVaccines = await apiFetch('/api/vaccines/');
+        document.getElementById('vac-total').textContent = allVaccines.filter(v => v.is_active !== false).length;
+        renderVaccines(allVaccines);
     } catch(e) {
-        container.innerHTML = '<div class="col-12"><div class="alert alert-danger">فشل تحميل البيانات.</div></div>';
+        container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
     }
 }
 
+function renderVaccines(vaccines) {
+    const container = document.getElementById('vaccines-container');
+    if (!vaccines.length) {
+        container.innerHTML = '<p class="text-center text-muted py-5">لا توجد لقاحات مسجلة.</p>';
+        return;
+    }
+    container.innerHTML = `<table class="ministry-table">
+    <thead><tr>
+        <th>#</th>
+        <th>اسم اللقاح</th>
+        <th>الوصف</th>
+        <th>الجرعات</th>
+        <th>الحالة</th>
+        <th>إجراءات</th>
+    </tr></thead>
+    <tbody>${vaccines.map((v, i) => `
+    <tr class="${v.is_active === false ? 'table-secondary opacity-75' : ''}">
+        <td class="text-muted">${i + 1}</td>
+        <td>
+            <div class="fw-bold" style="color:var(--c-blue-900);">${v.name_ar || '—'}</div>
+            ${v.name_en ? `<div class="text-muted small">${v.name_en}</div>` : ''}
+        </td>
+        <td style="max-width:220px;">
+            ${v.description
+                ? `<span class="text-muted small" title="${v.description.replace(/"/g, '&quot;')}">${v.description.length > 80 ? v.description.substring(0,80) + '...' : v.description}</span>`
+                : '<span class="text-muted fst-italic small">لا يوجد وصف</span>'}
+        </td>
+        <td>
+            ${v.schedules && v.schedules.length > 0
+                ? `<div class="d-flex flex-wrap gap-1">${v.schedules.map(s =>
+                    `<span class="badge ${s.stage === 'SCHOOL' ? 'bg-warning text-dark' : 'bg-info text-dark'}" style="font-size:0.72rem;">
+                        جرعة ${s.dose_number} (${s.age_in_months} شهر)
+                    </span>`).join('')}</div>`
+                : '<small class="text-muted">—</small>'}
+        </td>
+        <td>
+            ${v.is_active !== false
+                ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
+                : '<span class="badge badge-low rounded-pill px-3">موقوف</span>'}
+        </td>
+        <td>
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary rounded-pill"
+                    onclick="openEditModal(${v.id})" title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm ${v.is_active !== false ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill"
+                    onclick="toggleVaccineStatus(${v.id}, ${v.is_active !== false})"
+                    title="${v.is_active !== false ? 'إيقاف (أرشفة)' : 'تفعيل'}">
+                    <i class="fas fa-${v.is_active !== false ? 'ban' : 'check-circle'}"></i>
+                </button>
+            </div>
+        </td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// Search
+document.getElementById('vac-search').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    if (!q) { renderVaccines(allVaccines); return; }
+    renderVaccines(allVaccines.filter(v =>
+        (v.name_ar || '').toLowerCase().includes(q) ||
+        (v.name_en || '').toLowerCase().includes(q)
+    ));
+});
+
+// ---- Dose Row Helper ----
+function addDoseRow(containerId, data = {}) {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'dose-row d-flex gap-2 mb-2 align-items-center';
+    div.innerHTML = `
+        <input type="number" class="form-control dose-number form-control-sm" placeholder="الجرعة" min="1" value="${data.dose_number || ''}" style="width:80px;">
+        <input type="number" class="form-control dose-age form-control-sm" placeholder="الشهر" min="0" step="0.5" value="${data.age_in_months !== undefined ? data.age_in_months : ''}" style="width:100px;">
+        <select class="form-select dose-stage form-select-sm" style="width:150px;">
+            <option value="BASIC" ${data.stage !== 'SCHOOL' ? 'selected' : ''}>أساسي (رضّع)</option>
+            <option value="SCHOOL" ${data.stage === 'SCHOOL' ? 'selected' : ''}>مدرسي</option>
+        </select>
+        <button type="button" class="btn btn-danger btn-sm rounded-pill flex-shrink-0" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>`;
+    container.appendChild(div);
+}
+
+function collectDoses(containerId) {
+    const doses = [];
+    document.querySelectorAll(`#${containerId} .dose-row`).forEach(row => {
+        const dose = row.querySelector('.dose-number').value;
+        const age = row.querySelector('.dose-age').value;
+        const stage = row.querySelector('.dose-stage').value;
+        if (dose && age !== '' && stage) doses.push({ dose_number: +dose, age_in_months: +age, stage });
+    });
+    return doses;
+}
+
+// ---- Add Vaccine ----
 async function addVaccine() {
     const errEl = document.getElementById('vac-error'), sucEl = document.getElementById('vac-success');
     errEl.classList.add('d-none'); sucEl.classList.add('d-none');
@@ -117,6 +261,7 @@ async function addVaccine() {
         name_ar: document.getElementById('v-name-ar').value.trim(),
         name_en: document.getElementById('v-name-en').value.trim(),
         description: document.getElementById('v-desc').value.trim() || undefined,
+        schedules_data: collectDoses('doses-container')
     };
     if (!payload.name_ar || !payload.name_en) {
         errEl.textContent = 'يرجى ملء الاسم العربي والإنجليزي.'; errEl.classList.remove('d-none'); return;
@@ -126,7 +271,69 @@ async function addVaccine() {
         sucEl.textContent = `تم إضافة لقاح "${payload.name_ar}" بنجاح! ✅`; sucEl.classList.remove('d-none');
         await loadVaccines();
         setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addVaccineModal')).hide(), 1200);
+        document.getElementById('v-name-ar').value = '';
+        document.getElementById('v-name-en').value = '';
+        document.getElementById('v-desc').value = '';
+        document.getElementById('doses-container').innerHTML = '';
     } catch(e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+}
+
+// ---- Open Edit Modal ----
+function openEditModal(id) {
+    const v = allVaccines.find(x => x.id === id);
+    if (!v) return;
+    document.getElementById('edit-vac-id').value = v.id;
+    document.getElementById('edit-v-name-ar').value = v.name_ar || '';
+    document.getElementById('edit-v-name-en').value = v.name_en || '';
+    document.getElementById('edit-v-desc').value = v.description || '';
+    // Fill existing schedules
+    const dc = document.getElementById('edit-doses-container');
+    dc.innerHTML = '';
+    (v.schedules || []).forEach(s => addDoseRow('edit-doses-container', s));
+    // Clear messages
+    document.getElementById('edit-vac-error').classList.add('d-none');
+    document.getElementById('edit-vac-success').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('editVaccineModal')).show();
+}
+
+// ---- Save Edit ----
+async function saveEditVaccine() {
+    const errEl = document.getElementById('edit-vac-error'), sucEl = document.getElementById('edit-vac-success');
+    errEl.classList.add('d-none'); sucEl.classList.add('d-none');
+    const id = document.getElementById('edit-vac-id').value;
+    const payload = {
+        name_ar: document.getElementById('edit-v-name-ar').value.trim(),
+        name_en: document.getElementById('edit-v-name-en').value.trim(),
+        description: document.getElementById('edit-v-desc').value.trim() || null,
+        schedules_data: collectDoses('edit-doses-container')
+    };
+    if (!payload.name_ar || !payload.name_en) {
+        errEl.textContent = 'يرجى ملء الاسم العربي والإنجليزي.'; errEl.classList.remove('d-none'); return;
+    }
+    try {
+        await apiFetch(`/api/vaccines/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+        sucEl.textContent = 'تم حفظ التعديلات بنجاح! ✅'; sucEl.classList.remove('d-none');
+        await loadVaccines();
+        setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('editVaccineModal')).hide(), 1200);
+    } catch(e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+}
+
+// ---- Soft Delete / Activate ----
+async function toggleVaccineStatus(id, isCurrentlyActive) {
+    const action = isCurrentlyActive ? 'إيقاف' : 'تفعيل';
+    const msg = isCurrentlyActive
+        ? '⚠️ سيتم إيقاف هذا اللقاح. لن يظهر للممرضين ولن يُضاف للرضّع الجدد.\nسجلات الأطفال الحالية تبقى سليمة.\n\nهل تريد المتابعة؟'
+        : 'هل تريد إعادة تفعيل هذا اللقاح؟';
+    if (!confirm(msg)) return;
+    try {
+        await apiFetch(`/api/vaccines/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_active: !isCurrentlyActive })
+        });
+        await loadVaccines();
+    } catch(e) {
+        alert('حدث خطأ: ' + e.message);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', loadVaccines);

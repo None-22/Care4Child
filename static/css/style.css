@@ -7,23 +7,23 @@
 
 :root {
     /* Brand Colors - Vibrant, Electric, yet Medical */
-    --c-blue-900: #0f172a;
-    /* Near black indigo for deepest contrast */
-    --c-blue-800: #1e3a8a;
-    --c-blue-700: #1d4ed8;
-    --c-blue-600: #2563eb;
+    --c-blue-900: #0a4275;
+    /* Deep blue for contrast, not black */
+    --c-blue-800: #145b9d;
+    --c-blue-700: #1d74c4;
+    --c-blue-600: #268fe8;
     /* Primary Vibrant Blue */
-    --c-blue-500: #3b82f6;
-    --c-blue-400: #60a5fa;
-    --c-blue-100: #dbeafe;
-    --c-blue-50: #eff6ff;
+    --c-blue-500: #3aaafc;
+    --c-blue-400: #66c4ff;
+    --c-blue-100: #ccebff;
+    --c-blue-50:  #e6f5ff;
 
-    --c-teal-700: #0f766e;
-    --c-teal-600: #0d9488;
-    --c-teal-500: #14b8a6;
+    --c-teal-700: #0d7a71;
+    --c-teal-600: #109488;
+    --c-teal-500: #17c2b3;
     /* Vibrant secondary accent */
-    --c-teal-100: #ccfbf1;
-    --c-teal-50: #f0fdfa;
+    --c-teal-100: #d6fcf7;
+    --c-teal-50:  #f0fdfb;
 
     --c-primary: var(--c-blue-600);
     --c-primary-hover: var(--c-blue-700);
@@ -81,10 +81,10 @@ body {
     direction: rtl;
     min-height: 100vh;
     overflow-x: hidden;
-    /* Optional global background mesh gradient for extreme luxury */
+    /* Optional global background mesh gradient for vibrant bright aesthetic */
     background-image:
-        radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.5) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(204, 251, 241, 0.4) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, var(--c-blue-100) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, var(--c-teal-100) 0px, transparent 60%);
     background-attachment: fixed;
 }
 
@@ -429,9 +429,9 @@ a {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
 }
 
-/* Clean Formal Banner */
+/* Clean Vibrant Banner */
 .saas-wave-banner {
-    background: linear-gradient(135deg, var(--c-blue-900) 0%, var(--c-blue-700) 100%);
+    background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-500) 100%);
     border-radius: var(--radius-md);
     position: relative;
     overflow: hidden;

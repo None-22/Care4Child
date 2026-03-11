@@ -45,7 +45,7 @@
     </div>
 </div>
 
-<!-- Add Center Modal -->
+<!-- ===== Add Center Modal ===== -->
 <div class="modal fade" id="addCenterModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
@@ -58,6 +58,40 @@
                 <div id="add-error" class="alert alert-danger d-none"></div>
                 <div id="add-success" class="alert alert-success d-none"></div>
                 <div class="row g-3">
+                    <!-- ========================================== -->
+                    <!-- القسم الأول: الموقع الجغرافي -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-1 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">الموقع الجغرافي</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">المحافظة <span class="text-danger">*</span></label>
+                        <select id="c-governorate" class="form-select">
+                            <option value=""> اختر المحافظة </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">المديرية</label>
+                        <select id="c-directorate" class="form-select">
+                            <option value="">اختر المديرية </option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">العنوان التفصيلي</label>
+                        <input type="text" id="c-address" class="form-control"
+                            placeholder="الشارع، الحي، المعالم القريبة...">
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- القسم الثاني: البيانات الأساسية -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-4 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">بيانات المركز الأساسية</h5>
+                        </div>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">اسم المركز (عربي) <span class="text-danger">*</span></label>
                         <input type="text" id="c-name-ar" class="form-control" placeholder="مثال: مستشفى الثورة">
@@ -67,22 +101,6 @@
                         <input type="text" id="c-name-en" class="form-control" placeholder="e.g. Al-Thawra Hospital">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">المحافظة <span class="text-danger">*</span></label>
-                        <select id="c-governorate" class="form-select">
-                            <option value="">-- اختر المحافظة --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">المديرية</label>
-                        <select id="c-directorate" class="form-select">
-                            <option value="">-- اختر المديرية --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">العنوان</label>
-                        <input type="text" id="c-address" class="form-control" placeholder="العنوان التفصيلي">
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label fw-bold">ساعات العمل</label>
                         <input type="text" id="c-hours" class="form-control"
                             placeholder="مثال: 8:00 صباحاً - 2:00 مساءً">
@@ -90,6 +108,15 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">رقم الترخيص</label>
                         <input type="text" id="c-license" class="form-control" placeholder="LIC-2026-XXX">
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- القسم الثالث: إعدادات الأمان -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-4 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">إعدادات الأمان</h5>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">كلمة مرور حساب المدير <span
@@ -101,9 +128,87 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" id="add-center-btn"
+                <button type="button" class="btn btn-primary rounded-pill px-4" style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important;" id="add-center-btn"
                     onclick="addCenter()">
                     <i class="fas fa-save me-2"></i>حفظ المركز
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Edit Center Modal ===== -->
+<div class="modal fade" id="editCenterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header"
+                style="background: var(--ministry-accent); color:#fff; border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل بيانات المركز</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="edit-error" class="alert alert-danger d-none"></div>
+                <div id="edit-success" class="alert alert-success d-none"></div>
+                <input type="hidden" id="edit-center-id">
+                <div class="row g-3">
+
+                    <!-- ========================================== -->
+                    <!-- القسم الأول: الموقع الجغرافي -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-1 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">الموقع الجغرافي</h5>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">العنوان التفصيلي</label>
+                        <input type="text" id="edit-address" class="form-control">
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- القسم الثاني: البيانات الأساسية -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-4 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">بيانات المركز الأساسية</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">اسم المركز (عربي) <span class="text-danger">*</span></label>
+                        <input type="text" id="edit-name-ar" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">اسم المركز (English)</label>
+                        <input type="text" id="edit-name-en" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">ساعات العمل</label>
+                        <input type="text" id="edit-hours" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">رقم الترخيص</label>
+                        <input type="text" id="edit-license" class="form-control">
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- القسم الثالث: إعدادات الأمان -->
+                    <!-- ========================================== -->
+                    <div class="col-12 mt-4 mb-2 text-center">
+                        <div class="ministry-banner" style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                            <h5 style="margin: 0; font-weight: bold; color: white;">إعدادات الأمان</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">كلمة مرور جديدة للمدير (اختياري)</label>
+                        <input type="password" id="edit-password" class="form-control"
+                            placeholder="اتركها فارغة إذا لم ترد تغييرها">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-warning rounded-pill px-4 text-white" style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important;" onclick="saveEditCenter()">
+                    <i class="fas fa-save me-2"></i>حفظ التعديلات
                 </button>
             </div>
         </div>
@@ -115,6 +220,8 @@
 {% block extra_scripts %}
 <script>
     let allCenters = [];
+    let allGovs = [];
+    let allDirs = [];
 
     async function loadCenters() {
         const container = document.getElementById('centers-container');
@@ -136,10 +243,10 @@
         container.innerHTML = `<table class="ministry-table">
         <thead><tr>
             <th>#</th><th>المركز الصحي</th><th>كود المركز</th>
-            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th>
+            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th><th>إجراءات</th>
         </tr></thead>
         <tbody>${centers.map((c, i) => `
-        <tr>
+        <tr class="${!c.is_active ? 'table-secondary opacity-75' : ''}">
             <td class="text-muted">${i + 1}</td>
             <td><div class="fw-bold">${c.name_ar || '—'}</div>
                 ${c.name_en ? `<div class="text-muted small">${c.name_en}</div>` : ''}</td>
@@ -148,8 +255,21 @@
             <td>${c.directorate_name || '—'}</td>
             <td>${c.is_active
                 ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
-                : '<span class="badge badge-low rounded-pill px-3">غير نشط</span>'}</td>
+                : '<span class="badge badge-low rounded-pill px-3">موقوف</span>'}</td>
             <td class="text-muted small">${c.created_at ? c.created_at.substring(0, 10) : '—'}</td>
+            <td>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill"
+                        onclick="openEditCenterModal(${c.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm ${c.is_active ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill"
+                        onclick="toggleCenterStatus(${c.id}, ${c.is_active})"
+                        title="${c.is_active ? 'إيقاف المركز' : 'تفعيل المركز'}">
+                        <i class="fas fa-${c.is_active ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                </div>
+            </td>
         </tr>`).join('')}
         </tbody>
     </table>`;
@@ -167,22 +287,22 @@
         ));
     });
 
-    // Load governorates for modal
+    // Load governorates for Add modal
     async function loadGovernorates() {
         try {
-            const govs = await apiFetch('/api/governorates/');
+            allGovs = await apiFetch('/api/governorates/');
+            allDirs = await apiFetch('/api/directorates/');
             const sel = document.getElementById('c-governorate');
-            govs.forEach(g => {
+            allGovs.forEach(g => {
                 const opt = document.createElement('option');
                 opt.value = g.id; opt.textContent = g.name_ar;
                 sel.appendChild(opt);
             });
-            sel.addEventListener('change', async function () {
+            sel.addEventListener('change', function () {
                 const dirSel = document.getElementById('c-directorate');
                 dirSel.innerHTML = '<option value="">-- اختر المديرية --</option>';
                 if (!this.value) return;
-                const dirs = await apiFetch('/api/directorates/');
-                dirs.filter(d => d.governorate == this.value).forEach(d => {
+                allDirs.filter(d => d.governorate == this.value).forEach(d => {
                     const opt = document.createElement('option');
                     opt.value = d.id; opt.textContent = d.name_ar;
                     dirSel.appendChild(opt);
@@ -191,6 +311,7 @@
         } catch (e) { console.error(e); }
     }
 
+    // ---- Add Center ----
     async function addCenter() {
         const btn = document.getElementById('add-center-btn');
         const errEl = document.getElementById('add-error');
@@ -226,6 +347,65 @@
             errEl.classList.remove('d-none');
         } finally {
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>حفظ المركز';
+        }
+    }
+
+    // ---- Open Edit Modal ----
+    function openEditCenterModal(id) {
+        const c = allCenters.find(x => x.id === id);
+        if (!c) return;
+        document.getElementById('edit-center-id').value = c.id;
+        document.getElementById('edit-name-ar').value = c.name_ar || '';
+        document.getElementById('edit-name-en').value = c.name_en || '';
+        document.getElementById('edit-address').value = c.address || '';
+        document.getElementById('edit-hours').value = c.working_hours || '';
+        document.getElementById('edit-license').value = c.license_number || '';
+        document.getElementById('edit-password').value = '';
+        document.getElementById('edit-error').classList.add('d-none');
+        document.getElementById('edit-success').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('editCenterModal')).show();
+    }
+
+    // ---- Save Edit Center ----
+    async function saveEditCenter() {
+        const errEl = document.getElementById('edit-error'), sucEl = document.getElementById('edit-success');
+        errEl.classList.add('d-none'); sucEl.classList.add('d-none');
+        const id = document.getElementById('edit-center-id').value;
+        const payload = {
+            name_ar: document.getElementById('edit-name-ar').value.trim(),
+            name_en: document.getElementById('edit-name-en').value.trim() || null,
+            address: document.getElementById('edit-address').value.trim() || null,
+            working_hours: document.getElementById('edit-hours').value.trim() || null,
+            license_number: document.getElementById('edit-license').value.trim() || null,
+        };
+        const newPass = document.getElementById('edit-password').value;
+        if (newPass) payload.password = newPass;
+
+        if (!payload.name_ar) {
+            errEl.textContent = 'يرجى ملء اسم المركز.'; errEl.classList.remove('d-none'); return;
+        }
+        try {
+            await apiFetch(`/api/health-centers/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+            sucEl.textContent = 'تم حفظ التعديلات بنجاح! ✅'; sucEl.classList.remove('d-none');
+            await loadCenters();
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('editCenterModal')).hide(), 1200);
+        } catch (e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
+    }
+
+    // ---- Soft Delete / Activate Center ----
+    async function toggleCenterStatus(id, isCurrentlyActive) {
+        const msg = isCurrentlyActive
+            ? '⚠️ سيتم إيقاف هذا المركز.\nموظفوه لن يتمكنوا من تسجيل أطفال جدد.\nسجلات الأطفال الحاليين تبقى سليمة.\n\nهل تريد المتابعة؟'
+            : 'هل تريد إعادة تفعيل هذا المركز؟';
+        if (!confirm(msg)) return;
+        try {
+            await apiFetch(`/api/health-centers/${id}/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_active: !isCurrentlyActive })
+            });
+            await loadCenters();
+        } catch (e) {
+            alert('حدث خطأ: ' + e.message);
         }
     }
 

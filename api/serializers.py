@@ -280,12 +280,12 @@ class VaccineListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vaccine
-        fields = ['id', 'name_ar', 'name_en', 'description', 'schedules']
+        fields = ['id', 'name_ar', 'name_en', 'description', 'is_active', 'schedules']
 
     def get_schedules(self, obj):
         from medical.models import VaccineSchedule
         qs = VaccineSchedule.objects.filter(vaccine=obj).order_by('dose_number')
-        return [{'id': s.id, 'dose_number': s.dose_number, 'age_in_months': s.age_in_months} for s in qs]
+        return [{'id': s.id, 'dose_number': s.dose_number, 'age_in_months': s.age_in_months, 'stage': s.stage} for s in qs]
 
 
 class VaccineDetailSerializer(serializers.ModelSerializer):
@@ -300,9 +300,49 @@ class VaccineDetailSerializer(serializers.ModelSerializer):
 
 
 class VaccineCreateUpdateSerializer(serializers.ModelSerializer):
+    schedules_data = serializers.ListField(
+        child=serializers.DictField(), 
+        write_only=True, 
+        required=False,
+        help_text="List of dicts: [{'dose_number': 1, 'age_in_months': 0}, ...]"
+    )
+
     class Meta:
         model = Vaccine
-        fields = ['name_ar', 'name_en', 'description']
+        fields = ['id', 'name_ar', 'name_en', 'description', 'is_active', 'schedules_data']
+
+    def _create_schedules(self, vaccine, schedules_data):
+        from medical.models import VaccineSchedule
+        for sched in schedules_data:
+            age_in_months = float(sched.get('age_in_months', 0))
+            stage = sched.get('stage')
+            if not stage:
+                stage = 'SCHOOL' if age_in_months >= 48 else 'BASIC'
+            VaccineSchedule.objects.create(
+                vaccine=vaccine,
+                dose_number=int(sched.get('dose_number', 1)),
+                age_in_months=age_in_months,
+                stage=stage
+            )
+
+    def create(self, validated_data):
+        schedules_data = validated_data.pop('schedules_data', [])
+        vaccine = Vaccine.objects.create(**validated_data)
+        self._create_schedules(vaccine, schedules_data)
+        return vaccine
+
+    def update(self, instance, validated_data):
+        from medical.models import VaccineSchedule
+        schedules_data = validated_data.pop('schedules_data', None)
+        # Update vaccine fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        # If schedules_data was explicitly provided, replace all existing schedules
+        if schedules_data is not None:
+            instance.schedules.all().delete()
+            self._create_schedules(instance, schedules_data)
+        return instance
 
 
 # ============== Vaccine Record ==============
