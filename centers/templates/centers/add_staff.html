@@ -3,25 +3,36 @@
 {% block page_title %}إضافة موظف جديد{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card-luxury p-5 animate-slide-up delay-1">
-            <div class="text-center mb-5">
-                <div class="bg-warning text-white rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
-                    style="width: 70px; height: 70px;">
-                    <i class="fas fa-user-nurse fa-2x"></i>
+<div class="row">
+    <div class="col-12">
+        <div class="ministry-banner mb-4 text-md-start" style="border-radius: 16px;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="text-white mb-2"><i class="fas fa-user-nurse me-2"></i>تسجيل موظف جديد</h2>
+                    <p class="mb-0" style="color: rgba(255,255,255,0.85);">سيتم ربط الموظف تلقائياً بمركزك: <strong>{{
+                            request.user.health_center.name_ar }}</strong></p>
                 </div>
-                <h3 class="fw-bold">تسجيل موظف جديد</h3>
-                <p class="text-muted">سيتم ربط الموظف تلقائياً بمركزك: <strong>{{ request.user.health_center.name_ar
-                        }}</strong></p>
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'centers:staff_list' %}" class="btn btn-outline-light fw-bold rounded-pill px-4">
+                        <i class="fas fa-arrow-left me-2"></i>عودة
+                    </a>
+                </div>
             </div>
+        </div>
+        <div class="card-luxury p-4 p-md-5 animate-slide-up delay-1">
 
             <form method="POST">
                 {% csrf_token %}
 
-                <h5 class="text-primary mb-3 border-bottom pb-2">
-                    <i class="fas fa-id-badge me-2"></i>بيانات الحساب
-                </h5>
+                <div class="col-12 mt-1 mb-4">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                        <h5 style="margin: 0; font-weight: bold; color: white;">
+                            <i class="fas fa-id-badge me-2"></i>بيانات الحساب
+                        </h5>
+                    </div>
+                </div>
+
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="form-floating">
@@ -31,8 +42,7 @@
                             <label for="floatingUsername">اسم المستخدم (للدخول)</label>
                         </div>
                         <div class="form-text small ps-2 {% if username_error %}text-danger{% endif %}"><i
-                                class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية
-                            وأرقام.</div>
+                                class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية وأرقام.</div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating">
@@ -43,9 +53,17 @@
                     </div>
                 </div>
 
-                <h5 class="text-primary mb-3 border-bottom pb-2 mt-5">
-                    <i class="fas fa-user me-2"></i>البيانات الشخصية
-                </h5>
+                <hr>
+
+                <div class="col-12 mt-3 mb-4">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                        <h5 style="margin: 0; font-weight: bold; color: white;">
+                            <i class="fas fa-user me-2"></i>البيانات الشخصية
+                        </h5>
+                    </div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-floating">
@@ -70,12 +88,13 @@
                     </div>
                 </div>
 
-                <div class="border-top pt-4 mt-5">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow btn-luxury">
+                <div class="border-top pt-4 mt-5 d-flex justify-content-end gap-3">
+                    <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary py-3 px-4 fs-5">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-primary-action py-3 px-5 fs-5">
                         <i class="fas fa-plus-circle me-2"></i>إضافة الموظف
                     </button>
-                    <a href="{% url 'centers:dashboard' %}"
-                        class="btn btn-link w-100 mt-2 text-muted btn-luxury">إلغاء</a>
                 </div>
             </form>
         </div>

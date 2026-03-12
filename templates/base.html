@@ -48,7 +48,8 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            box-shadow: 0 2px 12px rgba(29, 116, 196, 0.08); /* Derived from c-blue-700 */
+            box-shadow: 0 2px 12px rgba(29, 116, 196, 0.08);
+            /* Derived from c-blue-700 */
             border-right: 4px solid var(--c-blue-600);
             transition: transform .2s, box-shadow .2s;
         }
@@ -302,24 +303,23 @@
                 </a>
                 {% endif %}
 
-                <a href="#" class="nav-item">
-                    <i class="fas fa-file-invoice"></i>
-                    <span class="si-text">التقارير والإحصائيات</span>
-                </a>
+
 
             </nav>
             {% endif %}
 
             <!-- User Footer — shared -->
             <div class="sidebar-footer">
-                <a href="{% url 'logout' %}" class="user-profile text-danger w-100" title="تسجيل خروج" style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="{% url 'logout' %}" class="user-profile text-danger w-100" title="تسجيل خروج"
+                    style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="d-flex align-items-center">
-                        <div class="avatar bg-danger-soft text-danger" style="border-radius: 50%; width: 44px; height: 44px; font-size: 1.2rem;">
+                        <div class="avatar bg-danger-soft text-danger"
+                            style="border-radius: 50%; width: 44px; height: 44px; font-size: 1.2rem;">
                             <i class="fas fa-sign-out-alt"></i>
                         </div>
                         <div class="user-details ms-3">
                             <div class="user-name text-danger fw-bold">تسجيل خروج</div>
-                            <div class="user-role text-danger opacity-75" style="color: inherit;">إنهاء الجلسة</div>
+
                         </div>
                     </div>
                 </a>
@@ -343,23 +343,36 @@
 
                 <!-- User Menu -->
                 <div class="dropdown">
-                    <div class="avatar shadow-sm" data-bs-toggle="dropdown" aria-expanded="false"
-                        style="cursor:pointer; width:45px; height:45px; border-radius:50%; background-color: var(--c-primary); color: white;">
-                        {{ user.get_full_name|first|default:user.username|first|upper }}
-                    </div>
-                    <ul class="dropdown-menu dropdown-menu-start shadow border-0 mt-2"
-                        style="min-width: 220px; border-radius: 12px;">
-                        <li>
-                            <div class="px-3 py-2">
-                                <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
-                                <small class="text-muted">{{ user.get_role_display|default:"مستخدم" }}</small>
+                    <a href="#" class="d-flex align-items-center text-decoration-none text-dark" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.is_authenticated %}
+                        <div class="me-3 text-end d-none d-md-block">
+                            <div class="fw-bold" style="color: var(--c-primary); font-size: 0.95rem;">
+                                {{ user.get_full_name|default:user.username }}
                             </div>
-                        </li>
+                            <div class="text-muted" style="font-size: 0.8rem;">
+                                {{ user.get_role_display|default:"مستخدم" }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="me-3 text-end d-none d-md-block">
+                            <div class="fw-bold" style="color: var(--c-primary); font-size: 0.95rem;">
+                                زائر
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="avatar shadow-sm"
+                            style="width:45px; height:45px; border-radius:50%; background-color: var(--c-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                            {{ user.get_full_name|first|default:user.username|first|upper }}
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-start shadow border-0 mt-2"
+                        style="min-width: 220px; border-radius: 12px;" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i
+                                    class="fas fa-user-circle me-2 text-primary"></i>المعلومات الشخصية</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i
-                                    class="fas fa-user-circle me-2 text-primary"></i>الملف الشخصي</a></li>
                         <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i
                                     class="fas fa-sign-out-alt me-2"></i>تسجيل خروج</a></li>
                     </ul>

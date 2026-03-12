@@ -225,12 +225,39 @@ class ChildListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     completion_percentage = serializers.SerializerMethodField()
     next_vaccine = serializers.SerializerMethodField()
-    
+    vaccine_records = serializers.SerializerMethodField()
+
     class Meta:
         model = Child
-        fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender', 
-                  'health_center_name', 'family_name', 'is_completed', 
-                  'completion_percentage', 'next_vaccine', 'created_at']
+        fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender',
+                  'health_center_name', 'family_name', 'is_completed',
+                  'completion_percentage', 'next_vaccine', 'vaccine_records', 'created_at']
+
+    # خريطة ثابتة: اسم اللقاح في قاعدة البيانات → المفتاح المستخدم في JS
+    VACCINE_KEY_MAP = {
+        'السل':                        'Bacillus Calmette-Guérin',
+        'شلل الأطفال الفموي':          'Oral Polio Vaccine',
+        'الخماسي':                     'Pentavalent Vaccine',
+        'المكورات الرئوية':            'Pneumococcal Conjugate Vaccine',
+        'فيروس الروتا':                'Rotavirus Vaccine',
+        'شلل الأطفال الحقن':           'Inactivated Polio Vaccine',
+        'الحصبة والحصبة الألمانية':    'Measles-Rubella Vaccine',
+        'فيتامين أ':                   'Vitamin A Supplementation',
+        'الثلاثي البكتيري (منشطة)':   'Tetanus-Diphtheria Vaccine',
+    }
+
+    def get_vaccine_records(self, obj):
+        """إرجاع سجلات التطعيم مع مفتاح جاهز يطابق col.id في JS مباشرةً"""
+        records = obj.vaccine_records.select_related('vaccine').all()
+        return [
+            {
+                'vaccine_name': r.vaccine.name_ar,
+                'vaccine_key':  self.VACCINE_KEY_MAP.get(r.vaccine.name_ar, r.vaccine.name_ar),
+                'dose_number':  r.dose_number,
+                'date_given':   str(r.date_given),
+            }
+            for r in records
+        ]
 
     def get_family_name(self, obj):
         if obj.family:

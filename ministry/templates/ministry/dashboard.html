@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}لوحة المعلومات الوطنية | وزارة الصحة{% endblock %}
-{% block page_title %}لوحة المعلومات الوطنية{% endblock %}
+{% block title %}لوحة المعلومات | وزارة الصحة{% endblock %}
+{% block page_title %}لوحة المعلومات {% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -150,18 +150,18 @@
             let start = 0, duration = 1200, startTs = null;
             const isFloat = !Number.isInteger(parseFloat(end));
             const target = parseFloat(end);
-            
+
             const step = ts => {
                 if (!startTs) startTs = ts;
                 const p = Math.min((ts - startTs) / duration, 1);
                 const currentVal = p * target;
-                
+
                 if (isFloat) {
                     el.textContent = currentVal.toFixed(1) + suffix;
                 } else {
                     el.textContent = Math.floor(currentVal) + suffix;
                 }
-                
+
                 if (p < 1) requestAnimationFrame(step);
             };
             requestAnimationFrame(step);

@@ -9,7 +9,8 @@
     <div class="col-12 col-lg-8 mx-auto">
         <div class="saas-card p-0">
             <div class="saas-wave-banner p-5 text-center" style="border-radius: var(--radius-md) var(--radius-md) 0 0;">
-                <div class="avatar shadow-lg mx-auto mb-3" style="width: 110px; height: 110px; font-size: 3rem; background-color: var(--c-surface); color: var(--c-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 4px solid rgba(255,255,255,0.2);">
+                <div class="avatar shadow-lg mx-auto mb-3"
+                    style="width: 110px; height: 110px; font-size: 3rem; background-color: var(--c-surface); color: var(--c-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 4px solid rgba(255,255,255,0.2);">
                     {{ user.get_full_name|first|default:user.username|first|upper }}
                 </div>
                 <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
@@ -20,24 +21,23 @@
             <div class="card-body-styled">
                 <!-- User Details Grid -->
                 <div class="row g-4 pt-3">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <label class="form-label text-muted"><i class="fas fa-user ms-1"></i> اسم المستخدم</label>
                         <div class="form-control bg-light border-0 shadow-sm">{{ user.username }}</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-envelope ms-1"></i> البريد الإلكتروني</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.email|default:"غير متوفر" }}</div>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> الاسم الأول</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.first_name|default:"غير متوفر" }}</div>
+                        <div class="form-control bg-light border-0 shadow-sm">{{ user.first_name|default:"غير متوفر" }}
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> اسم العائلة</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.last_name|default:"غير متوفر" }}</div>
+                        <div class="form-control bg-light border-0 shadow-sm">{{ user.last_name|default:"غير متوفر" }}
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-shield-alt ms-1"></i> الدور والصلاحية</label>
+                        <label class="form-label text-muted"><i class="fas fa-shield-alt ms-1"></i> الدور
+                            والصلاحية</label>
                         <div class="form-control bg-light border-0 shadow-sm text-primary fw-bold">{{ user.get_role_display|default:"مستخدم" }}</div>
                     </div>
                     <div class="col-md-6">
@@ -45,14 +45,11 @@
                         <div class="form-control bg-light border-0 shadow-sm" dir="ltr" style="text-align: right;">{{ user.date_joined|date:"Y-m-d" }}</div>
                     </div>
                 </div>
-                
+
                 <!-- Action section -->
                 <div class="text-center mt-5 pt-3 border-top">
                     <!-- Currently readonly as per typical medical SaaS without explicit edit functionality required here -->
-                    <button class="btn btn-primary-action px-5 mx-auto opacity-75" disabled>
-                        <i class="fas fa-edit"></i> تعديل البيانات
-                    </button>
-                    <p class="text-muted mt-3 small"><i class="fas fa-info-circle ms-1"></i> لتعديل البيانات يرجى التواصل مع مسؤول النظام.</p>
+                    <p class="text-muted mt-3 h6"><i class="fas fa-info-circle ms-1"></i> لتعديل البيانات يرجى التواصل مع مسؤول النظام.</p>
                 </div>
             </div>
         </div>

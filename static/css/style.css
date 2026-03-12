@@ -16,14 +16,14 @@
     --c-blue-500: #3aaafc;
     --c-blue-400: #66c4ff;
     --c-blue-100: #ccebff;
-    --c-blue-50:  #e6f5ff;
+    --c-blue-50: #e6f5ff;
 
     --c-teal-700: #0d7a71;
     --c-teal-600: #109488;
     --c-teal-500: #17c2b3;
     /* Vibrant secondary accent */
     --c-teal-100: #d6fcf7;
-    --c-teal-50:  #f0fdfb;
+    --c-teal-50: #f0fdfb;
 
     --c-primary: var(--c-blue-600);
     --c-primary-hover: var(--c-blue-700);
@@ -403,6 +403,7 @@ a {
     transition: var(--transition);
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .content-wrapper {

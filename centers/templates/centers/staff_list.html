@@ -5,15 +5,21 @@
 
 {% block content %}
 
-<div class="row align-items-center mb-4">
-    <div class="col">
-        <h3 class="fw-bold text-primary"><i class="fas fa-users-cog me-2"></i>إدارة الكوادر الطبية</h3>
-        <p class="text-muted mb-0">جميع الموظفين المسجلين في مركزك الصحي.</p>
-    </div>
-    <div class="col-auto">
-        <a href="{% url 'centers:add_staff' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="fas fa-user-plus me-2"></i>إضافة موظف جديد
-        </a>
+<div class="row">
+    <div class="col-12">
+        <div class="ministry-banner mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="text-white mb-2"><i class="fas fa-users-cog me-2"></i>إدارة الكوادر الطبية</h2>
+                    <p class="mb-0" style="color: rgba(255,255,255,0.85);">جميع الموظفين المسجلين في مركزك الصحي.</p>
+                </div>
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <a href="{% url 'centers:add_staff' %}" class="btn btn-light text-primary fw-bold shadow-sm rounded-pill px-4">
+                        <i class="fas fa-user-plus me-2"></i>إضافة موظف جديد
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -59,13 +59,22 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header"
-                style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0;">
+                style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
                 <h5 class="modal-title fw-bold"><i class="fas fa-map me-2"></i>إضافة محافظة جديدة</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 pt-2">
                 <div id="gov-error" class="alert alert-danger d-none"></div>
                 <div id="gov-success" class="alert alert-success d-none"></div>
+
+                <div class="d-flex flex-column align-items-center mb-2">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 14px 30px; display: inline-block;">
+                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-map me-2"></i>إضافة
+                            محافظة</h6>
+                    </div>
+                    <hr class="w-100 mt-2 mb-0">
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
                     <input type="text" id="g-name-ar" class="form-control" placeholder="مثال: صنعاء">
@@ -96,14 +105,23 @@
 <div class="modal fade" id="editGovModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header" style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0;">
+            <div class="modal-header"
+                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
                 <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل المحافظة</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 pt-2">
                 <div id="edit-gov-error" class="alert alert-danger d-none"></div>
                 <div id="edit-gov-success" class="alert alert-success d-none"></div>
                 <input type="hidden" id="edit-gov-id">
+
+                <div class="d-flex flex-column align-items-center mb-2">
+                    <div class="ministry-banner" style="border-radius: 50px; padding: 8px 30px; display: inline-block;">
+                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-edit me-2"></i>تعديل
+                            المحافظة</h6>
+                    </div>
+                    <hr class="w-100 mt-2 mb-0">
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
                     <input type="text" id="edit-g-name-ar" class="form-control">
@@ -131,15 +149,25 @@
 
 <!-- ===== Add Directorate Modal ===== -->
 <div class="modal fade" id="addDirModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header" style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0;">
+            <div class="modal-header"
+                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
                 <h5 class="modal-title fw-bold"><i class="fas fa-city me-2"></i>إضافة مديرية جديدة</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 pt-2">
                 <div id="dir-error" class="alert alert-danger d-none"></div>
                 <div id="dir-success" class="alert alert-success d-none"></div>
+
+                <div class="d-flex flex-column align-items-center mb-2">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 14px 30px; display: inline-block;">
+                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-city me-2"></i>إضافة
+                            مديرية</h6>
+                    </div>
+                    <hr class="w-100 mt-2 mb-0">
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">المحافظة التابعة لها <span class="text-danger">*</span></label>
                     <select id="d-gov" class="form-select">
@@ -173,16 +201,25 @@
 
 <!-- ===== Edit Directorate Modal ===== -->
 <div class="modal fade" id="editDirModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header" style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0;">
+            <div class="modal-header"
+                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
                 <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل المديرية</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 pt-2">
                 <div id="edit-dir-error" class="alert alert-danger d-none"></div>
                 <div id="edit-dir-success" class="alert alert-success d-none"></div>
                 <input type="hidden" id="edit-dir-id">
+
+                <div class="d-flex flex-column align-items-center mb-2">
+                    <div class="ministry-banner" style="border-radius: 50px; padding: 8px 30px; display: inline-block;">
+                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-edit me-2"></i>تعديل
+                            المديرية</h6>
+                    </div>
+                    <hr class="w-100 mt-2 mb-0">
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">المحافظة</label>
                     <select id="edit-d-gov" class="form-select"></select>

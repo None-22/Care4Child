@@ -4,12 +4,26 @@
 {% block page_title %}تسجيل طفل جديد{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center fade-in-up">
-    <div class="col-md-9 col-lg-8">
+<div class="row fade-in-up">
+    <div class="col-12">
 
-        <div class="text-center mb-4">
-            <h2 class="fw-bolder text-indigo-900 mb-2">تسجيل ملف طبي جديد</h2>
-            <p class="text-muted">يرجى تعبئة البيانات بدقة لإصدار الكرت الإلكتروني للطفل فوراً</p>
+        <div class="row">
+            <div class="col-12">
+                <div class="ministry-banner mb-4 text-center text-md-start">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        <div class="mb-3 mb-md-0">
+                            <h2 class="text-white mb-2"><i class="fas fa-id-card me-2"></i>تسجيل طفل جديد</h2>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.85);">يرجى تعبئة البيانات بدقة </p>
+                        </div>
+                        <div class="d-flex align-items-center mt-3 mt-md-0">
+                            <a href="{% url 'centers:dashboard' %}"
+                                class="btn btn-outline-light fw-bold rounded-pill px-4">
+                                <i class="fas fa-arrow-left me-2"></i>عودة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="saas-card p-4 p-md-5">
@@ -17,22 +31,23 @@
                 {% csrf_token %}
 
                 <!-- Basic Info Section -->
-                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-                    <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center me-3"
-                        style="width: 40px; height: 40px;">
-                        <i class="fas fa-id-card text-primary fs-5"></i>
+                <div class="col-12 mt-1 mb-2">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                        <h5 style="margin: 0; font-weight: bold; color: white;">
+                            <i class="fas fa-id-card me-2"></i>البيانات الأساسية للطفل
+                        </h5>
                     </div>
-                    <h5 class="text-indigo-900 fw-bold m-0">البيانات الأساسية للطفل</h5>
                 </div>
 
                 <div class="row g-4 mb-5">
                     <div class="col-12">
-                        <label class="form-label fw-bold text-muted small">الاسم الكامل المطابق للهوية</label>
+                        <label class="form-label fw-bold text-muted small">الاسم الكامل</label>
                         <input type="text" name="child_name" class="form-control form-control-lg bg-light"
                             id="floatingChildName" placeholder="الاسم الرباعي للطفل" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold text-muted small">تاريخ الميلاد الدقيق</label>
+                        <label class="form-label fw-bold text-muted small">تاريخ الميلاد </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i
                                     class="fas fa-calendar-alt text-muted"></i></span>
@@ -51,12 +66,13 @@
                 </div>
 
                 <!-- Location Section -->
-                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-                    <div class="bg-teal-soft rounded-circle d-flex align-items-center justify-content-center me-3"
-                        style="width: 40px; height: 40px;">
-                        <i class="fas fa-map-marker-alt text-teal-600 fs-5"></i>
+                <div class="col-12 mt-4 mb-2">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                        <h5 style="margin: 0; font-weight: bold; color: white;">
+                            <i class="fas fa-map-marker-alt me-2"></i>مكان وتفاصيل الميلاد
+                        </h5>
                     </div>
-                    <h5 class="text-indigo-900 fw-bold m-0">مكان وتفاصيل الميلاد</h5>
                 </div>
 
                 <!-- Manual/Dropdown toggle -->
@@ -66,7 +82,7 @@
                             style="transform: scale(1.2);">
                         <label class="form-check-label fw-bold text-indigo-900 cursor-pointer"
                             for="manualLocationSwitch">
-                            إدخال المحافظة والمديرية يدوياً (خارج نطاق المنظومة / خارج اليمن)
+                            إدخال المحافظة والمديرية يدوياً خارج نطاق المنظومة
                         </label>
                     </div>
                 </div>
@@ -102,41 +118,42 @@
 
                     <!-- 3. Place of birth -->
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-muted small">مكان الميلاد (قرية / منزل / مرفق)</label>
+                        <label class="form-label fw-bold text-muted small">مكان الميلاد </label>
                         <input type="text" name="place_of_birth" class="form-control bg-light" id="placeOfBirth"
                             placeholder="التفاصيل" required>
                     </div>
                 </div>
 
                 <!-- Family Section -->
-                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-                    <div class="bg-warning-soft rounded-circle d-flex align-items-center justify-content-center me-3"
-                        style="width: 40px; height: 40px;">
-                        <i class="fas fa-users text-warning fs-5"></i>
+                <div class="col-12 mt-4 mb-2">
+                    <div class="ministry-banner"
+                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
+                        <h5 style="margin: 0; font-weight: bold; color: white;">
+                            <i class="fas fa-users me-2"></i>صِلة القرابة والعائلة
+                        </h5>
                     </div>
-                    <h5 class="text-indigo-900 fw-bold m-0">صِلة القرابة والعائلة</h5>
                 </div>
 
                 <div class="row g-4 mb-5">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold text-muted small">اسم الأب (الرباعي)</label>
+                        <label class="form-label fw-bold text-muted small">اسم الأب </label>
                         <input type="text" name="father_name" class="form-control form-control-lg bg-light"
                             id="floatingFather" placeholder="اسم الأب الكامل" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold text-muted small">اسم الأم (الرباعي)</label>
+                        <label class="form-label fw-bold text-muted small">اسم الأم </label>
                         <input type="text" name="mother_name" class="form-control form-control-lg bg-light"
                             id="floatingMother" placeholder="اسم الأم الكامل" required>
                     </div>
                 </div>
 
-                <div class="pt-2">
-                    <button type="submit" id="submitBtn"
-                        class="btn btn-primary-action w-100 justify-content-center py-3 fs-5">
-                        <i class="fas fa-save"></i> حفظ وإصدار الكرت الإلكتروني
+                <div class="pt-2 d-flex justify-content-end gap-3">
+                    <a href="{% url 'centers:dashboard' %}" class="btn btn-outline-secondary py-3 px-4 fs-5">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </a>
+                    <button type="submit" id="submitBtn" class="btn btn-primary-action py-3 px-5 fs-5">
+                        <i class="fas fa-save me-2"></i>تسجيل الطفل
                     </button>
-                    <p class="text-center text-muted small mt-3 m-0"><i class="fas fa-shield-alt text-success me-1"></i>
-                        جميع البيانات محفوظة بسرية وتخضع لسياسات الخصوصية الطبية</p>
                 </div>
             </form>
         </div>
@@ -221,7 +238,7 @@
         document.getElementById('addChildForm').addEventListener('submit', function () {
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ وإصدار الكرت...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ ...';
         });
 
     });
