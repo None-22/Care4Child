@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from django.shortcuts import render, get_object_or_404
@@ -31,6 +32,16 @@ from .serializers import (
 )
 from .permissions import IsCenterStaffOrReadOnly
 from notifications.models import NotificationLog
+
+# ============== Child Pagination ==============
+class ChildPagination(PageNumberPagination):
+    """
+    Pagination class dedicated to ChildViewSet only.
+    Returns 10 children per page to test pagination buttons.
+    """
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 200
 
 
 # ============== Governorate ViewSet ==============
@@ -231,6 +242,7 @@ class ChildViewSet(viewsets.ModelViewSet):
     """
     queryset = Child.objects.all()
     permission_classes = [IsAuthenticated, IsCenterStaffOrReadOnly]
+    pagination_class = ChildPagination  # فقط هذا الـ ViewSet يستخدم Pagination
     
     def get_queryset(self):
         user = self.request.user

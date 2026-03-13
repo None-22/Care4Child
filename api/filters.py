@@ -5,23 +5,20 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 class ChildFilter(django_filters.FilterSet):
-    # الفلترات الأساسية الموجودة
-    health_center = django_filters.NumberFilter(field_name='health_center__id')
-    family = django_filters.NumberFilter(field_name='family__id')
+    # فلترات شخصية للطفل فقط
     gender = django_filters.CharFilter(field_name='gender')
     is_completed = django_filters.BooleanFilter(field_name='is_completed')
     
-    # فلترات جديدة لتاريخ الميلاد
+    # فلترات تاريخ الميلاد
     birth_year = django_filters.NumberFilter(field_name='date_of_birth__year')
     birth_month = django_filters.NumberFilter(field_name='date_of_birth__month')
     
-    # فلتر حسب العمر (تحديد عمر معين بالأشهر أو السنوات)
-    # سنأخذ "العمر بالأشهر" كمعيار للفلترة (مثلاً الأطفال اللي عمرهم 6 أشهر)
+    # فلتر حسب العمر بالأشهر (مثلاً الأطفال الذين يبلغون 6 أشهر)
     age_in_months = django_filters.NumberFilter(method='filter_by_age_months')
 
     class Meta:
         model = Child
-        fields = ['health_center', 'family', 'gender', 'is_completed', 'birth_year', 'birth_month']
+        fields = ['gender', 'is_completed', 'birth_year', 'birth_month']
 
     def filter_by_age_months(self, queryset, name, value):
         """
