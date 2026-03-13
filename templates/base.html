@@ -412,10 +412,25 @@
 
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', () => {
-                    body.classList.toggle('sidebar-closed');
-                    localStorage.setItem('sidebarClosed', body.classList.contains('sidebar-closed'));
+                    if (window.innerWidth <= 768) {
+                        // جوال: افتح/أغلق overlay
+                        body.classList.toggle('sidebar-open');
+                    } else {
+                        // ديسكتوب: collapse عادي
+                        body.classList.toggle('sidebar-closed');
+                        localStorage.setItem('sidebarClosed', body.classList.contains('sidebar-closed'));
+                    }
                 });
             }
+
+            // أغلق الـ sidebar لما يضغط على الـ overlay
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && 
+                    !e.target.closest('#mainSidebar') && 
+                    !e.target.closest('#sidebarToggle')) {
+                    body.classList.remove('sidebar-open');
+                }
+            });
 
             // ---- SweetAlert for Django Messages ----
             {% if messages %}

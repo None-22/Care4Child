@@ -63,53 +63,6 @@ def record_vaccine(request, child_id, schedule_id):
     
     return redirect('centers:child_detail', child_id=child.id)
 
-@login_required
-@center_staff_required
-def child_detail_view(request, child_id):
-    child = get_object_or_404(Child, pk=child_id)
-    
-    # 1. جلب الجدول الزمني
-    schedules = VaccineSchedule.objects.select_related('vaccine').order_by('age_in_months', 'dose_number')
-    
-    # 2. جلب السجلات
-    taken_records = VaccineRecord.objects.filter(child=child).select_related('vaccine')
-    taken_map = {(rec.vaccine.id, rec.dose_number): rec for rec in taken_records}
-    
-    # 3. تجميع حسب العمر (الزيارة)
-    # النتيجة: [ {'age': 0, 'label': 'عند الولادة', 'vaccines': [...]}, ... ]
-    visits_map = {} # age -> {label, vaccines: []}
-    
-    for sched in schedules:
-        age_key = sched.age_in_months
-        if age_key not in visits_map:
-            # تحديد العنوان
-            if age_key == 0:
-                label = "عند الولادة"
-            elif age_key == 72:
-                label = "سن دخول المدرسة (6 سنوات)"
-            else:
-                label = f"عمر {age_key} أشهر"
-                
-            visits_map[age_key] = {'age': age_key, 'label': label, 'vaccines': []}
-        
-        is_taken = (sched.vaccine.id, sched.dose_number) in taken_map
-        record_info = taken_map.get((sched.vaccine.id, sched.dose_number))
-        
-        visits_map[age_key]['vaccines'].append({
-            'schedule': sched,
-            'is_taken': is_taken,
-            'date_taken': record_info.date_given if record_info else None,
-            'status': 'مكتمل' if is_taken else 'مستحق'
-        })
-    
-    # تحويل القاموس لقائمة مرتبة
-    visits_list = [visits_map[k] for k in sorted(visits_map.keys())]
-
-    context = {
-        'child': child,
-        'visits': visits_list
-    }
-    return render(request, 'centers/child_detail.html', context)
 
 
 @login_required

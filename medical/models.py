@@ -5,6 +5,12 @@ from centers.models import Governorate, Directorate, HealthCenter
 class Vaccine(models.Model):
     name_ar = models.CharField(max_length=100, verbose_name="اسم اللقاح (عربي)")
     name_en = models.CharField(max_length=100, blank=True, null=True, verbose_name="اسم اللقاح (إنجليزي)")
+    # المفتاح المستخدم في الواجهة الأمامية (JS) لمطابقة أعمدة الجدول
+    key = models.CharField(
+        max_length=100, blank=True, null=True,
+        verbose_name="مفتاح الواجهة الأمامية (JS Key)",
+        help_text="المفتاح المستخدم في JS لمطابقة عمود اللقاح. مثال: Pentavalent Vaccine"
+    )
     description = models.TextField(blank=True, null=True, verbose_name="وصف اللقاح")
     is_active = models.BooleanField(default=True, verbose_name="نشط")
 
@@ -14,6 +20,7 @@ class Vaccine(models.Model):
     class Meta:
         verbose_name = "لقاح"
         verbose_name_plural = "اللقاحات"
+
 
 class VaccineSchedule(models.Model):
     vaccine = models.ForeignKey(Vaccine, on_delete=models.CASCADE, related_name='schedules')

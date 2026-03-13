@@ -102,7 +102,7 @@ STATICFILES_DIRS = [
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:Sarovic1922@localhost:5432/care4child_db',
+        default=os.environ.get('DATABASE_URL'),  # يجب تعريف DATABASE_URL في ملف .env
         conn_max_age=600
     )
 }
@@ -132,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ar'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Aden'  # اليمن UTC+3
 
 USE_I18N = True
 
@@ -152,8 +152,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# السماح للجميع بالاتصال (مؤقتاً للتطوير)
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS — مفتوح في Dev، مقيّد في Production عبر متغير البيئة
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL', 'True') == 'True'
+# في production، اضبط CORS_ALLOW_ALL=False في .env وأضف النطاقات المسموح بها:
+# CORS_ALLOWED_ORIGINS = ['https://yourapp.com']
+CORS_ALLOWED_ORIGINS_REGEXES = []
 
 # Authentication Settings
 LOGIN_REDIRECT_URL = 'centers:dashboard'

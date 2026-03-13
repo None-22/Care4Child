@@ -834,3 +834,46 @@ body.sidebar-closed .sidebar-footer {
 .text-teal-500 {
     color: var(--c-teal-500) !important;
 }
+
+/* === Mobile: 768px وأقل === */
+@media (max-width: 768px) {
+
+    /* أخفِ الـ sidebar تماماً بالإزاحة خارج الشاشة */
+    .saas-sidebar {
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 1050;
+    }
+
+    /* لما الـ sidebar مفتوح على الجوال */
+    body.sidebar-open .saas-sidebar {
+        transform: translateX(0);
+    }
+
+    /* الـ header يمتد الشاشة كلها */
+    .saas-header {
+        right: 0 !important;
+        left: 0 !important;
+    }
+
+    /* المحتوى بدون margin */
+    .saas-main {
+        margin-right: 0 !important;
+    }
+
+    /* overlay خلف الـ sidebar لما يكون مفتوح */
+    body.sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1040;
+    }
+}
+
+/* === Tablet: 769px - 1024px === */
+@media (min-width: 769px) and (max-width: 1024px) {
+    :root {
+        --sidebar-width: 220px;
+    }
+}

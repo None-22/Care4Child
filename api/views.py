@@ -427,10 +427,16 @@ class DashboardStatsView(APIView):
 
         centers_report = []
         if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
-            centers = HealthCenter.objects.filter(is_active=True).select_related('governorate', 'directorate')
+            from django.db.models import Count, Q
+            centers = HealthCenter.objects.filter(is_active=True)\
+                .select_related('governorate', 'directorate')\
+                .annotate(
+                    total_children=Count('children', distinct=True),
+                    completed_children=Count('children', filter=Q(children__is_completed=True), distinct=True)
+                )
             for center in centers:
-                ctotal = Child.objects.filter(health_center=center).count()
-                ccompleted = Child.objects.filter(health_center=center, is_completed=True).count()
+                ctotal = center.total_children
+                ccompleted = center.completed_children
                 crate = round((ccompleted / ctotal * 100), 1) if ctotal > 0 else 0
                 gov_name = center.governorate.name_ar if getattr(center, 'governorate', None) else 'غير محدد'
                 dir_name = center.directorate.name_ar if getattr(center, 'directorate', None) else 'غير محدد'

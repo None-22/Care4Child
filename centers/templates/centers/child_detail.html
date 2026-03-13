@@ -143,25 +143,37 @@
         }
 
         const schedule = child.full_vaccine_schedule || [];
-        const visitsMap = {};
+
+        // --- بناء الزيارات ---
+        // نستخدم Map بدل Object لأن Object keys تُحوَّل إلى string
+        // وهذا يسبب تلخبط الترتيب مع الأعداد العشرية مثل 1.5
+        const visitsMap = new Map();
 
         schedule.forEach(item => {
             const age = item.age_in_months;
-            if (!visitsMap[age]) {
+            if (!visitsMap.has(age)) {
                 let label;
                 if (age === 0) label = 'عند الولادة';
                 else if (age === 72) label = 'سن دخول المدرسة (6 سنوات)';
                 else label = `عمر ${age} أشهر`;
-                visitsMap[age] = { label, vaccines: [] };
+                visitsMap.set(age, { label, vaccines: [] });
             }
-            visitsMap[age].vaccines.push(item);
+            visitsMap.get(age).vaccines.push(item);
         });
 
-        const visitsList = Object.keys(visitsMap).map(Number).sort((a, b) => a - b);
+        // ترتيب الزيارات حسب العمر (تصاعدي)
+        const visitsList = [...visitsMap.keys()].sort((a, b) => a - b);
+
+        // ترتيب اللقاحات داخل كل زيارة حسب رقم الجرعة
+        visitsList.forEach(age => {
+            visitsMap.get(age).vaccines.sort((a, b) => a.dose_number - b.dose_number);
+        });
+
         let visitsHtml = '';
 
         visitsList.forEach(age => {
-            const visit = visitsMap[age];
+            const visit = visitsMap.get(age);
+
             let vaccineItems = '';
 
             visit.vaccines.forEach(item => {
@@ -177,10 +189,15 @@
                 } else {
                     actionEl = `
                     <div class="text-end" style="min-width: 90px;">
-                        <a href="/center/vaccine/record/${child.id}/${item.schedule_id}/" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
-                            تسجيل
-                        </a>
+                        <button
+                            class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm record-vaccine-btn"
+                            data-child-id="${child.id}"
+                            data-schedule-id="${item.schedule_id}"
+                            data-vaccine-name="${item.vaccine_name_ar || item.vaccine_name || ''}">
+                            <i class="fas fa-syringe me-1"></i>تسجيل
+                        </button>
                     </div>`;
+
                 }
 
                 vaccineItems += `
@@ -219,7 +236,78 @@
             <i class="fas fa-syringe fa-2x mb-2 opacity-25"></i>
             <p>لا يوجد جدول تطعيمات مسجل لهذا الطفل.</p>
         </div>`;
+
+        // --- AJAX لأزرار تسجيل اللقاح ---
+        document.getElementById('visits-container').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.record-vaccine-btn');
+            if (!btn) return;
+
+            const childId    = btn.dataset.childId;
+            const scheduleId = btn.dataset.scheduleId;
+            const vaccineName = btn.dataset.vaccineName;
+
+            // منع الضغط المزدوج
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>جاري...';
+
+            try {
+                const response = await fetch(`/center/vaccine/record/${childId}/${scheduleId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                if (response.ok || response.redirected) {
+                    // نجح التسجيل — حدّث الزر مباشرة بدون reload
+                    const today = new Date().toISOString().split('T')[0];
+                    const actionDiv = btn.closest('div.text-end');
+                    actionDiv.innerHTML = `
+                        <span class="text-success small fw-bold d-block mb-1">
+                            <i class="fas fa-check-circle me-1"></i>مكتمل
+                        </span>
+                        <span class="text-muted small" style="font-size:0.75rem;">
+                            <i class="fas fa-calendar-alt me-1"></i>${today}
+                        </span>`;
+
+                    // اختياري: إظهار Toast نجاح خفيف
+                    showToast(`✅ تم تسجيل ${vaccineName || 'اللقاح'} بنجاح`, 'success');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-syringe me-1"></i>تسجيل';
+                    showToast('حدث خطأ أثناء التسجيل، حاول مجدداً', 'danger');
+                }
+            } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-syringe me-1"></i>تسجيل';
+                showToast('تعذر الاتصال بالخادم', 'danger');
+            }
+        });
+    }
+
+    function getCsrfToken() {
+        const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+        return cookie ? cookie.trim().split('=')[1] : '';
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container') || (() => {
+            const el = document.createElement('div');
+            el.id = 'toast-container';
+            el.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;';
+            document.body.appendChild(el);
+            return el;
+        })();
+
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} shadow px-4 py-2 mb-2`;
+        toast.style.cssText = 'border-radius:30px; font-size:0.9rem; min-width:250px; text-align:center;';
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
     }
 </script>
 
-{% endblock %}
+{% endblock %}
