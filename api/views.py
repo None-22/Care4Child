@@ -240,7 +240,11 @@ class ChildViewSet(viewsets.ModelViewSet):
         
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['health_center', 'family', 'gender', 'is_completed']
+    
+    # استخدام الملف api/filters.py للفلترات المتقدمة
+    from .filters import ChildFilter
+    filterset_class = ChildFilter
+    
     search_fields = ['full_name', 'family__father_name', 'family__mother_name']
     
     def get_serializer_class(self):

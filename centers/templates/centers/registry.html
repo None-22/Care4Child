@@ -28,23 +28,92 @@
     </div>
 </div>
 
-<!-- Search Bar -->
+<!-- Search Bar & Filters -->
 <div class="row mb-4">
-    <div class="col-lg-8 col-xl-7">
-        <div class="d-flex flex-column flex-md-row gap-2">
-            <div class="input-group flex-grow-1">
-                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="search-input" class="form-control border-start-0"
-                    placeholder="ابحث باسم الطفل..." oninput="debounceSearch()">
+    <div class="col-12">
+        <div class="saas-card p-3 bg-white">
+            <div class="d-flex flex-column flex-md-row gap-2 mb-3">
+                <div class="input-group flex-grow-1">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="search-input" class="form-control border-start-0 bg-light"
+                        placeholder="ابحث باسم الطفل أو ولي الأمر..." oninput="debounceSearch()">
+                </div>
+                <select id="status-filter" class="form-select w-auto bg-light" style="min-width: 200px;"
+                    onchange="applyFilters()">
+                    <option value="all">الجميع</option>
+                    <option value="active" selected>قيد التحصين</option>
+                    <option value="archived">مكتملين التحصين</option>
+                </select>
+                <!-- زر إظهار/إخفاء الفلاتر المتقدمة -->
+                <button class="btn border bg-light text-muted d-flex align-items-center px-3" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false"
+                    aria-controls="advancedFilters" onmouseover="this.classList.remove('bg-light', 'text-muted'); this.classList.add('btn-primary', 'text-white')" onmouseout="this.classList.remove('btn-primary', 'text-white'); this.classList.add('bg-light', 'text-muted')">
+                    <i class="fas fa-filter me-2"></i> فلاتر متقدمة
+                </button>
             </div>
-            <select id="status-filter" class="form-select w-auto" style="min-width: 240px;"
-                onchange="switchStatus(this.value)">
-                <option value="active" selected>قيد التحصين</option>
-                <option value="archived">مكتملين التحصين</option>
-            </select>
+
+            <!-- Advanced Filters (Collapsible) -->
+            <div class="collapse" id="advancedFilters">
+                <div class="row g-2 pt-2 border-top">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">الجنس</label>
+                        <select id="gender-filter" class="form-select form-select-sm" onchange="applyFilters()">
+                            <option value="">الكل</option>
+                            <option value="M">ذكر</option>
+                            <option value="F">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">سنة الميلاد</label>
+                        <select id="year-filter" class="form-select form-select-sm" onchange="applyFilters()">
+                            <option value="">الكل</option>
+                            <!-- يتم ملئها بـ JS -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">شهر الميلاد</label>
+                        <select id="month-filter" class="form-select form-select-sm" onchange="applyFilters()">
+                            <option value="">الكل</option>
+                            <option value="1">يناير (1)</option>
+                            <option value="2">فبراير (2)</option>
+                            <option value="3">مارس (3)</option>
+                            <option value="4">أبريل (4)</option>
+                            <option value="5">مايو (5)</option>
+                            <option value="6">يونيو (6)</option>
+                            <option value="7">يوليو (7)</option>
+                            <option value="8">أغسطس (8)</option>
+                            <option value="9">سبتمبر (9)</option>
+                            <option value="10">أكتوبر (10)</option>
+                            <option value="11">نوفمبر (11)</option>
+                            <option value="12">ديسمبر (12)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">العمر الحالي</label>
+                        <select id="age-filter" class="form-select form-select-sm" onchange="applyFilters()">
+                            <option value="">الكل</option>
+                            <option value="0">حديث ولادة (0 شهر)</option>
+                            <option value="1">1 شهر</option>
+                            <option value="2">2 شهر</option>
+                            <option value="3">3 أشهر</option>
+                            <option value="4">4 أشهر</option>
+                            <option value="6">6 أشهر</option>
+                            <option value="9">9 أشهر</option>
+                            <option value="12">سنة واحدة (12 شهر)</option>
+                            <option value="18">سنة ونصف (18 شهر)</option>
+                            <option value="24">سنتين (24 شهر)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mt-2 text-end">
+                        <button class="btn btn-sm btn-light text-danger" onclick="clearFilters()"><i
+                                class="fas fa-times me-1"></i>مسح الفلاتر</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
 
 <!-- Registry Table -->
 <div class="row">
@@ -261,6 +330,19 @@
             params.push(`search=${encodeURIComponent(currentSearch)}`);
         }
 
+        // --- فلاتر متقدمة ---
+        const gender = document.getElementById('gender-filter')?.value;
+        if (gender) params.push(`gender=${gender}`);
+
+        const year = document.getElementById('year-filter')?.value;
+        if (year) params.push(`birth_year=${year}`);
+
+        const month = document.getElementById('month-filter')?.value;
+        if (month) params.push(`birth_month=${month}`);
+
+        const age = document.getElementById('age-filter')?.value;
+        if (age) params.push(`age_in_months=${age}`);
+
         if (params.length > 0) {
             url += '?' + params.join('&');
         }
@@ -437,6 +519,7 @@
     }
 
     // ============ Helpers ============
+    // ============ Helpers & Filters ============
     function formatAgeAr(months) {
         if (months === 0) return 'عند الولادة';
         if (months === 72) return 'سن المدرسة';
@@ -444,19 +527,46 @@
         return `${months} شهر`;
     }
 
-    function switchStatus(status) {
-        currentStatus = status;
-        currentSearch = '';
-        document.getElementById('search-input').value = '';
+    // Initialize year filter options dynamically
+    function initYearFilter() {
+        const yearSelect = document.getElementById('year-filter');
+        const currentYear = new Date().getFullYear();
+        // Generates from current year down to 10 years ago
+        for (let i = 0; i <= 10; i++) {
+            const y = currentYear - i;
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        }
+    }
+
+    // Call on load
+    document.addEventListener('DOMContentLoaded', () => {
+        initYearFilter();
+    });
+
+    function applyFilters() {
+        currentStatus = document.getElementById('status-filter').value;
+        currentSearch = document.getElementById('search-input').value.trim();
         loadChildren();
+    }
+
+    function clearFilters() {
+        document.getElementById('status-filter').value = 'all';
+        document.getElementById('search-input').value = '';
+        document.getElementById('gender-filter').value = '';
+        document.getElementById('year-filter').value = '';
+        document.getElementById('month-filter').value = '';
+        document.getElementById('age-filter').value = '';
+        applyFilters();
     }
 
     let searchTimeout;
     function debounceSearch() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
-            currentSearch = document.getElementById('search-input').value.trim();
-            loadChildren();
+            applyFilters();
         }, 500);
     }
 </script>
