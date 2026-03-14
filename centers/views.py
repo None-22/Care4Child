@@ -173,7 +173,11 @@ def add_staff_view(request):
         return redirect('centers:dashboard')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
+        import unicodedata
+        # تطبيع Unicode (NFKC) على اليوزرنيم لضمان التطابق عند تسجيل الدخول لاحقاً
+        # هذا يعالج الحروف العربية التي قد تأتي بأشكال Unicode مختلفة
+        raw_username = request.POST.get('username', '')
+        username = unicodedata.normalize('NFKC', raw_username).strip()
         password = request.POST.get('password')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
@@ -277,5 +281,3 @@ def delete_staff(request, staff_id):
         messages.error(request, f"تم حذف الموظف {staff_name} نهائياً.")
         
     return redirect('centers:staff_list')
-
-
