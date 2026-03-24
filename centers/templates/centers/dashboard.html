@@ -1,25 +1,609 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}لوحة المعلومات والقيادة{% endblock %}
+{% block page_title %}لوحة الإدارة{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --blue: #268fe8;
+        --blue-d: #0a4275;
+        --blue-l: #dbeafe;
+        --green: #0d9488;
+        --green-l: #ecfdf5;
+        --amber: #d97706;
+        --amber-l: #fffbeb;
+        --red: #dc2626;
+        --red-l: #fef2f2;
+        --bd: #e8f0f9;
+        --bg: #f0f5fc;
+        --sur: #fff;
+        --muted: #64748b;
+        --text: #0f172a;
+        --r: 13px;
+        --sh: 0 1px 8px rgba(10, 66, 117, 0.07);
+    }
+
+    [data-theme="dark"] {
+        --blue: #3b82f6;
+        --blue-d: #93c5fd;
+        --blue-l: #1e3a5f;
+        --green: #34d399;
+        --green-l: rgba(16, 185, 129, 0.15);
+        --amber: #fbbf24;
+        --amber-l: rgba(245, 158, 11, 0.15);
+        --red: #fca5a5;
+        --red-l: rgba(239, 68, 68, 0.15);
+        --bd: #30363d;
+        --bg: #0d1117;
+        --sur: #161b22;
+        --muted: #8b949e;
+        --text: #e6edf3;
+        --sh: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ── BANNER ── */
+    .db-banner,
+    .dash-banner {
+        background: linear-gradient(120deg, #0a4275 0%, #1d74c4 55%, #268fe8 100%);
+        border-radius: var(--r);
+        padding: .9rem 1.6rem;
+        color: #fff;
+        margin-bottom: .9rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .db-banner::after,
+    .dash-banner::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .db-banner h2,
+    .dash-banner h2 {
+        font-size: 1.2rem;
+        font-weight: 900;
+        margin: 0;
+    }
+
+    .db-banner p,
+    .dash-banner p {
+        margin: .1rem 0 0;
+        font-size: .78rem;
+        opacity: .8;
+    }
+
+    /* ── LAYOUT ── */
+    .db-wrap {
+        display: grid;
+        grid-template-columns: 175px 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 9px;
+    }
+
+    .kpi-col {
+        grid-column: 1;
+        grid-row: 1/span 2;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .charts-top {
+        grid-column: 2;
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+    }
+
+    .charts-mid {
+        grid-column: 2;
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+    }
+
+    .tables-row {
+        grid-column: 1/span 2;
+        grid-row: 3;
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 9px;
+    }
+
+    /* ── KPI CARD ── */
+    .kc {
+        background: var(--sur);
+        border-radius: var(--r);
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh);
+        padding: .85rem 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .kc .ico {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        margin-bottom: .45rem;
+    }
+
+    .kc .num {
+        font-size: 1.95rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+        letter-spacing: -1px;
+    }
+
+    .kc .lbl {
+        font-size: .73rem;
+        color: var(--muted);
+        font-weight: 600;
+        margin-top: .12rem;
+    }
+
+    .kc .sub {
+        font-size: .66rem;
+        font-weight: 700;
+        margin-top: .2rem;
+    }
+
+    .kc .trk {
+        height: 3px;
+        background: #f1f5f9;
+        border-radius: 99px;
+        margin-top: auto;
+        padding-top: .7rem;
+        overflow: hidden;
+    }
+
+    .kc .trk div {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1s ease;
+    }
+
+    /* ring inside kpi */
+    .kc .ring-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .35rem;
+    }
+
+    .rw {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .rw .ri {
+        position: absolute;
+        text-align: center;
+    }
+
+    .rw .rp {
+        font-size: .78rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    /* ── CHART CARD ── */
+    .cc {
+        background: var(--sur);
+        border-radius: var(--r);
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cc-h {
+        padding: .55rem .95rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .cc-h h4 {
+        font-size: .76rem;
+        font-weight: 800;
+        color: var(--blue-d);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        margin: 0;
+    }
+
+    .hi {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+    }
+
+    .cc-b {
+        padding: .75rem .95rem;
+        flex: 1;
+    }
+
+    /* ── DONUT ── */
+    .dw {
+        position: relative;
+        width: 115px;
+        height: 115px;
+        flex-shrink: 0;
+    }
+
+    .dc {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .dc .dn {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+    }
+
+    .dc .dt {
+        font-size: .55rem;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .ld {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ── GAUGE ── */
+    .gw {
+        position: relative;
+        display: inline-block;
+    }
+
+    .gl {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+
+    .gl .gn {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+    }
+
+    .gl .gs {
+        font-size: .55rem;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    /* ── VAC BARS ── */
+    .vbr {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: .45rem;
+    }
+
+    .vbn {
+        font-size: .69rem;
+        font-weight: 700;
+        color: #374151;
+        width: 72px;
+        flex-shrink: 0;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .vbt {
+        flex: 1;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .vbf {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1.1s ease;
+    }
+
+    .vbn2 {
+        font-size: .68rem;
+        font-weight: 800;
+        color: var(--blue-d);
+        width: 16px;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    /* ── APPT ── */
+    .api {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: .48rem .9rem;
+        border-bottom: 1px solid #f8fafc;
+        transition: background .15s;
+    }
+
+    .api:last-child {
+        border-bottom: none;
+    }
+
+    .api:hover {
+        background: #f8fafc;
+    }
+
+    .apav {
+        width: 27px;
+        height: 27px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .6rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        background: var(--blue-l);
+        color: var(--blue);
+    }
+
+    .apnm {
+        font-size: .74rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .apvc {
+        font-size: .64rem;
+        color: var(--muted);
+    }
+
+    .apbg {
+        margin-right: auto;
+        padding: 2px 7px;
+        border-radius: 99px;
+        font-size: .6rem;
+        font-weight: 700;
+        white-space: nowrap;
+        background: var(--blue-l);
+        color: var(--blue);
+    }
+
+    .apbg.t {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* ── TABLE ── */
+    .at {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .75rem;
+    }
+
+    .at thead tr {
+        background: #f8fafc;
+    }
+
+    .at th {
+        padding: .5rem .9rem;
+        font-weight: 800;
+        font-size: .67rem;
+        color: var(--muted);
+        text-align: right;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+    }
+
+    .at td {
+        padding: .5rem .9rem;
+        border-bottom: 1px solid #f8fafc;
+        vertical-align: middle;
+    }
+
+    .at tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .at tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* ── STATUS ── */
+    .sbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: .38rem .6rem;
+        border-radius: 8px;
+        font-size: .68rem;
+        font-weight: 700;
+        margin-top: .5rem;
+    }
+
+    /* ── EMPTY ── */
+    .emp {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        color: #94a3b8;
+    }
+
+    .emp i {
+        font-size: 1.5rem;
+        margin-bottom: .4rem;
+        display: block;
+    }
+
+    .emp p {
+        font-size: .74rem;
+        margin: 0;
+    }
+
+    /* ── ANIM ── */
+    @keyframes fu {
+        from {
+            opacity: 0;
+            transform: translateY(9px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .fu {
+        animation: fu .35s ease both;
+    }
+
+    .d1 {
+        animation-delay: .04s
+    }
+
+    .d2 {
+        animation-delay: .08s
+    }
+
+    .d3 {
+        animation-delay: .12s
+    }
+
+    .d4 {
+        animation-delay: .16s
+    }
+
+    .d5 {
+        animation-delay: .20s
+    }
+
+    .d6 {
+        animation-delay: .24s
+    }
+
+    .d7 {
+        animation-delay: .28s
+    }
+
+    .d8 {
+        animation-delay: .32s
+    }
+
+    .d9 {
+        animation-delay: .36s
+    }
+
+    @media(max-width:991px) {
+        .db-wrap {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-col {
+            grid-row: auto;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .kpi-col .kc {
+            min-width: 140px;
+            flex: 1;
+        }
+
+        .charts-top,
+        .charts-mid {
+            grid-template-columns: 1fr;
+        }
+
+        .tables-row {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-top,
+        .charts-mid,
+        .tables-row {
+            grid-column: 1;
+        }
+
+        .charts-top {
+            grid-row: auto;
+        }
+
+        .charts-mid {
+            grid-row: auto;
+        }
+
+        .tables-row {
+            grid-row: auto;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 
-<!-- ================= BANNER ================= -->
+<!-- BANNER -->
 <div class="row">
     <div class="col-12">
-        <div class="ministry-banner mb-4">
+        <div class="ministry-banner mb-3">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <div class="mb-3 mb-md-0">
                     <h2 class="text-white mb-2"><i class="fas fa-chart-pie me-2"></i>لوحة الإدارة الطبية</h2>
-                    <p class="mb-0" style="color: rgba(255,255,255,0.85);">نظرة شاملة ومباشرة على أداء ومؤشرات المركز الصحي الفعلي</p>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.85);">
+                        <i class="fas fa-hospital-alt me-1"></i>{{ user.health_center.name_ar|default:"مركزك الصحي" }}
+                        &nbsp;·&nbsp;
+                        <i class="fas fa-clock me-1"></i><span id="live-time"></span>
+                    </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{% url 'centers:add_child' %}" class="btn btn-light text-primary fw-bold px-4 shadow-sm rounded-pill">
-                        <i class="fas fa-plus me-2"></i> تسجيل طفل جديد
+                    <a href="{% url 'centers:add_child' %}"
+                        class="btn btn-light text-primary fw-bold px-4 shadow-sm rounded-pill">
+                        <i class="fas fa-plus me-2"></i>تسجيل طفل جديد
                     </a>
                     <a href="{% url 'centers:registry' %}" class="btn btn-outline-light fw-bold px-4 rounded-pill">
-                        <i class="fas fa-book-medical me-2"></i> السجل الرقمي
+                        <i class="fas fa-book-medical me-2"></i>السجل الرقمي
                     </a>
                 </div>
             </div>
@@ -27,280 +611,507 @@
     </div>
 </div>
 
-<!-- ================= KPIS ================= -->
-<div class="row g-4 mb-4">
-    <!-- KPI 1 -->
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="kpi-card fade-in-up">
-            <div class="kpi-icon bg-danger-soft">
-                <i class="fas fa-exclamation-triangle"></i>
+<div class="db-wrap">
+
+    <!-- ═══════════ KPI SIDEBAR ═══════════ -->
+    <div class="kpi-col">
+
+        <div class="kc fu d1">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.35rem;">
+                <div class="ico" style="background:var(--blue-l);color:var(--blue);"><i class="fas fa-baby"></i></div>
+                <canvas id="spark-total" width="68" height="34"></canvas>
             </div>
-            <div class="kpi-info">
-                <p class="kpi-label">تنبيه المتسربين</p>
-                <div class="kpi-value" id="kpi-defaulters">—</div>
-                <div class="text-danger mt-1 fw-bold" style="font-size: 0.75rem;">أكثر من 3 أيام تأخير!</div>
+            <div class="num" id="kpi-total">—</div>
+            <div class="lbl">إجمالي الأطفال</div>
+            <div class="sub" style="color:var(--blue);">مسجلون في المركز</div>
+            <div class="trk">
+                <div id="bar-total" style="width:0%;background:var(--blue);"></div>
             </div>
         </div>
-    </div>
 
-    <!-- KPI 2 -->
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="kpi-card fade-in-up delay-100">
-            <div class="kpi-icon bg-primary-soft">
-                <i class="fas fa-syringe"></i>
+        <div class="kc fu d2">
+            <div class="ring-row">
+                <div class="rw" style="width:44px;height:44px;">
+                    <canvas id="ring-c" width="44" height="44"></canvas>
+                    <div class="ri">
+                        <div class="rp" style="color:var(--green);" id="rp-c">0%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="num" id="kpi-completed" style="font-size:1.55rem;">—</div>
+                    <div class="lbl">مكتملو التحصين</div>
+                </div>
             </div>
-            <div class="kpi-info">
-                <p class="kpi-label">تطعيمات اليوم</p>
-                <div class="kpi-value" id="kpi-vaccinated-today">—</div>
-                <div class="text-primary mt-1 fw-bold" style="font-size: 0.75rem;">إجمالي أطفال اليوم</div>
+            <div class="sub" style="color:var(--green);">إنجاز: <span id="kpi-rate">0</span>%</div>
+            <div class="trk">
+                <div id="bar-completed" style="width:0%;background:var(--green);"></div>
             </div>
         </div>
-    </div>
 
-    <!-- KPI 3 -->
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="kpi-card fade-in-up delay-200">
-            <div class="kpi-icon bg-teal-soft">
-                <i class="fas fa-users"></i>
+        <div class="kc fu d3">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.35rem;">
+                <div class="ico" style="background:var(--amber-l);color:var(--amber);"><i class="fas fa-syringe"></i>
+                </div>
+                <canvas id="spark-today" width="68" height="34"></canvas>
             </div>
-            <div class="kpi-info">
-                <p class="kpi-label">إجمالي الأطفال</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="text-teal-600 mt-1 fw-bold" style="font-size: 0.75rem; color: var(--c-teal-600);">مسجلون في
-                    المركز</div>
+            <div class="num" id="kpi-vaccinated-today">—</div>
+            <div class="lbl">تطعيمات اليوم</div>
+            <div class="sub" style="color:var(--amber);">جرعات مسجلة</div>
+            <div class="trk">
+                <div id="bar-today" style="width:0%;background:var(--amber);"></div>
             </div>
         </div>
+
+        <div class="kc fu d4">
+            <div class="ring-row">
+                <div class="rw" style="width:44px;height:44px;">
+                    <canvas id="ring-d" width="44" height="44"></canvas>
+                    <div class="ri">
+                        <div class="rp" style="color:var(--red);" id="rp-d">0%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="num" id="kpi-defaulters" style="font-size:1.55rem;">—</div>
+                    <div class="lbl">تنبيه المتسربين</div>
+                </div>
+            </div>
+            <div class="sub" style="color:var(--red);">تأخر &gt; 3 أيام</div>
+            <div class="trk">
+                <div id="bar-defaulters" style="width:0%;background:var(--red);"></div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- KPI 4 -->
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="kpi-card fade-in-up delay-300">
-            <div class="kpi-icon bg-warning-soft">
-                <i class="fas fa-check-circle"></i>
+    <!-- ═══════════ ROW 1: 3 charts ═══════════ -->
+    <div class="charts-top">
+
+        <!-- Line -->
+        <div class="cc fu d3">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue);"><i
+                            class="fas fa-chart-line"></i></div>معدل التطعيم — 7 أيام
+                </h4>
+                <span id="week-badge" style="font-size:.64rem;font-weight:700;color:var(--green);"></span>
             </div>
-            <div class="kpi-info">
-                <p class="kpi-label">مكتملي التحصين</p>
-                <div class="kpi-value" id="kpi-completed">—</div>
-                <div class="text-warning mt-1 fw-bold" style="font-size: 0.75rem;">
-                    نسبة الإنجاز: <span id="kpi-rate">0</span>%
+            <div class="cc-b">
+                <div style="height:150px;"><canvas id="lineChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Donut -->
+        <div class="cc fu d4">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue-d);"><i
+                            class="fas fa-chart-pie"></i></div>حالة التحصين
+                </h4>
+            </div>
+            <div class="cc-b d-flex align-items-center gap-3">
+                <div class="dw">
+                    <canvas id="donutChart" width="115" height="115"></canvas>
+                    <div class="dc">
+                        <div class="dn" id="donut-pct">0%</div>
+                        <div class="dt">مكتملون</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2" style="flex:1;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--green);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">مكتملون</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-c">—</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--blue);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">قيد المتابعة</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-p">—</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--red);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">متسربون</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-d">—</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ================= CHARTS AND APPOINTMENTS ================= -->
-<div class="row g-4 mb-4">
-    <div class="col-lg-8">
-        <div class="saas-card h-100">
-            <div class="card-header-styled">
-                <h3 class="card-title-styled">
-                    <div class="card-title-icon"><i class="fas fa-chart-line"></i></div>
-                    معدلات الإقبال الفعلية (آخر 7 أيام)
-                </h3>
+        <!-- Radar: مؤشرات الأداء الشاملة -->
+        <div class="cc fu d5">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue);"><i
+                            class="fas fa-chart-area"></i></div>مؤشرات الأداء الشاملة
+                </h4>
             </div>
-            <div class="card-body-styled">
-                <div style="height: 320px; width: 100%;">
-                    <canvas id="weeklyVisitsChart"></canvas>
+            <div class="cc-b d-flex align-items-center justify-content-center">
+                <div style="height:150px;width:100%;"><canvas id="radarChart"></canvas></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════ ROW 2: 3 charts ═══════════ -->
+    <div class="charts-mid">
+
+        <!-- Gauge -->
+        <div class="cc fu d5">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--red-l);color:var(--red);"><i
+                            class="fas fa-tachometer-alt"></i></div>مؤشر التسرب
+                </h4>
+            </div>
+            <div class="cc-b d-flex flex-column align-items-center justify-content-center">
+                <div class="gw">
+                    <canvas id="gaugeChart" width="150" height="88"></canvas>
+                    <div class="gl">
+                        <div class="gn" id="gauge-num">0%</div>
+                        <div class="gs">نسبة التسرب</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between w-100 mt-1" style="font-size:.6rem;font-weight:700;">
+                    <span style="color:var(--green);">آمن</span><span style="color:var(--amber);">متوسط</span><span
+                        style="color:var(--red);">عالي</span>
+                </div>
+                <div class="sbox w-100" id="gauge-box" style="background:var(--green-l);">
+                    <i id="gauge-ico" class="fas fa-circle-check" style="color:var(--green);font-size:.72rem;"></i>
+                    <span id="gauge-msg" style="color:#047857;">الوضع جيد</span>
                 </div>
             </div>
         </div>
+
+        <!-- Polar Area: توزيع اللقاحات -->
+        <div class="cc fu d6">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue);"><i
+                            class="fas fa-circle-half-stroke"></i></div>توزيع اللقاحات المسجّلة
+                </h4>
+                <span style="font-size:.63rem;color:var(--muted);font-weight:600;">من آخر السجلات</span>
+            </div>
+            <div class="cc-b d-flex align-items-center gap-2" style="padding:.6rem .9rem;">
+                <div style="height:115px;flex:0 0 115px;"><canvas id="polarChart"></canvas></div>
+                <div id="polar-legend" style="flex:1;display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="col-lg-4">
-        <div class="saas-card h-100">
-            <div class="card-header-styled">
-                <h3 class="card-title-styled">
-                    <div class="card-title-icon"><i class="fas fa-calendar-check text-warning"></i></div>
-                    المواعيد القادمة
-                </h3>
+    <!-- ═══════════ ROW 3: Tables ═══════════ -->
+    <div class="tables-row">
+
+        <!-- Activity Table -->
+        <div class="cc fu d7">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:#f8fafc;color:var(--muted);"><i class="fas fa-history"></i></div>
+                    آخر السجلات المضافة
+                </h4>
+                <a href="{% url 'centers:registry' %}" style="font-size:.66rem;font-weight:700;color:var(--blue);">عرض
+                    الكل <i class="fas fa-arrow-left ms-1"></i></a>
             </div>
-            <div class="card-body-styled p-0" id="upcoming-appointments-container">
-                <div class="d-flex justify-content-center py-5">
+            <div id="activity-container" style="overflow-x:auto;">
+                <div class="d-flex justify-content-center align-items-center py-3">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    <span class="text-muted" style="font-size:.76rem;">جاري التحميل...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments -->
+        <div class="cc fu d8">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--amber-l);color:var(--amber);"><i
+                            class="fas fa-calendar-check"></i></div>المواعيد القادمة
+                </h4>
+                <span class="badge rounded-pill px-2"
+                    style="background:var(--amber-l);color:var(--amber);font-size:.63rem;font-weight:700;"
+                    id="appt-badge">—</span>
+            </div>
+            <div id="appt-list" style="max-height:240px;overflow-y:auto;">
+                <div class="d-flex justify-content-center py-3">
                     <div class="spinner-border spinner-border-sm text-primary"></div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ================= RECENT ACTIVITY TABLE ================= -->
-<div class="row g-4">
-    <div class="col-12">
-        <div class="saas-card">
-            <div class="card-header-styled">
-                <h3 class="card-title-styled">
-                    <div class="card-title-icon"><i class="fas fa-history text-indigo-500"></i></div>
-                    آخر السجلات المضافة
-                </h3>
-                <a href="{% url 'centers:registry' %}"
-                    class="btn btn-sm btn-light border fw-bold text-primary px-3 rounded-pill">
-                    عرض السجل كاملاً
-                </a>
-            </div>
-            <div id="recent-activity-container" class="table-responsive">
-                <div class="d-flex justify-content-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <span class="ms-3 text-muted fw-bold">جاري التحميل...</span>
-                </div>
-            </div>
-        </div>
     </div>
-</div>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</div><!-- /db-wrap -->
+{% endblock %}
+
+{% block extra_scripts %}
 <script src="{% static 'js/api.js' %}"></script>
-
 <script>
-    document.addEventListener("DOMContentLoaded", async function () {
+    document.addEventListener('DOMContentLoaded', async function () {
 
-        // -----------------------------------------------
-        // 1. Animated Number Counter
-        // -----------------------------------------------
-        function animateValue(id, end, duration = 1200) {
-            const obj = document.getElementById(id);
-            if (!obj) return;
-            if (end === 0) { obj.innerHTML = '0'; return; }
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * end);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
+        const clk = () => {
+            document.getElementById('live-time').textContent =
+                new Date().toLocaleDateString('ar-SA', { weekday: 'short', month: 'long', day: 'numeric' }) +
+                '  ·  ' + new Date().toLocaleTimeString('ar-SA');
+        };
+        clk(); setInterval(clk, 1000);
 
-        // -----------------------------------------------
-        // 2. Fetch Dashboard Stats
-        // -----------------------------------------------
-        let dashData;
-        try {
-            dashData = await apiFetch('/api/dashboard/stats/');
-        } catch (e) {
-            console.error('Dashboard stats fetch failed:', e);
-            document.getElementById('recent-activity-container').innerHTML =
-                `<div class="alert alert-danger m-4 border-0 rounded-4"><i class="fas fa-exclamation-circle me-2"></i>فشل تحميل البيانات. يرجى تحديث الصفحة.</div>`;
-            document.getElementById('upcoming-appointments-container').innerHTML =
-                `<p class="text-danger small text-center p-4">فشل التحميل</p>`;
+        const anim = (id, end, dur = 900) => {
+            const el = document.getElementById(id); if (!el) return;
+            if (!end) { el.textContent = '0'; return; }
+            let st = null;
+            const s = ts => { if (!st) st = ts; const p = Math.min((ts - st) / dur, 1); el.textContent = Math.floor(p * end); if (p < 1) requestAnimationFrame(s); };
+            requestAnimationFrame(s);
+        };
+
+        const ring = (id, pct, color) => {
+            const c = document.getElementById(id); if (!c) return;
+            const x = c.getContext('2d'), cx = c.width / 2, cy = c.height / 2, r = 17, lw = 5;
+            x.clearRect(0, 0, c.width, c.height);
+            x.beginPath(); x.arc(cx, cy, r, 0, 2 * Math.PI); x.strokeStyle = '#e8f0f9'; x.lineWidth = lw; x.stroke();
+            x.beginPath(); x.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (pct / 100) * 2 * Math.PI);
+            x.strokeStyle = color; x.lineWidth = lw; x.lineCap = 'round'; x.stroke();
+        };
+
+        const gauge = pct => {
+            const c = document.getElementById('gaugeChart'); if (!c) return;
+            const x = c.getContext('2d'), cx = 75, cy = 83, r = 55, lw = 13;
+            x.clearRect(0, 0, 150, 88);
+            x.beginPath(); x.arc(cx, cy, r, Math.PI, 2 * Math.PI); x.strokeStyle = '#e8f0f9'; x.lineWidth = lw; x.stroke();
+            const col = pct < 10 ? '#0d9488' : pct < 30 ? '#d97706' : '#dc2626';
+            x.beginPath(); x.arc(cx, cy, r, Math.PI, Math.PI + (pct / 100) * Math.PI);
+            x.strokeStyle = col; x.lineWidth = lw; x.lineCap = 'round'; x.stroke();
+        };
+
+        const spark = (id, data, color) => {
+            const c = document.getElementById(id); if (!c || !data.length) return;
+            new Chart(c, {
+                type: 'line',
+                data: { labels: data.map((_, i) => i), datasets: [{ data, borderColor: color, borderWidth: 1.8, pointRadius: 0, fill: false, tension: 0.4 }] },
+                options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+            });
+        };
+
+        let d;
+        try { d = await apiFetch('/api/dashboard/stats/'); }
+        catch {
+            ['activity-container', 'appt-list'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = `<div class="alert alert-danger m-2 border-0 rounded-3" style="font-size:.78rem;"><i class="fas fa-exclamation-circle me-2"></i>فشل تحميل البيانات.</div>`;
+            });
             return;
         }
 
-        // -----------------------------------------------
-        // 3. Render KPIs
-        // -----------------------------------------------
-        const kpis = dashData.kpis || dashData;
-        animateValue('kpi-defaulters', kpis.defaulters_count ?? 0);
-        animateValue('kpi-vaccinated-today', kpis.vaccinated_today ?? 0);
-        animateValue('kpi-total', kpis.total_children ?? 0);
-        animateValue('kpi-completed', kpis.completed_children ?? 0);
-        const rateEl = document.getElementById('kpi-rate');
-        if (rateEl) rateEl.textContent = kpis.completion_rate ?? 0;
+        const K = d.kpis || {}, C = d.charts || {}, appts = d.upcoming_appointments || [], act = d.recent_activity || [];
+        const total = K.total_children || 0, comp = K.completed_children || 0, def = K.defaulters_count || 0;
+        const vacT = K.vaccinated_today || 0, rate = K.completion_rate || 0;
+        const trend = C.vaccination_trend || [], lbs = C.labels || [];
+        const pend = Math.max(total - comp - def, 0), defRate = total ? Math.round(def / total * 100) : 0;
 
-        // -----------------------------------------------
-        // 4. Chart.js — Weekly Visits
-        // -----------------------------------------------
-        const chartSection = dashData.charts || {};
-        const labels = chartSection.labels || [];
-        const values = chartSection.vaccination_trend || [];
+        anim('kpi-total', total); anim('kpi-completed', comp);
+        anim('kpi-vaccinated-today', vacT); anim('kpi-defaulters', def);
+        document.getElementById('kpi-rate').textContent = rate;
+        setTimeout(() => {
+            document.getElementById('bar-total').style.width = '100%';
+            document.getElementById('bar-completed').style.width = rate + '%';
+            document.getElementById('bar-today').style.width = Math.min(vacT / (total || 1) * 100, 100) + '%';
+            document.getElementById('bar-defaulters').style.width = defRate + '%';
+        }, 300);
+        ring('ring-c', rate, '#0d9488'); document.getElementById('rp-c').textContent = rate + '%';
+        ring('ring-d', defRate, '#dc2626'); document.getElementById('rp-d').textContent = defRate + '%';
+        spark('spark-total', trend, '#268fe8');
+        spark('spark-today', trend, '#d97706');
+        document.getElementById('week-badge').textContent = 'إجمالي الأسبوع: ' + trend.reduce((a, b) => a + b, 0);
 
-        const ctx = document.getElementById('weeklyVisitsChart');
-        if (ctx && labels.length) {
-            new Chart(ctx, {
-                type: 'line',
+        const tOpt = (lbl) => {
+            const dk = document.documentElement.getAttribute('data-theme') === 'dark';
+            return { backgroundColor: dk ? '#1e3a5f' : '#0a4275', bodyColor: '#93c5fd', padding: 8, callbacks: { label: c => ' ' + c.parsed.y + ' ' + lbl } };
+        };
+        const yA = () => {
+            const dk = document.documentElement.getAttribute('data-theme') === 'dark';
+            return { beginAtZero: true, grid: { color: dk ? '#21262d' : '#f1f5f9' }, border: { display: false }, ticks: { color: dk ? '#8b949e' : '#94a3b8', font: { size: 9 } } };
+        };
+        const xA = () => {
+            const dk = document.documentElement.getAttribute('data-theme') === 'dark';
+            return { grid: { display: false }, border: { display: false }, ticks: { color: dk ? '#8b949e' : '#64748b', font: { size: 10, weight: '600' } } };
+        };
+
+        /* Line - أزرق */
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: lbs, datasets: [{
+                    data: trend,
+                    borderColor: '#268fe8', backgroundColor: 'rgba(38,143,232,0.07)',
+                    borderWidth: 2.5, pointBackgroundColor: '#fff', pointBorderColor: '#268fe8',
+                    pointBorderWidth: 2, pointRadius: 3.5, fill: true, tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: tOpt('تطعيم') },
+                scales: { y: yA(), x: xA() }
+            }
+        });
+
+        /* Donut - أخضر / أزرق / أحمر (معبّر) */
+        document.getElementById('donut-pct').textContent = rate + '%';
+        document.getElementById('leg-c').textContent = comp;
+        document.getElementById('leg-p').textContent = pend;
+        document.getElementById('leg-d').textContent = def;
+        const _dk = () => document.documentElement.getAttribute('data-theme') === 'dark';
+        new Chart(document.getElementById('donutChart'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [comp, pend, def],
+                    backgroundColor: ['#0d9488', '#268fe8', '#dc2626'],
+                    borderWidth: 2, borderColor: _dk() ? '#161b22' : '#fff', hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: false, cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: c => ['مكتملون', 'قيد المتابعة', 'متسربون'][c.dataIndex] + ': ' + c.parsed } }
+                }
+            }
+        });
+
+        /* Polar Area - توزيع اللقاحات */
+        const vacMap = {};
+        act.forEach(r => { if (r.vaccine) vacMap[r.vaccine] = (vacMap[r.vaccine] || 0) + 1; });
+        const vacEntries = Object.entries(vacMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        const polarColors = ['#0a4275', '#1d74c4', '#268fe8', '#0d9488', '#d97706', '#dc2626'];
+        if (vacEntries.length) {
+            new Chart(document.getElementById('polarChart'), {
+                type: 'polarArea',
                 data: {
-                    labels: labels,
+                    labels: vacEntries.map(([n]) => n),
                     datasets: [{
-                        label: 'التطعيمات اليومية',
-                        data: values,
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.08)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#4f46e5',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.4
+                        data: vacEntries.map(([, c]) => c),
+                        backgroundColor: polarColors.slice(0, vacEntries.length).map(c => c + 'cc'),
+                        borderColor: polarColors.slice(0, vacEntries.length),
+                        borderWidth: 1.5
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
-                        x: { grid: { display: false }, border: { display: false } }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed.r} سجل` } } },
+                    scales: { r: { ticks: { display: false }, grid: { color: _dk() ? '#21262d' : '#f1f5f9' } } }
                 }
             });
-        } else if (ctx) {
-            ctx.parentElement.innerHTML = '<p class="text-muted text-center py-5">لا توجد بيانات كافية لعرض الرسم البياني.</p>';
+            document.getElementById('polar-legend').innerHTML = vacEntries.map(([n, c], i) => `
+            <div style="display:flex;align-items:center;gap:5px;">
+                <div style="width:7px;height:7px;border-radius:50%;background:${polarColors[i]};flex-shrink:0;"></div>
+                <span style="font-size:.68rem;font-weight:600;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n}</span>
+                <span style="font-size:.68rem;font-weight:800;color:var(--blue-d);margin-right:auto;">${c}</span>
+            </div>`).join('');
+        } else {
+            document.getElementById('polarChart').closest('.cc-b').innerHTML =
+                '<div class="emp"><i class="fas fa-vials"></i><p>لا توجد سجلات كافية</p></div>';
         }
 
-        // -----------------------------------------------
-        // 5. Upcoming Appointments
-        // -----------------------------------------------
-        const apptContainer = document.getElementById('upcoming-appointments-container');
-        const appts = dashData.upcoming_appointments || [];
-        if (appts.length === 0) {
-            apptContainer.innerHTML = '<p class="text-muted text-center py-5 small">لا توجد مواعيد قادمة.</p>';
-        } else {
-            let apptHtml = '<div class="list-group list-group-flush rounded-bottom">';
-            appts.forEach(a => {
-                apptHtml += `<div class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center border-bottom-0 border-top">
-                <div>
-                    <div class="fw-bold mb-1" style="color: var(--c-blue-900); font-size: 0.95rem;">${a.child_name || '—'}</div>
-                    <div class="text-muted" style="font-size:0.8rem;"><i class="fas fa-syringe me-1 text-teal-600"></i> ${a.vaccine || ''}</div>
+        /* Gauge */
+        gauge(defRate);
+        document.getElementById('gauge-num').textContent = defRate + '%';
+        const box = document.getElementById('gauge-box'), msg = document.getElementById('gauge-msg'), ico = document.getElementById('gauge-ico');
+        if (defRate < 10) { box.style.background = '#ecfdf5'; msg.style.color = '#047857'; msg.textContent = 'الوضع جيد'; ico.className = 'fas fa-circle-check'; ico.style.color = '#0d9488'; }
+        else if (defRate < 30) { box.style.background = '#fffbeb'; msg.style.color = '#92400e'; msg.textContent = 'يحتاج متابعة'; ico.className = 'fas fa-triangle-exclamation'; ico.style.color = '#d97706'; }
+        else { box.style.background = '#fef2f2'; msg.style.color = '#991b1b'; msg.textContent = 'تدخل فوري'; ico.className = 'fas fa-circle-xmark'; ico.style.color = '#dc2626'; }
+
+        /* Radar - مؤشرات الأداء (كل قيمة من 0 إلى 100) */
+        const radarData = [
+            rate,                                                          // نسبة الإنجاز
+            Math.max(0, 100 - defRate),                                    // معدل الحضور (عكس التسرب)
+            Math.min(Math.round((vacT / (total || 1)) * 100), 100),         // نشاط اليوم
+            Math.min(Math.round((comp / (total || 1)) * 100), 100),         // التحصين الكامل
+            Math.max(0, 100 - Math.round((appts.length / (total || 1)) * 100)), // انتظام المواعيد
+        ];
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
+            data: {
+                labels: ['الإنجاز', 'الحضور', 'نشاط اليوم', 'التحصين', 'المواعيد'],
+                datasets: [{
+                    data: radarData,
+                    borderColor: '#268fe8', backgroundColor: 'rgba(38,143,232,0.15)',
+                    borderWidth: 2, pointBackgroundColor: '#268fe8',
+                    pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }, tooltip: {
+                        backgroundColor: '#0a4275',
+                        callbacks: { label: c => ' ' + c.raw + '%' }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true, max: 100,
+                        grid: { color: _dk() ? '#21262d' : '#f1f5f9' },
+                        angleLines: { color: _dk() ? '#30363d' : '#e8f0f9' },
+                        ticks: { display: false },
+                        pointLabels: { font: { size: 9, weight: '700' }, color: _dk() ? '#8b949e' : '#64748b' }
+                    }
+                }
+            }
+        });
+
+        /* Appointments */
+        document.getElementById('appt-badge').textContent = appts.length;
+        const aEl = document.getElementById('appt-list');
+        if (!appts.length) { aEl.innerHTML = '<div class="emp"><i class="fas fa-calendar-check"></i><p>لا مواعيد قادمة</p></div>'; }
+        else {
+            const td = new Date().toISOString().slice(0, 10);
+            aEl.innerHTML = appts.map(a => {
+                const ini = (a.child_name || '؟').split(' ').slice(0, 2).map(w => w[0]).join('');
+                const isT = String(a.due_date) === td;
+                return `<div class="api">
+                <div class="apav">${ini}</div>
+                <div style="min-width:0;flex:1;">
+                    <div class="apnm">${a.child_name || '—'}</div>
+                    <div class="apvc"><i class="fas fa-syringe me-1" style="color:var(--green);font-size:.58rem;"></i>${a.vaccine || ''}</div>
                 </div>
-                <span class="badge badge-saas badge-saas-primary">${a.due_date || ''}</span>
+                <span class="apbg ${isT ? 't' : ''}">${isT ? 'اليوم' : (a.due_date || '')}</span>
             </div>`;
-            });
-            apptHtml += '</div>';
-            apptContainer.innerHTML = apptHtml;
+            }).join('');
         }
 
-        // -----------------------------------------------
-        // 6. Recent Activity Table
-        // -----------------------------------------------
-        const activityContainer = document.getElementById('recent-activity-container');
-        const activity = dashData.recent_activity || [];
-        if (activity.length === 0) {
-            activityContainer.innerHTML = `
-            <div class="text-center py-5 text-muted">
-                <i class="fas fa-inbox fa-3x mb-3 text-border"></i>
-                <p>لا توجد سجلات حديثة.</p>
-            </div>`;
-        } else {
-            let rows = '';
-            activity.forEach(item => {
-                rows += `<tr>
-                <td>
-                    <div class="fw-bold text-blue-900" style="color:var(--c-blue-900); font-size: 1.05rem;">${item.child_name || '—'}</div>
-                    <div class="text-muted" style="font-size: 0.85rem;">${item.staff || ''}</div>
-                </td>
-                <td class="fw-semibold text-blue-700" style="color:var(--c-blue-700);">${item.vaccine || '—'}</td>
-                <td><span class="badge badge-saas badge-saas-muted border-0 bg-light text-dark">جرعة ${item.dose || ''}</span></td>
-                <td class="text-muted" style="font-size: 0.85rem;"><i class="far fa-calendar-alt me-1"></i> ${item.date || '—'}</td>
-            </tr>`;
-            });
-
-            activityContainer.innerHTML = `
-            <table class="saas-table">
-                <thead>
-                    <tr>
-                        <th>اسم الطفل</th>
-                        <th>اللقاح</th>
-                        <th>الجرعة</th>
-                        <th>التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>`;
+        /* Activity */
+        const acEl = document.getElementById('activity-container');
+        if (!act.length) { acEl.innerHTML = '<div class="emp"><i class="fas fa-inbox"></i><p>لا توجد سجلات</p></div>'; }
+        else {
+            acEl.innerHTML = `<table class="at">
+            <thead><tr><th>الطفل</th><th>الموظف</th><th>اللقاح</th><th>الجرعة</th><th>التاريخ</th></tr></thead>
+            <tbody>${act.map(r => `<tr>
+                <td style="font-weight:700;color:var(--blue-d);font-size:.77rem;">${r.child_name || '—'}</td>
+                <td style="font-size:.7rem;color:var(--muted);"><i class="fas fa-user-nurse me-1"></i>${r.staff || '—'}</td>
+                <td style="font-weight:600;color:var(--text);font-size:.75rem;">${r.vaccine || '—'}</td>
+                <td><span style="background:var(--blue-l);color:var(--blue);font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:99px;">جرعة ${r.dose || ''}</span></td>
+                <td style="color:var(--muted);font-size:.69rem;white-space:nowrap;"><i class="far fa-calendar-alt me-1"></i>${r.date || '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
         }
-
     });
-</script>
 
+    /* إعادة رسم الـ charts عند تبديل الثيم */
+    new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+            if (m.attributeName === 'data-theme') {
+                Chart.instances && Object.values(Chart.instances).forEach(function (ch) {
+                    var dk = document.documentElement.getAttribute('data-theme') === 'dark';
+                    var gridColor = dk ? '#21262d' : '#f1f5f9';
+                    var tickColor = dk ? '#8b949e' : '#94a3b8';
+                    var scales = ch.options.scales;
+                    if (scales) {
+                        if (scales.x) { scales.x.ticks && (scales.x.ticks.color = tickColor); }
+                        if (scales.y) { scales.y.grid && (scales.y.grid.color = gridColor); scales.y.ticks && (scales.y.ticks.color = tickColor); }
+                        if (scales.r) { scales.r.grid && (scales.r.grid.color = gridColor); scales.r.angleLines && (scales.r.angleLines.color = dk ? '#30363d' : '#e8f0f9'); scales.r.pointLabels && (scales.r.pointLabels.color = tickColor); }
+                    }
+                    ch.update('none');
+                });
+            }
+        });
+    }).observe(document.documentElement, { attributes: true });
+</script>
 {% endblock %}

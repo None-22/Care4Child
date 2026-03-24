@@ -31,7 +31,7 @@
 <!-- Search Bar & Filters -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="saas-card p-3 bg-white">
+        <div class="saas-card p-3">
             <div class="d-flex flex-column flex-md-row gap-2 mb-3">
                 <div class="input-group flex-grow-1">
                     <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
@@ -129,7 +129,7 @@
             <div id="registry-scroll-container" class="table-responsive"
                 style="min-height: 400px; position: relative; overflow-x: auto;">
                 <div id="registry-loading" class="d-none justify-content-center align-items-center"
-                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 50;">
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--c4c-overlay, rgba(255,255,255,0.85)); z-index: 50;">
                     <div class="spinner-border text-primary spinner-border-sm"></div>
                     <span class="ms-3 text-muted fw-bold">جاري تحميل السجل...</span>
                 </div>
@@ -137,7 +137,7 @@
                 <div id="registry-table-container"></div>
             </div>
             <!-- Pagination Bar -->
-            <div class="d-flex justify-content-center align-items-center gap-4 bg-white border-top rounded-bottom pagination-container"
+            <div class="d-flex justify-content-center align-items-center gap-4 border-top rounded-bottom pagination-container"
                 id="pagination-bar" style="display:none!important;">
 
                 <!-- Prev Button Container (في العربي يمين) -->
@@ -522,11 +522,15 @@
 
         flatHeader.forEach(col => {
             const borderLeft = col.is_group_end ? 'border-left:2px solid #adb5bd;' : '';
-            doseRow += `<th class="small align-middle bg-light"
-            style="min-width:100px;border:1px solid #dee2e6;color:#555;font-weight:600;${borderLeft}">
+            const _dk = document.documentElement.getAttribute('data-theme') === 'dark';
+            const _border = _dk ? '1px solid #21262d' : '1px solid #dee2e6';
+            const _color  = _dk ? '#8b949e' : '#555';
+            const _bg     = _dk ? '#1a2332' : '#f8fafb';
+            doseRow += `<th class="small align-middle"
+            style="min-width:100px;border:${_border};color:${_color};background:${_bg};font-weight:600;${borderLeft}">
             <div class="d-flex flex-column py-1">
                 <span>${col.label}</span>
-                <span class="text-muted fw-normal mt-1" style="font-size:0.75rem;">${col.age}</span>
+                <span style="font-size:0.75rem;opacity:0.75;">${col.age}</span>
             </div></th>`;
         });
 
@@ -603,14 +607,15 @@
                     cellContent = `<div class="text-muted small" style="font-size:0.8em;opacity:0.4;">—</div>`;
                 }
 
-                cells += `<td class="align-middle ${statusClass}" style="border:1px solid #dee2e6;${borderLeft}">${cellContent}</td>`;
+                const _bColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#21262d' : '#dee2e6';
+                cells += `<td class="align-middle ${statusClass}" style="border:1px solid ${_bColor};${borderLeft}">${cellContent}</td>`;
             });
 
             tbody += `<tr>
-            <td class="sticky-col-start fw-bold text-start p-3" style="z-index:5;background:#fff;border:1px solid #dee2e6; white-space: nowrap;">
+            <td class="sticky-col-start fw-bold text-start p-3" style="z-index:5;border:1px solid #dee2e6; white-space: nowrap;">
                 <div class="d-flex align-items-center">
                     <div>
-                        <a href="/center/child/${child.id}/" class="text-decoration-none text-dark" style="font-size:0.95rem;">
+                        <a href="/center/child/${child.id}/" class="text-decoration-none" style="font-size:0.95rem;color:var(--c-text-main);">
                             ${child.full_name}
                         </a>
                     </div>
@@ -624,7 +629,7 @@
         <table class="table table-bordered align-middle mb-0 text-center registry-table" style="min-width: 2800px;">
             <thead style="position:sticky;top:0;z-index:20;">
                 <th rowspan="3" class="sticky-col-start align-middle shadow-sm"
-                    style="width: 400px; min-width: 350px; z-index: 30; background: linear-gradient(to right, var(--c-blue-400) 0%, var(--c-blue-700) 100%); border: 1px solid #000; font-weight: 800; color: #000 !important;">
+                    style="width: 400px; min-width: 350px; z-index: 30; background: linear-gradient(to right, var(--c-blue-400) 0%, var(--c-blue-700) 100%); border-right: 1px solid var(--c-border); font-weight: 800; color: #fff;">
                     <div class="py-2">الطفل</div>
                 </th>
                     ${mainRow}
@@ -687,6 +692,15 @@
             applyFilters();
         }, 500);
     }
+
+    /* إعادة رسم الجدول عند تبديل الثيم */
+    new MutationObserver(function(m) {
+        m.forEach(function(mut) {
+            if (mut.attributeName === 'data-theme' && allChildren.length) {
+                renderTable();
+            }
+        });
+    }).observe(document.documentElement, { attributes: true });
 </script>
 
 {% endblock %}

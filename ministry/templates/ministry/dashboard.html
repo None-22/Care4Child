@@ -1,287 +1,936 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}لوحة المعلومات | وزارة الصحة{% endblock %}
-{% block page_title %}لوحة المعلومات {% endblock %}
+{% block title %}لوحة الوزارة | Care4Child{% endblock %}
+{% block page_title %}لوحة الوزارة{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --blue: #268fe8;
+        --blue-d: #0a4275;
+        --blue-l: #dbeafe;
+        --green: #0d9488;
+        --green-l: #ecfdf5;
+        --amber: #d97706;
+        --amber-l: #fffbeb;
+        --red: #dc2626;
+        --red-l: #fef2f2;
+        --bd: #e8f0f9;
+        --sur: #fff;
+        --muted: #64748b;
+        --text: #0f172a;
+        --r: 13px;
+        --sh: 0 1px 8px rgba(10, 66, 117, 0.07);
+    }
+
+    .db-wrap {
+        display: grid;
+        grid-template-columns: 175px 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 9px;
+    }
+
+    .kpi-col {
+        grid-column: 1;
+        grid-row: 1/span 2;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .charts-top {
+        grid-column: 2;
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+    }
+
+    .charts-mid {
+        grid-column: 2;
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 9px;
+    }
+
+    .tables-row {
+        grid-column: 1/span 2;
+        grid-row: 3;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+
+    .kc {
+        background: var(--sur);
+        border-radius: var(--r);
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh);
+        padding: .85rem 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .kc .ico {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        margin-bottom: .45rem;
+    }
+
+    .kc .num {
+        font-size: 1.95rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+        letter-spacing: -1px;
+    }
+
+    .kc .lbl {
+        font-size: .73rem;
+        color: var(--muted);
+        font-weight: 600;
+        margin-top: .12rem;
+    }
+
+    .kc .sub {
+        font-size: .66rem;
+        font-weight: 700;
+        margin-top: .2rem;
+    }
+
+    .kc .trk {
+        height: 3px;
+        background: #f1f5f9;
+        border-radius: 99px;
+        margin-top: auto;
+        padding-top: .7rem;
+        overflow: hidden;
+    }
+
+    .kc .trk div {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1s ease;
+    }
+
+    .kc .ring-row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: .35rem;
+    }
+
+    .rw {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .rw .ri {
+        position: absolute;
+        text-align: center;
+    }
+
+    .rw .rp {
+        font-size: .78rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .cc {
+        background: var(--sur);
+        border-radius: var(--r);
+        border: 1px solid var(--bd);
+        box-shadow: var(--sh);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cc-h {
+        padding: .55rem .95rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .cc-h h4 {
+        font-size: .76rem;
+        font-weight: 800;
+        color: var(--blue-d);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        margin: 0;
+    }
+
+    .hi {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+    }
+
+    .cc-b {
+        padding: .75rem .95rem;
+        flex: 1;
+    }
+
+    .dw {
+        position: relative;
+        width: 115px;
+        height: 115px;
+        flex-shrink: 0;
+    }
+
+    .dc {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .dc .dn {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+    }
+
+    .dc .dt {
+        font-size: .55rem;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .ld {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .gw {
+        position: relative;
+        display: inline-block;
+    }
+
+    .gl {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+
+    .gl .gn {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: var(--blue-d);
+        line-height: 1;
+    }
+
+    .gl .gs {
+        font-size: .55rem;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .sbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: .38rem .6rem;
+        border-radius: 8px;
+        font-size: .68rem;
+        font-weight: 700;
+        margin-top: .5rem;
+    }
+
+    .at {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .75rem;
+    }
+
+    .at thead tr {
+        background: #f8fafc;
+    }
+
+    .at th {
+        padding: .5rem .9rem;
+        font-weight: 800;
+        font-size: .67rem;
+        color: var(--muted);
+        text-align: right;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+    }
+
+    .at td {
+        padding: .5rem .9rem;
+        border-bottom: 1px solid #f8fafc;
+        vertical-align: middle;
+    }
+
+    .at tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .at tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sp {
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-size: .65rem;
+        font-weight: 700;
+    }
+
+    .sp-g {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .sp-y {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .sp-r {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .emp {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        color: #94a3b8;
+    }
+
+    .emp i {
+        font-size: 1.5rem;
+        margin-bottom: .4rem;
+        display: block;
+    }
+
+    .emp p {
+        font-size: .74rem;
+        margin: 0;
+    }
+
+    @keyframes fu {
+        from {
+            opacity: 0;
+            transform: translateY(9px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .fu {
+        animation: fu .35s ease both;
+    }
+
+    .d1 {
+        animation-delay: .04s
+    }
+
+    .d2 {
+        animation-delay: .08s
+    }
+
+    .d3 {
+        animation-delay: .12s
+    }
+
+    .d4 {
+        animation-delay: .16s
+    }
+
+    .d5 {
+        animation-delay: .20s
+    }
+
+    .d6 {
+        animation-delay: .24s
+    }
+
+    .d7 {
+        animation-delay: .28s
+    }
+
+    .d8 {
+        animation-delay: .32s
+    }
+
+    @media(max-width:991px) {
+        .db-wrap {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-col {
+            grid-row: auto;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .kpi-col .kc {
+            min-width: 140px;
+            flex: 1;
+        }
+
+        .charts-top,
+        .charts-mid {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-top,
+        .charts-mid {
+            grid-column: 1;
+        }
+
+        .charts-mid {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-top {
+            grid-row: auto;
+        }
+
+        .charts-mid {
+            grid-row: auto;
+        }
+
+        .tables-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-
-<!-- Banner -->
-<div class="ministry-banner mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-        <div>
-            <h2><i class="fas fa-chart-pie me-2"></i>لوحة المعلومات </h2>
-            <p>نظرة إجمالية على أداء منظومة التطعيم</p>
-        </div>
-        <div class="mt-3 mt-md-0 text-white-50 small">
-            <i class="fas fa-clock me-1"></i> آخر تحديث: <span id="last-update">جاري التحميل...</span>
-        </div>
-    </div>
-</div>
-
-<!-- KPIs -->
-<div class="row g-3 mb-4">
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="ministry-kpi">
-            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-baby"></i></div>
-            <div>
-                <p class="kpi-label">إجمالي الأطفال</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="small text-muted mt-1">على المستوى الوطني</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="ministry-kpi" style="border-right-color: var(--ministry-accent);">
-            <div class="kpi-icon kpi-ministry-green"><i class="fas fa-check-circle"></i></div>
-            <div>
-                <p class="kpi-label">مكتملو التحصين</p>
-                <div class="kpi-value" id="kpi-completed">—</div>
-                <div class="small text-muted mt-1">استكملوا جميع اللقاحات</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="ministry-kpi" style="border-right-color: var(--ministry-warning);">
-            <div class="kpi-icon kpi-ministry-orange"><i class="fas fa-percent"></i></div>
-            <div>
-                <p class="kpi-label">نسبة التغطية</p>
-                <div class="kpi-value" id="kpi-rate">—%</div>
-                <div class="small text-muted mt-1">متوسط وطني</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-xl-3 col-md-6">
-        <div class="ministry-kpi" style="border-right-color: var(--ministry-danger);">
-            <div class="kpi-icon kpi-ministry-red"><i class="fas fa-hospital"></i></div>
-            <div>
-                <p class="kpi-label">المراكز الصحية</p>
-                <div class="kpi-value" id="kpi-centers">—</div>
-                <div class="small text-muted mt-1">مراكز نشطة</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts + Appointments -->
-<div class="row g-4 mb-4">
-    <div class="col-lg-8">
-        <div class="ministry-card h-100">
-            <div class="ministry-card-header">
-                <h3><i class="fas fa-chart-line text-primary"></i> معدلات التطعيم (آخر 7 أيام)</h3>
-            </div>
-            <div class="ministry-card-body">
-                <div style="height: 300px;"><canvas id="trendChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="ministry-card h-100">
-            <div class="ministry-card-header">
-                <h3><i class="fas fa-calendar-check text-warning"></i> المواعيد القادمة</h3>
-            </div>
-            <div id="upcoming-container" style="padding:0; max-height: 340px; overflow-y:auto;">
-                <div class="d-flex justify-content-center py-5">
-                    <div class="spinner-border text-primary spinner-border-sm"></div>
+<div class="row">
+    <div class="col-12">
+        <div class="ministry-banner mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="text-white mb-2"><i class="fas fa-landmark me-2"></i>لوحة وزارة الصحة</h2>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.85);">
+                        <i class="fas fa-globe me-1"></i>نظرة شاملة على أداء منظومة التطعيم الوطنية &nbsp;·&nbsp;
+                        <i class="fas fa-clock me-1"></i><span id="live-time"></span>
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'ministry:health_centers' %}"
+                        class="btn btn-outline-light fw-bold px-4 rounded-pill"><i
+                            class="fas fa-hospital me-2"></i>المراكز</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Centers Coverage Table -->
-<div class="ministry-card mb-4">
-    <div class="ministry-card-header">
-        <h3><i class="fas fa-table text-success"></i> نسب التغطية بالمراكز</h3>
-        <a href="{% url 'ministry:reports' %}" class="btn btn-sm btn-outline-primary rounded-pill">
-            <i class="fas fa-external-link-alt me-1"></i> التقرير الكامل
-        </a>
-    </div>
-    <div class="table-responsive">
-        <table class="ministry-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>المركز الصحي</th>
-                    <th>الموقع</th>
-                    <th>الأطفال</th>
-                    <th>مكتملون</th>
-                    <th>نسبة التغطية</th>
-                    <th>الحالة</th>
-                </tr>
-            </thead>
-            <tbody id="centers-table-body">
-                <tr>
-                    <td colspan="7" class="text-center py-4">
-                        <div class="spinner-border spinner-border-sm text-primary"></div> جاري التحميل...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+<div class="db-wrap">
 
-<!-- Recent Activity -->
-<div class="ministry-card">
-    <div class="ministry-card-header">
-        <h3><i class="fas fa-history text-secondary"></i> آخر سجلات التطعيم</h3>
-    </div>
-    <div id="activity-container" class="table-responsive">
-        <div class="d-flex justify-content-center py-4">
-            <div class="spinner-border text-primary spinner-border-sm"></div>
+    <!-- KPI SIDEBAR -->
+    <div class="kpi-col">
+        <div class="kc fu d1">
+            <div class="ico" style="background:var(--blue-l);color:var(--blue);"><i class="fas fa-baby"></i></div>
+            <div class="num" id="kpi-total">—</div>
+            <div class="lbl">إجمالي الأطفال</div>
+            <div class="sub" style="color:var(--blue);">على المستوى الوطني</div>
+            <div class="trk">
+                <div id="bar-total" style="width:0%;background:var(--blue);"></div>
+            </div>
+        </div>
+        <div class="kc fu d2">
+            <div class="ring-row">
+                <div class="rw" style="width:44px;height:44px;">
+                    <canvas id="ring-c" width="44" height="44"></canvas>
+                    <div class="ri">
+                        <div class="rp" style="color:var(--green);" id="rp-c">0%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="num" id="kpi-completed" style="font-size:1.55rem;">—</div>
+                    <div class="lbl">مكتملو التحصين</div>
+                </div>
+            </div>
+            <div class="sub" style="color:var(--green);">تغطية: <span id="kpi-rate">0</span>%</div>
+            <div class="trk">
+                <div id="bar-completed" style="width:0%;background:var(--green);"></div>
+            </div>
+        </div>
+        <div class="kc fu d3">
+            <div class="ico" style="background:var(--amber-l);color:var(--amber);"><i class="fas fa-hospital"></i></div>
+            <div class="num" id="kpi-centers">—</div>
+            <div class="lbl">المراكز الصحية</div>
+            <div class="sub" style="color:var(--amber);">مراكز نشطة</div>
+            <div class="trk">
+                <div style="width:100%;background:var(--amber);"></div>
+            </div>
+        </div>
+        <div class="kc fu d4">
+            <div class="ring-row">
+                <div class="rw" style="width:44px;height:44px;">
+                    <canvas id="ring-d" width="44" height="44"></canvas>
+                    <div class="ri">
+                        <div class="rp" style="color:var(--red);" id="rp-d">0%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="num" id="kpi-defaulters" style="font-size:1.55rem;">—</div>
+                    <div class="lbl">تنبيه المتسربين</div>
+                </div>
+            </div>
+            <div class="sub" style="color:var(--red);">تأخر &gt; 3 أيام</div>
+            <div class="trk">
+                <div id="bar-defaulters" style="width:0%;background:var(--red);"></div>
+            </div>
         </div>
     </div>
-</div>
 
+    <!-- ROW 1: Line + Donut + Gauge -->
+    <div class="charts-top">
+        <div class="cc fu d3">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue);"><i
+                            class="fas fa-chart-line"></i></div>معدل التطعيم الوطني — 7 أيام
+                </h4>
+                <span id="week-badge" style="font-size:.64rem;font-weight:700;color:var(--green);"></span>
+            </div>
+            <div class="cc-b">
+                <div style="height:210px;"><canvas id="lineChart"></canvas></div>
+            </div>
+        </div>
+        <div class="cc fu d4">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue-d);"><i
+                            class="fas fa-chart-pie"></i></div>حالة التحصين الوطنية
+                </h4>
+            </div>
+            <div class="cc-b d-flex align-items-center gap-3">
+                <div class="dw">
+                    <canvas id="donutChart" width="115" height="115"></canvas>
+                    <div class="dc">
+                        <div class="dn" id="donut-pct">0%</div>
+                        <div class="dt">مكتملون</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2" style="flex:1;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--green);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">مكتملون</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-c">—</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--blue);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">قيد المتابعة</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-p">—</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="ld" style="background:var(--red);"></div><span
+                            style="font-size:.7rem;font-weight:600;color:#374151;">متأخرون</span><span
+                            class="ms-auto fw-bold" style="font-size:.74rem;" id="leg-d">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="cc fu d6">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--red-l);color:var(--red);"><i
+                            class="fas fa-tachometer-alt"></i></div>مؤشر التسرب الوطني
+                </h4>
+            </div>
+            <div class="cc-b d-flex flex-column align-items-center justify-content-center">
+                <div class="gw">
+                    <canvas id="gaugeChart" width="140" height="82"></canvas>
+                    <div class="gl">
+                        <div class="gn" id="gauge-num">0%</div>
+                        <div class="gs">نسبة التسرب</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between w-100 mt-1" style="font-size:.6rem;font-weight:700;">
+                    <span style="color:var(--green);">آمن</span><span style="color:var(--amber);">متوسط</span><span
+                        style="color:var(--red);">عالي</span>
+                </div>
+                <div class="sbox w-100" id="gauge-box" style="background:var(--green-l);">
+                    <i id="gauge-ico" class="fas fa-circle-check" style="color:var(--green);font-size:.72rem;"></i>
+                    <span id="gauge-msg" style="color:#047857;">الوضع جيد</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 2: Stacked + Ranking -->
+    <div class="charts-mid">
+
+        <div class="cc fu d5">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--blue-l);color:var(--blue);"><i class="fas fa-chart-bar"></i>
+                    </div>مقارنة المراكز — التحصين والتسرب
+                </h4>
+                <span id="centers-badge" style="font-size:.63rem;color:var(--muted);font-weight:600;">—</span>
+            </div>
+            <div class="cc-b">
+                <div style="height:195px;"><canvas id="stackedChart"></canvas></div>
+            </div>
+        </div>
+        <!-- Bar: متوسط التغطية حسب المديرية -->
+        <div class="cc fu d6">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--green-l);color:var(--green);"><i
+                            class="fas fa-map-location-dot"></i></div>متوسط التغطية حسب المديرية
+                </h4>
+            </div>
+            <div class="cc-b">
+                <div style="height:195px;"><canvas id="dirChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="cc fu d7">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:var(--amber-l);color:var(--amber);"><i
+                            class="fas fa-ranking-star"></i></div>ترتيب المراكز
+                </h4>
+            </div>
+            <div class="cc-b" id="ranking-container" style="padding:0;overflow-y:auto;max-height:230px;">
+                <div class="d-flex justify-content-center py-2">
+                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 3: Centers Table -->
+    <div class="tables-row">
+        <div class="cc fu d7">
+            <div class="cc-h">
+                <h4>
+                    <div class="hi" style="background:#f8fafc;color:var(--muted);"><i class="fas fa-table"></i></div>نسب
+                    التغطية بالمراكز
+                </h4>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="at">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المركز</th>
+                            <th>الموقع</th>
+                            <th>الأطفال</th>
+                            <th>مكتملون</th>
+                            <th>قيد المتابعة</th>
+                            <th>التغطية</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="centers-tbody">
+                        <tr>
+                            <td colspan="8" class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
 
-        function animateValue(id, end, suffix = '') {
-            const el = document.getElementById(id);
-            if (!el) return;
-            if (end === 0) { el.textContent = '0' + suffix; return; }
-            let start = 0, duration = 1200, startTs = null;
-            const isFloat = !Number.isInteger(parseFloat(end));
-            const target = parseFloat(end);
+        const clk = () => {
+            document.getElementById('live-time').textContent =
+                new Date().toLocaleDateString('ar-SA', { weekday: 'short', month: 'long', day: 'numeric' }) +
+                '  ·  ' + new Date().toLocaleTimeString('ar-SA');
+        };
+        clk(); setInterval(clk, 1000);
 
-            const step = ts => {
-                if (!startTs) startTs = ts;
-                const p = Math.min((ts - startTs) / duration, 1);
-                const currentVal = p * target;
+        const anim = (id, end, dur = 900) => {
+            const el = document.getElementById(id); if (!el) return;
+            if (!end) { el.textContent = '0'; return; }
+            let st = null;
+            const s = ts => { if (!st) st = ts; const p = Math.min((ts - st) / dur, 1); el.textContent = Math.floor(p * end); if (p < 1) requestAnimationFrame(s); };
+            requestAnimationFrame(s);
+        };
 
-                if (isFloat) {
-                    el.textContent = currentVal.toFixed(1) + suffix;
-                } else {
-                    el.textContent = Math.floor(currentVal) + suffix;
-                }
+        const ring = (id, pct, color) => {
+            const c = document.getElementById(id); if (!c) return;
+            const x = c.getContext('2d'), cx = c.width / 2, cy = c.height / 2, r = 17, lw = 5;
+            x.clearRect(0, 0, c.width, c.height);
+            x.beginPath(); x.arc(cx, cy, r, 0, 2 * Math.PI); x.strokeStyle = '#e8f0f9'; x.lineWidth = lw; x.stroke();
+            x.beginPath(); x.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (pct / 100) * 2 * Math.PI);
+            x.strokeStyle = color; x.lineWidth = lw; x.lineCap = 'round'; x.stroke();
+        };
 
-                if (p < 1) requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-        }
-
-        let data;
-        try {
-            data = await apiFetch('/api/dashboard/stats/');
-        } catch (e) {
-            console.error('Ministry dashboard failed:', e);
-            document.getElementById('centers-table-body').innerHTML =
-                '<tr><td colspan="7" class="text-center text-danger py-4"><i class="fas fa-exclamation-circle me-2"></i>فشل تحميل البيانات</td></tr>';
+        let d;
+        try { d = await apiFetch('/api/dashboard/stats/'); }
+        catch {
             return;
         }
 
-        // KPIs
-        const kpis = data.kpis || {};
-        animateValue('kpi-total', kpis.total_children || 0);
-        animateValue('kpi-completed', kpis.completed_children || 0);
-        animateValue('kpi-rate', kpis.completion_rate || 0, '%');
-        const centers = data.centers_report || [];
-        animateValue('kpi-centers', centers.length);
+        const K = d.kpis || {}, C = d.charts || {}, centers = d.centers_report || [];
+        const total = K.total_children || 0, comp = K.completed_children || 0, def = K.defaulters_count || 0;
+        const rate = K.completion_rate || 0, trend = C.vaccination_trend || [], lbs = C.labels || [];
+        const defRate = total ? Math.round(def / total * 100) : 0;
 
-        // Last update
-        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('ar-SA');
+        /* KPIs */
+        anim('kpi-total', total); anim('kpi-completed', comp);
+        anim('kpi-centers', centers.length); anim('kpi-defaulters', def);
+        document.getElementById('kpi-rate').textContent = rate;
+        setTimeout(() => {
+            document.getElementById('bar-total').style.width = '100%';
+            document.getElementById('bar-completed').style.width = rate + '%';
+            document.getElementById('bar-defaulters').style.width = defRate + '%';
+        }, 300);
+        ring('ring-c', rate, '#0d9488'); document.getElementById('rp-c').textContent = rate + '%';
+        ring('ring-d', defRate, '#dc2626'); document.getElementById('rp-d').textContent = defRate + '%';
+        document.getElementById('week-badge').textContent = 'إجمالي الأسبوع: ' + trend.reduce((a, b) => a + b, 0);
 
-        // Trend Chart
-        const chartData = data.charts || {};
-        const ctx = document.getElementById('trendChart');
-        if (ctx && chartData.labels) {
-            new Chart(ctx, {
-                type: 'line',
+        const _dk = () => document.documentElement.getAttribute('data-theme') === 'dark';
+        const yA = () => ({ beginAtZero: true, grid: { color: _dk() ? '#21262d' : '#f1f5f9' }, border: { display: false }, ticks: { color: _dk() ? '#8b949e' : '#94a3b8', font: { size: 9 } } });
+        const xA = () => ({ grid: { display: false }, border: { display: false }, ticks: { color: _dk() ? '#8b949e' : '#64748b', font: { size: 9, weight: '600' } } });
+
+        /* Stacked Bar */
+        document.getElementById('centers-badge').textContent = centers.length + ' مركز';
+        if (centers.length) {
+            const top = centers.slice(0, 7);
+            new Chart(document.getElementById('stackedChart'), {
+                type: 'bar',
                 data: {
-                    labels: chartData.labels,
+                    labels: top.map(c => (c.name || '').length > 6 ? (c.name || '').substring(0, 6) + '…' : (c.name || '')),
+                    datasets: [
+                        {
+                            label: 'مكتملون', data: top.map(c => c.completed_children || 0),
+                            backgroundColor: 'rgba(13,148,136,0.8)', borderSkipped: false
+                        },
+                        {
+                            label: 'قيد المتابعة', data: top.map(c => Math.max((c.total_children || 0) - (c.completed_children || 0) - Math.round((c.total_children || 0) * Math.max(100 - parseFloat(c.coverage_rate || 0), 0) / 100), 0)),
+                            backgroundColor: 'rgba(220,38,38,0.7)', borderSkipped: false
+                        },
+                        {
+                            label: 'متسربون', data: top.map(c => Math.round((c.total_children || 0) * Math.max(100 - parseFloat(c.coverage_rate || 0), 0) / 100)),
+                            backgroundColor: 'rgba(38,143,232,0.65)', borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { boxWidth: 9, font: { size: 8 }, color: '#64748b', padding: 6 } },
+                        tooltip: { backgroundColor: _dk() ? '#1e3a5f' : '#0a4275', callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}` } }
+                    },
+                    scales: { y: { stacked: true, ...yA() }, x: { stacked: true, ...xA() } }
+                }
+            });
+        } else {
+            document.getElementById('stackedChart').parentElement.innerHTML = '<div class="emp"><i class="fas fa-hospital"></i><p>لا توجد بيانات مراكز</p></div>';
+        }
+
+        /* Donut: حالة التحصين */
+        const pend = Math.max(total - comp - def, 0);
+        document.getElementById('donut-pct').textContent = rate + '%';
+        document.getElementById('leg-c').textContent = comp;
+        document.getElementById('leg-p').textContent = pend;
+        document.getElementById('leg-d').textContent = def;
+        new Chart(document.getElementById('donutChart'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [comp, pend, def],
+                    backgroundColor: ['#0d9488', '#268fe8', '#dc2626'],
+                    borderWidth: 2, borderColor: _dk() ? '#161b22' : '#fff', hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: false, cutout: '68%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: c => ['مكتملون', 'قيد المتابعة', 'متأخرون'][c.dataIndex] + ': ' + c.parsed } }
+                }
+            }
+        });
+
+        /* Gauge */
+        const gaugeEl = document.getElementById('gaugeChart');
+        if (gaugeEl) {
+            const x = gaugeEl.getContext('2d'), cx = 70, cy = 77, r = 50, lw = 12;
+            x.clearRect(0, 0, 140, 82);
+            x.beginPath(); x.arc(cx, cy, r, Math.PI, 2 * Math.PI); x.strokeStyle = '#e8f0f9'; x.lineWidth = lw; x.stroke();
+            const col = defRate < 10 ? '#0d9488' : defRate < 30 ? '#d97706' : '#dc2626';
+            x.beginPath(); x.arc(cx, cy, r, Math.PI, Math.PI + (defRate / 100) * Math.PI);
+            x.strokeStyle = col; x.lineWidth = lw; x.lineCap = 'round'; x.stroke();
+        }
+        document.getElementById('gauge-num').textContent = defRate + '%';
+        const gbox = document.getElementById('gauge-box'), gmsg = document.getElementById('gauge-msg'), gico = document.getElementById('gauge-ico');
+        if (defRate < 10) { gbox.style.background = '#ecfdf5'; gmsg.style.color = '#047857'; gmsg.textContent = 'الوضع جيد'; gico.className = 'fas fa-circle-check'; gico.style.color = '#0d9488'; }
+        else if (defRate < 30) { gbox.style.background = '#fffbeb'; gmsg.style.color = '#92400e'; gmsg.textContent = 'يحتاج متابعة'; gico.className = 'fas fa-triangle-exclamation'; gico.style.color = '#d97706'; }
+        else { gbox.style.background = '#fef2f2'; gmsg.style.color = '#991b1b'; gmsg.textContent = 'تدخل فوري'; gico.className = 'fas fa-circle-xmark'; gico.style.color = '#dc2626'; }
+
+
+
+        /* Line */
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: lbs, datasets: [{
+                    data: trend,
+                    borderColor: '#268fe8', backgroundColor: 'rgba(38,143,232,0.07)',
+                    borderWidth: 2.5, pointBackgroundColor: '#fff', pointBorderColor: '#268fe8',
+                    pointBorderWidth: 2, pointRadius: 3.5, fill: true, tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: _dk() ? '#1e3a5f' : '#0a4275', bodyColor: '#93c5fd', padding: 8, callbacks: { label: c => ' ' + c.parsed.y + ' تطعيم' } } },
+                scales: { y: yA(), x: { grid: { display: false }, border: { display: false }, ticks: { color: '#64748b', font: { size: 10, weight: '600' } } } }
+            }
+        });
+
+        /* Bar: متوسط التغطية حسب المديرية */
+        if (centers.length) {
+            const dirMap = {};
+            centers.forEach(ctr => {
+                const parts = (ctr.location || '').split(' - ');
+                const dir = parts[1] || parts[0] || 'غير محدد';
+                if (!dirMap[dir]) dirMap[dir] = { sum: 0, count: 0 };
+                dirMap[dir].sum += parseFloat(ctr.coverage_rate || 0);
+                dirMap[dir].count++;
+            });
+            const dirLabels = Object.keys(dirMap).sort();
+            const dirData = dirLabels.map(d => Math.round(dirMap[d].sum / dirMap[d].count));
+            new Chart(document.getElementById('dirChart'), {
+                type: 'bar',
+                data: {
+                    labels: dirLabels.map(l => l.length > 10 ? l.substring(0, 10) + '…' : l),
                     datasets: [{
-                        label: 'التطعيمات اليومية',
-                        data: chartData.vaccination_trend || [],
-                        borderColor: '#1a5276',
-                        backgroundColor: 'rgba(26,82,118,0.08)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#1a5276',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        fill: true, tension: 0.4
+                        data: dirData,
+                        backgroundColor: dirData.map(v =>
+                            v >= 70 ? 'rgba(13,148,136,0.8)' : v >= 40 ? 'rgba(245,158,11,0.75)' : 'rgba(220,38,38,0.7)'
+                        ),
+                        borderRadius: 7, borderSkipped: false
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: _dk() ? '#1e3a5f' : '#0a4275', callbacks: {
+                                title: (items) => dirLabels[items[0].dataIndex],
+                                label: c => ` متوسط التغطية: ${c.parsed.y}% (${dirMap[dirLabels[c.dataIndex]].count} مركز)`
+                            }
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
-                        x: { grid: { display: false }, border: { display: false } }
+                        y: {
+                            beginAtZero: true, max: 100, grid: { color: _dk() ? '#21262d' : '#f1f5f9' }, border: { display: false },
+                            ticks: { color: _dk() ? '#8b949e' : '#94a3b8', font: { size: 9 }, callback: v => v + '%' }
+                        },
+                        x: {
+                            grid: { display: false }, border: { display: false },
+                            ticks: { color: _dk() ? '#8b949e' : '#64748b', font: { size: 9, weight: '600' }, maxRotation: 35, minRotation: 25 }
+                        }
                     }
                 }
             });
         }
 
-        // Upcoming Appointments
-        const upcomingEl = document.getElementById('upcoming-container');
-        const appts = data.upcoming_appointments || [];
-        if (appts.length === 0) {
-            upcomingEl.innerHTML = '<p class="text-muted text-center py-4 small">لا توجد مواعيد قادمة.</p>';
-        } else {
-            upcomingEl.innerHTML = '<div class="list-group list-group-flush">' +
-                appts.map(a => `
-            <div class="list-group-item border-0 border-bottom px-4 py-3">
-                <div class="fw-bold" style="font-size:0.9rem;">${a.child_name || '—'}</div>
-                <div class="small text-muted"><i class="fas fa-syringe me-1"></i>${a.vaccine || ''}</div>
-                <span class="badge bg-primary-subtle text-primary mt-1">${a.due_date || ''}</span>
-            </div>`).join('') + '</div>';
+        /* Ranking - أرقام فقط بدون نسبة مئوية */
+        const rankEl = document.getElementById('ranking-container');
+        if (!centers.length) { rankEl.innerHTML = '<div class="emp"><i class="fas fa-ranking-star"></i><p>لا توجد بيانات</p></div>'; }
+        else {
+            const sr = [...centers].sort((a, b) => parseFloat(b.coverage_rate || 0) - parseFloat(a.coverage_rate || 0));
+            const medals = ['🥇', '🥈', '🥉'];
+            rankEl.innerHTML = sr.map((ctr, i) => `
+            <div style="display:flex;align-items:center;gap:8px;padding:.42rem .9rem;border-bottom:1px solid #f8fafc;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <span style="font-size:.75rem;font-weight:900;color:#64748b;width:26px;text-align:center;flex-shrink:0;">${i < 3 ? medals[i] : ''} ${i + 1}</span>
+                <div style="min-width:0;flex:1;">
+                    <div style="font-size:.76rem;font-weight:700;color:var(--blue-d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ctr.name || '—'}</div>
+                    <div style="font-size:.62rem;color:var(--muted);">${ctr.total_children || 0} طفل · ${ctr.completed_children || 0} مكتمل</div>
+                </div>
+            </div>`).join('');
         }
 
-        // Centers Table
-        const tbody = document.getElementById('centers-table-body');
-        if (!centers.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">لا توجد بيانات.</td></tr>';
-        } else {
-            tbody.innerHTML = centers.map((c, i) => {
-                const rate = parseFloat(c.coverage_rate || 0);
-                const badgeCls = rate >= 70 ? 'badge-high' : rate >= 40 ? 'badge-medium' : 'badge-low';
-                const label = rate >= 70 ? 'جيد' : rate >= 40 ? 'متوسط' : 'منخفض';
-                const barColor = rate >= 70 ? '#1e8449' : rate >= 40 ? '#9a7d0a' : '#c0392b';
+        /* Centers Table */
+        const tbody = document.getElementById('centers-tbody');
+        if (!centers.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">لا توجد بيانات مراكز.</td></tr>'; }
+        else {
+            tbody.innerHTML = centers.map((ctr, i) => {
+                const r = parseFloat(ctr.coverage_rate || 0);
+                const cls = r >= 70 ? 'sp-g' : r >= 40 ? 'sp-y' : 'sp-r';
+                const lbl = r >= 70 ? 'جيد' : r >= 40 ? 'متوسط' : 'منخفض';
+                const bc = r >= 70 ? '#0d9488' : r >= 40 ? '#d97706' : '#dc2626';
+                const pending = Math.max((ctr.total_children || 0) - (ctr.completed_children || 0), 0);
                 return `<tr>
-                <td class="text-muted">${i + 1}</td>
-                <td class="fw-bold">${c.name || '—'}</td>
-                <td class="text-muted small">${c.location || '—'}</td>
-                <td>${c.total_children ?? 0}</td>
-                <td>${c.completed_children ?? 0}</td>
-                <td>
-                    <div class="d-flex align-items-center gap-2">
-                        <div style="width:80px; background:#eee; border-radius:10px; height:6px;">
-                            <div style="width:${Math.min(rate, 100)}%; background:${barColor}; height:100%; border-radius:10px;"></div>
-                        </div>
-                        <span style="font-size:0.85rem; font-weight:600;">${rate}%</span>
-                    </div>
-                </td>
-                <td><span class="badge ${badgeCls} rounded-pill px-3 py-1">${label}</span></td>
+                <td style="color:var(--muted);font-size:.72rem;">${i + 1}</td>
+                <td style="font-weight:700;color:var(--blue-d);font-size:.78rem;">${ctr.name || '—'}</td>
+                <td style="font-size:.7rem;color:var(--muted);">${ctr.location || '—'}</td>
+                <td style="font-size:.78rem;">${ctr.total_children ?? 0}</td>
+                <td style="font-size:.78rem;color:var(--green);font-weight:700;">${ctr.completed_children ?? 0}</td>
+                <td style="font-size:.78rem;color:var(--blue);font-weight:700;">${pending}</td>
+                <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:55px;background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden;"><div style="width:${Math.min(r, 100)}%;background:${bc};height:100%;border-radius:99px;"></div></div><span style="font-size:.74rem;font-weight:700;">${r}%</span></div></td>
+                <td><span class="sp ${cls}">${lbl}</span></td>
             </tr>`;
             }).join('');
         }
 
-        // Recent Activity
-        const actEl = document.getElementById('activity-container');
-        const activity = data.recent_activity || [];
-        if (!activity.length) {
-            actEl.innerHTML = '<p class="text-center text-muted py-4">لا توجد سجلات حديثة.</p>';
-        } else {
-            actEl.innerHTML = `<table class="ministry-table">
-            <thead><tr><th>اسم الطفل</th><th>اللقاح</th><th>الجرعة</th><th>التاريخ</th><th>المركز / الموظف</th></tr></thead>
-            <tbody>${activity.map(r => `
-            <tr>
-                <td class="fw-bold">${r.child_name || '—'}</td>
-                <td>${r.vaccine || '—'}</td>
-                <td><span class="badge bg-secondary-subtle text-secondary">جرعة ${r.dose ?? ''}</span></td>
-                <td class="text-muted small"><i class="far fa-calendar me-1"></i>${r.date || '—'}</td>
-                <td class="text-muted small">${r.staff || '—'}</td>
-            </tr>`).join('')}</tbody>
-        </table>`;
-        }
     });
+
+    /* إعادة رسم الـ charts عند تبديل الثيم */
+    new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName === 'data-theme') {
+                var dk = document.documentElement.getAttribute('data-theme') === 'dark';
+                var gridClr = dk ? '#21262d' : '#f1f5f9';
+                var tickClr = dk ? '#8b949e' : '#94a3b8';
+                Object.values(Chart.instances || {}).forEach(function(ch) {
+                    var s = ch.options.scales;
+                    if (!s) return;
+                    ['x','y','r'].forEach(function(ax) {
+                        if (!s[ax]) return;
+                        if (s[ax].grid)        s[ax].grid.color = gridClr;
+                        if (s[ax].ticks)       s[ax].ticks.color = tickClr;
+                        if (s[ax].angleLines)  s[ax].angleLines.color = dk ? '#30363d' : '#e8f0f9';
+                    });
+                    ch.update('none');
+                });
+            }
+        });
+    }).observe(document.documentElement, { attributes: true });
 </script>
 {% endblock %}

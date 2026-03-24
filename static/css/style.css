@@ -877,3 +877,845 @@ body.sidebar-closed .sidebar-footer {
         --sidebar-width: 220px;
     }
 }
+
+/* ============================================================
+   DARK MODE — Care4Child v1.0
+   يطبق عند وجود data-theme="dark" على <html>
+   ============================================================ */
+
+[data-theme="dark"] {
+    --c-blue-900: #bfdbfe;
+    --c-blue-800: #93c5fd;
+    --c-blue-700: #60a5fa;
+    --c-blue-600: #3b82f6;
+    --c-blue-500: #2563eb;
+    --c-blue-400: #1d4ed8;
+    --c-blue-100: #1e3a5f;
+    --c-blue-50: #172b45;
+
+    --c-teal-700: #5eead4;
+    --c-teal-600: #2dd4bf;
+    --c-teal-500: #14b8a6;
+    --c-teal-100: #042f2e;
+    --c-teal-50: #021a19;
+
+    --c-primary: var(--c-blue-600);
+    --c-primary-hover: var(--c-blue-700);
+    --c-accent: var(--c-teal-500);
+
+    --c-bg: #0d1117;
+    --c-surface: #161b22;
+    --c-border: #21262d;
+    --c-border-strong: #30363d;
+
+    --c-text-main: #e6edf3;
+    --c-text-muted: #8b949e;
+    --c-text-light: #6e7681;
+
+    --c-success: #3fb950;
+    --c-warning: #d29922;
+    --c-danger: #f85149;
+
+    --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 35px -5px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    --c4c-overlay: rgba(13, 17, 23, 0.88);
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+[data-theme="dark"] body {
+    background-color: var(--c-bg);
+    color: var(--c-text-main);
+    background-image:
+        radial-gradient(at 0% 0%, rgba(30, 58, 95, 0.5) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(4, 47, 46, 0.4) 0px, transparent 60%);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+[data-theme="dark"] .saas-sidebar {
+    background: var(--c-surface);
+    border-left-color: var(--c-border-strong);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .sidebar-header {
+    border-bottom-color: var(--c-border);
+}
+
+[data-theme="dark"] .brand-title {
+    color: var(--c-blue-900);
+}
+
+[data-theme="dark"] .nav-item {
+    color: var(--c-text-muted);
+}
+
+[data-theme="dark"] .nav-item:hover {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--c-blue-700);
+}
+
+[data-theme="dark"] .nav-item.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15));
+    color: var(--c-blue-700);
+}
+
+[data-theme="dark"] .nav-label {
+    color: var(--c-text-light);
+}
+
+[data-theme="dark"] .sidebar-footer {
+    border-top-color: var(--c-border);
+    background: transparent;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+[data-theme="dark"] .saas-header {
+    background: rgba(22, 27, 34, 0.92);
+    border-bottom-color: var(--c-border-strong);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+[data-theme="dark"] .page-title {
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .toggle-btn {
+    background: var(--c-border);
+    color: var(--c-text-muted);
+    border-color: var(--c-border-strong);
+}
+
+[data-theme="dark"] .toggle-btn:hover {
+    background: var(--c-blue-100);
+    color: var(--c-blue-700);
+}
+
+/* ── Dark Mode Toggle Button ──────────────────────────────── */
+#darkModeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: transparent;
+    border: 1.5px solid var(--c-border-strong);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--c-text-muted);
+    font-size: 1rem;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+#darkModeToggle:hover {
+    background: var(--c-blue-50);
+    border-color: var(--c-blue-600);
+    color: var(--c-blue-600);
+    transform: scale(1.08);
+}
+
+[data-theme="dark"] #darkModeToggle {
+    background: var(--c-border);
+    border-color: var(--c-border-strong);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] #darkModeToggle:hover {
+    background: rgba(251, 191, 36, 0.12);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+/* إظهار/إخفاء الأيقونة حسب الوضع */
+/* light mode → شمس ظاهرة */
+#darkModeToggle .dm-sun {
+    display: block;
+}
+
+#darkModeToggle .dm-moon {
+    display: none;
+}
+
+/* dark mode → هلال ظاهر */
+[data-theme="dark"] #darkModeToggle .dm-sun {
+    display: none;
+}
+
+[data-theme="dark"] #darkModeToggle .dm-moon {
+    display: block;
+}
+
+/* ── User Dropdown ────────────────────────────────────────── */
+[data-theme="dark"] #userDropdown .fw-bold {
+    color: var(--c-blue-900) !important;
+}
+
+[data-theme="dark"] #userDropdown .text-muted {
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--c-surface);
+    border-color: var(--c-border-strong) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background: var(--c-border);
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-color: var(--c-border-strong);
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+[data-theme="dark"] .saas-card,
+[data-theme="dark"] .ministry-card {
+    background: var(--c-surface);
+    border-color: var(--c-border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .saas-card-header,
+[data-theme="dark"] .ministry-card-header {
+    border-bottom-color: var(--c-border-strong);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .ministry-card-header h3 {
+    color: var(--c-blue-900);
+}
+
+/* ── Ministry KPI Cards ───────────────────────────────────── */
+[data-theme="dark"] .ministry-kpi {
+    background: var(--c-surface) !important;
+    border-right-color: var(--c-blue-600) !important;
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .ministry-kpi .kpi-label {
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .ministry-kpi .kpi-value {
+    color: var(--c-blue-900) !important;
+}
+
+[data-theme="dark"] .kpi-ministry-blue {
+    background: var(--c-blue-50) !important;
+    color: var(--c-blue-700) !important;
+}
+
+[data-theme="dark"] .kpi-ministry-green {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .kpi-ministry-orange {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .kpi-ministry-red {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #f87171 !important;
+}
+
+/* ── Ministry Banner ──────────────────────────────────────── */
+[data-theme="dark"] .ministry-banner {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%) !important;
+    border: 1px solid var(--c-blue-100);
+}
+
+/* ── Tables ───────────────────────────────────────────────── */
+[data-theme="dark"] .saas-table thead th,
+[data-theme="dark"] .ministry-table thead th {
+    background: var(--c-border) !important;
+    color: var(--c-text-main) !important;
+    border-bottom-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] .saas-table tbody td,
+[data-theme="dark"] .ministry-table tbody td {
+    border-bottom-color: var(--c-border) !important;
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .saas-table tbody tr:hover td {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+[data-theme="dark"] .ministry-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* ── Forms & Inputs ───────────────────────────────────────── */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--c-border) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--c-surface) !important;
+    border-color: var(--c-blue-600) !important;
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--c-text-light);
+}
+
+[data-theme="dark"] .form-label {
+    color: var(--c-blue-900) !important;
+}
+
+[data-theme="dark"] .input-group-text {
+    background: var(--c-border) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-muted) !important;
+}
+
+/* ── Badges ───────────────────────────────────────────────── */
+[data-theme="dark"] .badge-saas-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+[data-theme="dark"] .badge-saas-primary {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .badge-saas-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .badge-saas-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .badge-saas-muted {
+    background: var(--c-border);
+    color: var(--c-text-muted);
+    border-color: var(--c-border-strong);
+}
+
+[data-theme="dark"] .badge-high {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .badge-medium {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .badge-low {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+}
+
+[data-theme="dark"] .ministry-badge {
+    background: var(--c-blue-50) !important;
+    color: var(--c-blue-700) !important;
+}
+
+/* ── Misc Bootstrap overrides ─────────────────────────────── */
+[data-theme="dark"] .card {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .card-header {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-bottom-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--c-surface);
+    border-color: var(--c-border-strong);
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--c-border-strong);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .alert-success {
+    background: rgba(63, 185, 80, 0.12) !important;
+    border-color: rgba(63, 185, 80, 0.3) !important;
+    color: #3fb950 !important;
+}
+
+[data-theme="dark"] .alert-danger {
+    background: rgba(248, 81, 73, 0.12) !important;
+    border-color: rgba(248, 81, 73, 0.3) !important;
+    color: #f85149 !important;
+}
+
+[data-theme="dark"] .alert-warning {
+    background: rgba(210, 153, 34, 0.12) !important;
+    border-color: rgba(210, 153, 34, 0.3) !important;
+    color: #d29922 !important;
+}
+
+[data-theme="dark"] .alert-info {
+    background: rgba(59, 130, 246, 0.12) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    color: #60a5fa !important;
+}
+
+[data-theme="dark"] .page-link {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-blue-700) !important;
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+    background: var(--c-blue-600) !important;
+    border-color: var(--c-blue-600) !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .page-item.disabled .page-link {
+    color: var(--c-text-light) !important;
+    background: var(--c-border) !important;
+}
+
+[data-theme="dark"] hr {
+    border-color: var(--c-border-strong);
+    opacity: .6;
+}
+
+[data-theme="dark"] .text-dark {
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-light {
+    background-color: var(--c-surface) !important;
+}
+
+[data-theme="dark"] .border,
+[data-theme="dark"] .border-bottom,
+[data-theme="dark"] .border-top {
+    border-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] .list-group-item {
+    background: var(--c-surface);
+    border-color: var(--c-border-strong);
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] .btn-light {
+    background: var(--c-border) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-muted) !important;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--c-bg);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--c-border-strong);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--c-blue-600);
+}
+
+/* ── Saas Main / Content area ─────────────────────────────── */
+[data-theme="dark"] .saas-main {
+    background: transparent;
+}
+
+[data-theme="dark"] .content-wrapper {
+    background: transparent;
+}
+
+/* ── Smooth transitions on everything ────────────────────── */
+*,
+*::before,
+*::after {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
+}
+
+
+/* ============================================================
+   DARK MODE — Registry, Staff & Charts fixes
+   ============================================================ */
+
+/* ── Registry: sticky first column ─── */
+[data-theme="dark"] .sticky-col-start {
+    background-color: #1e293b !important;
+    border-right-color: var(--c-border-strong) !important;
+    border-color: var(--c-border-strong) !important;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Registry: status cells ─── */
+[data-theme="dark"] .bg-status-taken {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .bg-status-overdue {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .bg-status-due {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .bg-status-future {
+    background-color: var(--c-surface) !important;
+    color: var(--c-text-muted) !important;
+}
+
+/* ── Registry: table borders & header sub row ─── */
+[data-theme="dark"] .registry-table th,
+[data-theme="dark"] .registry-table th {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%) !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .registry-table .doseRow-th {
+    background: rgba(15, 39, 68, 0.95) !important;
+    color: #cbd5e1 !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+/* ── Registry: loading overlay ─── */
+[data-theme="dark"] #registry-loading {
+    background: rgba(15, 17, 23, 0.85) !important;
+}
+
+/* ── Registry: pagination bar ─── */
+[data-theme="dark"] #pagination-bar,
+[data-theme="dark"] .pagination-container {
+    background-color: var(--c-surface) !important;
+    border-top-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] #pagination-bar .btn-light {
+    background: var(--c-border) !important;
+    color: var(--c-text-muted) !important;
+}
+
+/* ── saas-card with bg-white (registry search bar) ─── */
+[data-theme="dark"] .saas-card.bg-white,
+[data-theme="dark"] .saas-card {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: var(--c-surface) !important;
+    color: var(--c-text-main) !important;
+}
+
+/* ── Registry: dose header row (light background row) ─── */
+[data-theme="dark"] th.bg-light,
+[data-theme="dark"] td.bg-light {
+    background-color: var(--c-border) !important;
+    color: var(--c-text-main) !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+/* ── Staff: table-light thead ─── */
+[data-theme="dark"] .table-light,
+[data-theme="dark"] .table thead.table-light tr th,
+[data-theme="dark"] thead.table-light th {
+    background-color: var(--c-border) !important;
+    color: var(--c-text-main) !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] .table {
+    --bs-table-bg: transparent !important;
+    --bs-table-color: var(--c-text-main) !important;
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table tr {
+    background-color: transparent !important;
+    color: var(--c-text-main) !important;
+    border-color: var(--c-border) !important;
+}
+
+/* ── bg-secondary-subtle badge ─── */
+[data-theme="dark"] .bg-secondary-subtle {
+    background-color: var(--c-border) !important;
+    color: var(--c-text-main) !important;
+}
+
+/* ── input-group bg-light ─── */
+[data-theme="dark"] .input-group-text.bg-light,
+[data-theme="dark"] .input-group .bg-light {
+    background-color: var(--c-border) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .form-select.bg-light,
+[data-theme="dark"] .form-control.bg-light {
+    background-color: var(--c-border) !important;
+    color: var(--c-text-main) !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+/* ── border-top collapse divider ─── */
+[data-theme="dark"] .border-top {
+    border-top-color: var(--c-border-strong) !important;
+}
+
+/* ── gauge & KPI boxes ─── */
+[data-theme="dark"] #gauge-box {
+    background: var(--c-surface) !important;
+}
+
+
+/* ============================================================
+   DARK MODE — Final catch-all for inline & Bootstrap overrides
+   ============================================================ */
+
+/* Dashboard KPI and Chart cards */
+[data-theme="dark"] .kc,
+[data-theme="dark"] .cc,
+[data-theme="dark"] .kpi-card {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border-strong) !important;
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .dash-banner,
+[data-theme="dark"] .db-banner {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%) !important;
+    border: 1px solid var(--c-blue-100) !important;
+}
+
+/* activity table inside dashboard */
+[data-theme="dark"] table.at {
+    color: var(--c-text-main);
+}
+
+[data-theme="dark"] table.at thead tr {
+    background: var(--c-border) !important;
+}
+
+[data-theme="dark"] table.at thead th {
+    color: var(--c-text-muted) !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+[data-theme="dark"] table.at tbody tr:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+[data-theme="dark"] table.at td {
+    border-bottom-color: var(--c-border) !important;
+}
+
+/* staff inline avatar bg */
+[data-theme="dark"] .bg-danger-soft {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* registry: header gradient (main row) stays visible in dark */
+[data-theme="dark"] .registry-table thead {
+    background: linear-gradient(to left, #1d4ed8 0%, #1e3a5f 100%) !important;
+}
+
+/* center dashboard KPI progress bars background */
+[data-theme="dark"] .progress,
+[data-theme="dark"] .progress-bar-bg {
+    background-color: var(--c-border) !important;
+}
+
+/* Appointments widget */
+[data-theme="dark"] .api {
+    border-bottom-color: var(--c-border) !important;
+}
+
+[data-theme="dark"] .apnm {
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .apvc {
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .apbg {
+    background: var(--c-border) !important;
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .apbg.t {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #93c5fd !important;
+}
+
+/* Dashboard chart containers */
+[data-theme="dark"] .cc-b,
+[data-theme="dark"] .chart-card {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border-strong) !important;
+}
+
+/* gauge container */
+[data-theme="dark"] canvas {
+    filter: none;
+}
+
+/* Any remaining bg-white elements */
+[data-theme="dark"] [class*="bg-white"],
+[data-theme="dark"] [style*="background:#fff"],
+[data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background-color:#fff"],
+[data-theme="dark"] [style*="background-color: #fff"],
+[data-theme="dark"] [style*="background-color:white"],
+[data-theme="dark"] [style*="background: white"] {
+    background-color: var(--c-surface) !important;
+}
+
+/* collapse advanced filters divider */
+[data-theme="dark"] #advancedFilters {
+    background: var(--c-surface);
+}
+
+[data-theme="dark"] #advancedFilters .border-top {
+    border-top-color: var(--c-border-strong) !important;
+}
+
+/* Staff page: action buttons */
+[data-theme="dark"] .btn-outline-primary {
+    border-color: var(--c-blue-600) !important;
+    color: var(--c-blue-700) !important;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background: var(--c-blue-100) !important;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+    border-color: var(--c-danger) !important;
+    color: var(--c-danger) !important;
+}
+
+/* staff status badges */
+[data-theme="dark"] .badge.bg-success {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .badge.bg-danger {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .badge.bg-warning {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .badge.bg-primary {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #93c5fd !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: var(--c-border) !important;
+    color: var(--c-text-muted) !important;
+}
+
+[data-theme="dark"] .badge.bg-info {
+    background-color: rgba(14, 165, 233, 0.15) !important;
+    color: #7dd3fc !important;
+}
+
+/* SweetAlert2 dark */
+[data-theme="dark"] .swal2-popup {
+    background: var(--c-surface) !important;
+    color: var(--c-text-main) !important;
+    border: 1px solid var(--c-border-strong);
+}
+
+[data-theme="dark"] .swal2-title {
+    color: var(--c-text-main) !important;
+}
+
+[data-theme="dark"] .swal2-html-container {
+    color: var(--c-text-muted) !important;
+}
+
+/* ============================================================
+   MINISTRY MODAL HEADERS — Light & Dark
+   ============================================================ */
+.modal-header-primary {
+    background: linear-gradient(135deg, #1d74c4 0%, #3aaafc 100%) !important;
+    color: #fff !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-bottom: none !important;
+}
+
+.modal-header-accent {
+    background: linear-gradient(135deg, #0d7a71 0%, #17c2b3 100%) !important;
+    color: #fff !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-bottom: none !important;
+}
+
+[data-theme="dark"] .modal-header-primary {
+    background: linear-gradient(135deg, #0f2744 0%, #1d4ed8 100%) !important;
+}
+
+[data-theme="dark"] .modal-header-accent {
+    background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%) !important;
+}
+
+/* inline var() support */
+:root {
+    --ministry-primary: linear-gradient(135deg, #1d74c4 0%, #3aaafc 100%);
+    --ministry-accent:  linear-gradient(135deg, #0d7a71 0%, #17c2b3 100%);
+}

@@ -19,7 +19,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-luxury p-4 p-md-5 animate-slide-up delay-1">
+        <div class="saas-card p-4 p-md-5 animate-slide-up delay-1">
 
             <form method="POST">
                 {% csrf_token %}
@@ -42,7 +42,8 @@
                             <label for="floatingUsername">اسم المستخدم (للدخول)</label>
                         </div>
                         <div class="form-text small ps-2 {% if username_error %}text-danger{% endif %}"><i
-                                class="fas fa-info-circle me-1"></i>يفضل أحرف إنجليزية وأرقام.</div>
+                                class="fas fa-info-circle me-1"></i>يمكن استخدام العربية أو الإنجليزية والأرقام. مثال:
+                            <strong>محمد_علي</strong> أو <strong>staff01</strong></div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating">

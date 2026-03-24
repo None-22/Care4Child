@@ -1,11 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Care4Child | رعاية الطفل{% endblock %}</title>
+
+    <!-- Dark Mode: الافتراضي light دائماً -->
+    <script>
+        (function () {
+            if (localStorage.getItem('c4c_theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +32,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=5.0">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=14.0">
 
     <!-- Ministry-specific styles (only active when user.is_ministry) -->
     <style>
@@ -235,10 +244,6 @@
                     class="nav-item {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'ministry' %}active{% endif %}">
                     <i class="fas fa-chart-pie"></i><span class="si-text">لوحة المعلومات</span>
                 </a>
-                <a href="{% url 'ministry:reports' %}"
-                    class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-                    <i class="fas fa-chart-bar"></i><span class="si-text">التقارير الوطنية</span>
-                </a>
                 <div class="nav-label">إدارة البيانات</div>
                 <a href="{% url 'ministry:health_centers' %}"
                     class="nav-item {% if request.resolver_match.url_name == 'health_centers' %}active{% endif %}">
@@ -338,8 +343,6 @@
             </div>
 
             <div class="header-actions">
-                <!-- Add Child Shortcut Button Removed per user request -->
-
 
                 <!-- User Menu -->
                 <div class="dropdown">
@@ -377,6 +380,13 @@
                                     class="fas fa-sign-out-alt me-2"></i>تسجيل خروج</a></li>
                     </ul>
                 </div>
+
+                <!-- Dark Mode Toggle — قبل أيقونة المستخدم في الاتجاه RTL -->
+                <button id="darkModeToggle" type="button" title="الوضع الداكن" aria-label="تبديل الوضع">
+                    <span class="dm-sun"><i class="fas fa-sun"></i></span>
+                    <span class="dm-moon"><i class="fas fa-moon"></i></span>
+                </button>
+
             </div>
         </header>
 
@@ -425,8 +435,8 @@
 
             // أغلق الـ sidebar لما يضغط على الـ overlay
             document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 768 && 
-                    !e.target.closest('#mainSidebar') && 
+                if (window.innerWidth <= 768 &&
+                    !e.target.closest('#mainSidebar') &&
                     !e.target.closest('#sidebarToggle')) {
                     body.classList.remove('sidebar-open');
                 }
@@ -449,6 +459,22 @@
             // ---- Smooth page transition on sidebar nav clicks ----
             // Removed as per user request (was causing jittery behavior).
         });
+    </script>
+
+    <!-- Dark Mode JS -->
+    <script>
+        (function () {
+            var btn = document.getElementById('darkModeToggle');
+            if (!btn) return;
+
+            btn.onclick = function () {
+                var html = document.documentElement;
+                var isDark = html.getAttribute('data-theme') === 'dark';
+                var next = isDark ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('c4c_theme', next);
+            };
+        })();
     </script>
 
     {% block extra_scripts %}{% endblock %}

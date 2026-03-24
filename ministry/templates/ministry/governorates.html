@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}المحافظات والمديريات | وزارة الصحة{% endblock %}
@@ -58,23 +58,14 @@
 <div class="modal fade" id="addGovModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-map me-2"></i>إضافة محافظة جديدة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="gov-error" class="alert alert-danger d-none"></div>
                 <div id="gov-success" class="alert alert-success d-none"></div>
-
-                <div class="d-flex flex-column align-items-center mb-2">
-                    <div class="ministry-banner"
-                        style="border-radius: 50px; padding: 14px 30px; display: inline-block;">
-                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-map me-2"></i>إضافة
-                            محافظة</h6>
-                    </div>
-                    <hr class="w-100 mt-2 mb-0">
-                </div>
+                <br>
                 <div class="mb-3">
                     <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
                     <input type="text" id="g-name-ar" class="form-control" placeholder="مثال: صنعاء">
@@ -105,10 +96,9 @@
 <div class="modal fade" id="editGovModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل المحافظة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="edit-gov-error" class="alert alert-danger d-none"></div>
@@ -151,23 +141,13 @@
 <div class="modal fade" id="addDirModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-city me-2"></i>إضافة مديرية جديدة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="dir-error" class="alert alert-danger d-none"></div>
-                <div id="dir-success" class="alert alert-success d-none"></div>
-
-                <div class="d-flex flex-column align-items-center mb-2">
-                    <div class="ministry-banner"
-                        style="border-radius: 50px; padding: 14px 30px; display: inline-block;">
-                        <h6 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-city me-2"></i>إضافة
-                            مديرية</h6>
-                    </div>
-                    <hr class="w-100 mt-2 mb-0">
-                </div>
+                <div id="dir-success" class="alert alert-success d-none"></div><br>
                 <div class="mb-3">
                     <label class="form-label fw-bold">المحافظة التابعة لها <span class="text-danger">*</span></label>
                     <select id="d-gov" class="form-select">
@@ -203,10 +183,9 @@
 <div class="modal fade" id="editDirModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل المديرية</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="edit-dir-error" class="alert alert-danger d-none"></div>
@@ -377,7 +356,7 @@
         }
         try {
             await apiFetch('/api/governorates/', { method: 'POST', body: JSON.stringify(payload) });
-            sucEl.textContent = `تم إضافة محافظة "${payload.name_ar}" ✅`; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = `<i class="fas fa-check-circle me-1"></i> تم إضافة محافظة "${payload.name_ar}"`; sucEl.classList.remove('d-none');
             [govData, dirData] = await Promise.all([apiFetch('/api/governorates/'), apiFetch('/api/directorates/')]);
             renderGovs(); renderDirs(dirData); populateGovSelects();
             document.getElementById('g-name-ar').value = ''; document.getElementById('g-name-en').value = ''; document.getElementById('g-code').value = '';
@@ -410,7 +389,7 @@
         if (!payload.name_ar) { errEl.textContent = 'الاسم مطلوب.'; errEl.classList.remove('d-none'); return; }
         try {
             await apiFetch(`/api/governorates/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
-            sucEl.textContent = 'تم الحفظ ✅'; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> تم الحفظ'; sucEl.classList.remove('d-none');
             govData = await apiFetch('/api/governorates/');
             renderGovs(); populateGovSelects();
             setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('editGovModal')).hide(), 1000);
@@ -432,7 +411,7 @@
         }
         try {
             await apiFetch('/api/directorates/', { method: 'POST', body: JSON.stringify(payload) });
-            sucEl.textContent = `تم إضافة مديرية "${payload.name_ar}" ✅`; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = `<i class="fas fa-check-circle me-1"></i> تم إضافة مديرية "${payload.name_ar}"`; sucEl.classList.remove('d-none');
             dirData = await apiFetch('/api/directorates/');
             renderDirs(dirData);
             document.getElementById('d-name-ar').value = ''; document.getElementById('d-name-en').value = ''; document.getElementById('d-code').value = '';
@@ -467,7 +446,7 @@
         if (!payload.name_ar) { errEl.textContent = 'الاسم مطلوب.'; errEl.classList.remove('d-none'); return; }
         try {
             await apiFetch(`/api/directorates/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
-            sucEl.textContent = 'تم الحفظ ✅'; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> تم الحفظ'; sucEl.classList.remove('d-none');
             dirData = await apiFetch('/api/directorates/');
             const filterSel = document.getElementById('dir-filter-gov');
             const filter = filterSel ? filterSel.value : '';

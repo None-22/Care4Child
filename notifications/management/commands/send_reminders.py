@@ -24,7 +24,7 @@ class Command(BaseCommand):
             if not family_user:
                 continue
                 
-            title = "تذكير بموعد تطعيم 📅"
+            title = "تذكير بموعد تطعيم"
             body = f"غداً موعد تطعيم طفلك ({schedule.child.full_name}) بلقاح ({schedule.vaccine_schedule.vaccine.name_ar}). يرجى الحضور للمركز."
             
             if FCMService.send_notification(family_user, title, body, notification_type='REMINDER'):
@@ -45,7 +45,7 @@ class Command(BaseCommand):
             if not family_user:
                 continue
 
-            title = "تحذير: تطعيم فائت ⚠️"
+            title = "تحذير: تطعيم فائت"
             body = f"طفلك ({schedule.child.full_name}) تأخر أسبوعاً عن لقاح ({schedule.vaccine_schedule.vaccine.name_ar}). التأخير قد يضر بصحته!"
             
             if FCMService.send_notification(family_user, title, body, notification_type='MISSED'):

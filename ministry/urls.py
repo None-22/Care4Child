@@ -10,5 +10,4 @@ urlpatterns = [
     path('vaccines/', views.vaccines_view, name='vaccines'),
     path('children/', views.children_view, name='children'),
     path('users/', views.users_view, name='users'),
-    path('reports/', views.reports_view, name='reports'),
 ]

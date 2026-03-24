@@ -14,7 +14,8 @@
             <div class="ministry-banner mb-4">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                     <div class="mb-3 mb-md-0">
-                        <span class="d-block mb-1" style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">رقم الملف</span>
+                        <span class="d-block mb-1" style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">رقم
+                            الملف</span>
                         <h2 class="text-white mb-0" id="detail-access-code" style="font-family: monospace;">—</h2>
                     </div>
                     <div class="d-flex align-items-center flex-wrap gap-2">
@@ -242,7 +243,7 @@
             const btn = e.target.closest('.record-vaccine-btn');
             if (!btn) return;
 
-            const childId    = btn.dataset.childId;
+            const childId = btn.dataset.childId;
             const scheduleId = btn.dataset.scheduleId;
             const vaccineName = btn.dataset.vaccineName;
 
@@ -272,7 +273,7 @@
                         </span>`;
 
                     // اختياري: إظهار Toast نجاح خفيف
-                    showToast(`✅ تم تسجيل ${vaccineName || 'اللقاح'} بنجاح`, 'success');
+                    showToast(`<i class="fas fa-check-circle me-1"></i> تم تسجيل ${vaccineName || 'اللقاح'} بنجاح`, 'success');
                 } else {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-syringe me-1"></i>تسجيل';
@@ -304,10 +305,10 @@
         const toast = document.createElement('div');
         toast.className = `alert alert-${type} shadow px-4 py-2 mb-2`;
         toast.style.cssText = 'border-radius:30px; font-size:0.9rem; min-width:250px; text-align:center;';
-        toast.textContent = message;
+        toast.innerHTML = message;
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3500);
     }
 </script>
 
-{% endblock %}
+{% endblock %}

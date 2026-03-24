@@ -11,7 +11,6 @@ class NotificationLogAdmin(admin.ModelAdmin):
 
     def status_badge(self, obj):
         if obj.sent_via_fcm:
-            return format_html('<span style="color: green;">✔ Sent</span>')
-        return format_html('<span style="color: red;">✖ Failed</span>')
+            return format_html('<span style="color: green;"><i class="fas fa-check-circle"></i> Sent</span>')
+        return format_html('<span style="color: red;"><i class="fas fa-times-circle"></i> Failed</span>')
     status_badge.short_description = "Status"
-

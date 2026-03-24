@@ -532,7 +532,7 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
             mother_name=m_name
         )
 
-        # 🎯 ربط حساب العائلة بالمركز الصحي (إذا كان الحساب قد أنشئ للتو عبر Signals)
+        # ربط حساب العائلة بالمركز الصحي (إذا كان الحساب قد أنشئ للتو عبر Signals)
         # ننتظر قليلاً حتى ينتهي الـ signal من جلب الـ account
         if family_obj.account and not family_obj.account.health_center:
             family_obj.account.health_center = center
@@ -566,7 +566,7 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
         if instance.family:
             data['father_name'] = instance.family.father_name
             data['mother_name'] = instance.family.mother_name
-            data['access_code'] = instance.family.access_code  # ✅ أهم حقل
+            data['access_code'] = instance.family.access_code  # أهم حقل
         return data
 
 

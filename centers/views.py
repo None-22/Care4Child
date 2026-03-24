@@ -59,7 +59,7 @@ def record_vaccine(request, child_id, schedule_id):
             child.is_completed = True
             child.completed_date = timezone.now().date()
             child.save()
-            messages.info(request, "🎉 مبروك! هذا الطفل استكمل جميع اللقاحات وتمت أرشفته.")
+            messages.info(request, "مبروك! هذا الطفل استكمل جميع اللقاحات وتمت أرشفته.")
     
     return redirect('centers:child_detail', child_id=child.id)
 
@@ -125,7 +125,7 @@ def add_child_view(request):
                 
                 # رسالة النجاح
                 fam = child.family
-                msg = f"تم تسجيل الطفل {child.full_name} بنجاح! ✅\nكود العائلة: {fam.access_code}"
+                msg = f"تم تسجيل الطفل {child.full_name} بنجاح! كود العائلة: {fam.access_code}"
                 messages.success(request, msg)
                 
                 return redirect('centers:dashboard')

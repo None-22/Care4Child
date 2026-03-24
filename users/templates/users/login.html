@@ -1,11 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Care4Child | تسجيل الدخول</title>
+
+    <!-- Dark Mode: الافتراضي light دائماً -->
+    <script>
+        (function () {
+            if (localStorage.getItem('c4c_theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
 
     <!-- Google Fonts (Cairo & Outfit for modern English text if any) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -111,7 +120,7 @@
         /* Left Side - Brand/Image Area */
         .login-brand-side {
             background: linear-gradient(135deg, rgba(20, 91, 157, 0.4) 0%, rgba(38, 143, 232, 0.5) 100%),
-                        url("{% static 'css/pediatric_ward_login_bg.png' %}") center/cover no-repeat;
+            url("{% static 'css/pediatric_ward_login_bg.png' %}") center/cover no-repeat;
             padding: 4rem;
             color: white;
             display: flex;
@@ -202,13 +211,15 @@
             right: 1.2rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--c-blue-600, #268fe8); /* Now blue by default */
+            color: var(--c-blue-600, #268fe8);
+            /* Now blue by default */
             transition: all 0.3s ease;
         }
 
         .input-wrapper input {
             width: 100%;
-            padding: 1rem 3.5rem 1rem 1.2rem; /* Right padding for the icon in RTL */
+            padding: 1rem 3.5rem 1rem 1.2rem;
+            /* Right padding for the icon in RTL */
             border: 2px solid #e2e8f0;
             border-radius: 16px;
             font-family: 'Cairo', sans-serif;
@@ -225,7 +236,8 @@
         }
 
         .input-wrapper input:focus+i {
-            color: var(--c-blue-800, #145b9d); /* Darker blue on focus */
+            color: var(--c-blue-800, #145b9d);
+            /* Darker blue on focus */
         }
 
         /* Modern Submit Button */
@@ -291,9 +303,95 @@
             }
         }
     </style>
+
+    <style>
+        /* Dark Mode — Login Page */
+        [data-theme="dark"] body {
+            background-color: #0d1117 !important;
+        }
+        [data-theme="dark"] .shape-1 { background: rgba(30,58,95,0.5); }
+        [data-theme="dark"] .shape-2 { background: rgba(4,47,46,0.4); }
+        [data-theme="dark"] .shape-3 { background: rgba(29,78,216,0.25); }
+        [data-theme="dark"] .login-card {
+            background: #161b22 !important;
+            border: 1px solid #21262d;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7) !important;
+        }
+        [data-theme="dark"] .login-brand-side {
+            background: linear-gradient(160deg, #0f2744 0%, #0a1628 100%) !important;
+        }
+        [data-theme="dark"] .login-form-side { background: #161b22 !important; }
+        [data-theme="dark"] .login-form-side h2 { color: #e6edf3 !important; }
+        [data-theme="dark"] .login-form-side p  { color: #8b949e !important; }
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background: #21262d !important;
+            border-color: #30363d !important;
+            color: #e6edf3 !important;
+        }
+        [data-theme="dark"] .form-control:focus {
+            background: #161b22 !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.18) !important;
+        }
+        [data-theme="dark"] .form-control::placeholder { color: #6e7681; }
+        [data-theme="dark"] .form-label { color: #bfdbfe !important; }
+        [data-theme="dark"] .input-group-text {
+            background: #21262d !important;
+            border-color: #30363d !important;
+            color: #8b949e !important;
+        }
+        /* Toggle fixed top-left */
+        #loginDarkToggle {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 9999;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255,255,255,0.25);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        #loginDarkToggle:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.08);
+        }
+        [data-theme="dark"] #loginDarkToggle {
+            background: rgba(0,0,0,0.35);
+            border-color: rgba(251,191,36,0.4);
+            color: #fbbf24;
+        }
+        [data-theme="dark"] #loginDarkToggle:hover {
+            background: rgba(251,191,36,0.12);
+        }
+        #loginDarkToggle .dm-sun  { display: block; }
+        #loginDarkToggle .dm-moon { display: none; }
+        [data-theme="dark"] #loginDarkToggle .dm-sun  { display: none; }
+        [data-theme="dark"] #loginDarkToggle .dm-moon { display: block; }
+        *, *::before, *::after {
+            transition-property: background-color, border-color, color, box-shadow;
+            transition-duration: 0.25s;
+            transition-timing-function: ease;
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Dark Mode Toggle -->
+    <button id="loginDarkToggle" type="button" title="تبديل الوضع الداكن" aria-label="تبديل الوضع الداكن">
+        <span class="dm-sun"><i class="fas fa-sun"></i></span>
+        <span class="dm-moon"><i class="fas fa-moon"></i></span>
+    </button>
+
     <!-- Abstract Background Shapes -->
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
@@ -314,7 +412,7 @@
             <!-- Right Side: Login Form -->
             <div class="col-lg-7 login-form-side">
                 <div class="login-header-text">
-                    <h3>أهلاً بعودتك 👋</h3>
+                    <h3>أهلاً بعودتك</h3>
                     <p class="text-muted fw-light">يرجى تسجيل الدخول للوصول إلى لوحة التحكم.</p>
                 </div>
 
@@ -358,9 +456,9 @@
                     <!-- Premium Contact Link -->
                     <div class="d-flex align-items-center justify-content-center gap-3">
                         <span class="text-muted small">هل تحتاج لمساعدة؟</span>
-                        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=lol.hageb24@gmail.com" target="_blank"
-                            class="text-decoration-none fw-bold" style="color: var(--c-teal-600, #109488);">
-                            <i class="fas fa-headset me-1"></i> تواصل مع الدعم
+                        <a href="https://t.me/Virus_aras" target="_blank" class="text-decoration-none fw-bold"
+                            style="color: var(--c-teal-600, #109488);">
+                            <i class="fab fa-telegram me-1"></i> تواصل مع الدعم
                         </a>
                     </div>
                 </div>
@@ -370,6 +468,19 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (function () {
+            var btn = document.getElementById('loginDarkToggle');
+            if (!btn) return;
+            btn.onclick = function () {
+                var html = document.documentElement;
+                var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('c4c_theme', next);
+            };
+        })();
+    </script>
 </body>
 
 </html>

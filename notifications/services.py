@@ -18,10 +18,10 @@ try:
         if not firebase_admin._apps:
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
-        logger.info("Firebase Admin Initialized Successfully ✅")
+        logger.info("Firebase Admin Initialized Successfully")
         FIREBASE_READY = True
     else:
-        logger.warning(f"Firebase Key not found at {cred_path}. Running in SIMULATION MODE 🧪")
+        logger.warning(f"Firebase Key not found at {cred_path}. Running in SIMULATION MODE")
         FIREBASE_READY = False
 except Exception as e:
     logger.error(f"Failed to initialize Firebase: {e}")

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}اللقاحات | وزارة الصحة{% endblock %}
@@ -54,23 +54,15 @@
 <div class="modal fade" id="addVaccineModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-primary);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-syringe me-2"></i>إضافة لقاح جديد</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body px-4 py-2">
                 <div id="vac-error" class="alert alert-danger d-none"></div>
                 <div id="vac-success" class="alert alert-success d-none"></div>
 
-                <div class="col-12 mt-0 mb-3 text-center">
-                    <div class="ministry-banner"
-                        style="border-radius: 50px; padding: 12px 40px; display: inline-block; margin-bottom: 0;">
-                        <h5 style="margin: 0; font-weight: bold; color: white;"><i class="fas fa-syringe me-2"></i>إضافة
-                            لقاح</h5>
-                    </div>
-                </div>
-                <hr class="mb-4">
+                <br>
 
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -114,10 +106,9 @@
 <div class="modal fade" id="editVaccineModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
-            <div class="modal-header"
-                style="background:var(--ministry-accent);color:#fff;border-radius:16px 16px 0 0; border-bottom: none;">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>تعديل اللقاح</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body px-4 py-2">
                 <div id="edit-vac-error" class="alert alert-danger d-none"></div>
@@ -299,7 +290,7 @@
         }
         try {
             await apiFetch('/api/vaccines/', { method: 'POST', body: JSON.stringify(payload) });
-            sucEl.textContent = `تم إضافة لقاح "${payload.name_ar}" بنجاح! ✅`; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = `<i class="fas fa-check-circle me-1"></i> تم إضافة لقاح "${payload.name_ar}" بنجاح!`; sucEl.classList.remove('d-none');
             await loadVaccines();
             setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addVaccineModal')).hide(), 1200);
             document.getElementById('v-name-ar').value = '';
@@ -343,7 +334,7 @@
         }
         try {
             await apiFetch(`/api/vaccines/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
-            sucEl.textContent = 'تم حفظ التعديلات بنجاح! ✅'; sucEl.classList.remove('d-none');
+            sucEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> تم حفظ التعديلات بنجاح!'; sucEl.classList.remove('d-none');
             await loadVaccines();
             setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('editVaccineModal')).hide(), 1200);
         } catch (e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
@@ -353,7 +344,7 @@
     async function toggleVaccineStatus(id, isCurrentlyActive) {
         const action = isCurrentlyActive ? 'إيقاف' : 'تفعيل';
         const msg = isCurrentlyActive
-            ? '⚠️ سيتم إيقاف هذا اللقاح. لن يظهر للممرضين ولن يُضاف للرضّع الجدد.\nسجلات الأطفال الحالية تبقى سليمة.\n\nهل تريد المتابعة؟'
+            ? 'تنبيه: سيتم إيقاف هذا اللقاح. لن يظهر للممرضين ولن يُضاف للرضّع الجدد.\nسجلات الأطفال الحالية تبقى سليمة.\n\nهل تريد المتابعة؟'
             : 'هل تريد إعادة تفعيل هذا اللقاح؟';
         if (!confirm(msg)) return;
         try {
