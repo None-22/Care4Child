@@ -10,6 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Q  # ✅ للحسابات المُجمَّعة في قاعدة البيانات
 
 from django.shortcuts import render, get_object_or_404
 import datetime
@@ -246,9 +247,16 @@ class ChildViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
+
+        # ✅ استخدام annotate() لحساب نسبة التحصين في استعلام واحد (يحل N+1 Query)
+        base_qs = Child.objects.annotate(
+            taken_count=Count('vaccine_records', distinct=True),
+            total_schedules=Count('personal_schedule', distinct=True),
+        ).select_related('family', 'health_center')
+
         if user.is_superuser or getattr(user, 'role', None) in ['CENTER_MANAGER', 'CENTER_STAFF', 'MINISTRY']:
-            return Child.objects.all()
-        return Child.objects.filter(family__account=user)
+            return base_qs
+        return base_qs.filter(family__account=user)
         
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]

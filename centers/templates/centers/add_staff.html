@@ -46,10 +46,11 @@
                             <strong>محمد_علي</strong> أو <strong>staff01</strong></div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-floating">
+                        <div class="form-floating position-relative">
                             <input type="password" name="password" class="form-control" id="floatingPassword"
                                 placeholder="كلمة المرور" required>
                             <label for="floatingPassword">كلمة المرور</label>
+                            <i class="fas fa-eye position-absolute" style="left: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10;" onclick="togglePassword(this, 'floatingPassword')"></i>
                         </div>
                     </div>
                 </div>
@@ -101,4 +102,20 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    function togglePassword(icon, inputId) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 {% endblock %}

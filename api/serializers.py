@@ -263,9 +263,14 @@ class ChildListSerializer(serializers.ModelSerializer):
         return age
 
     def get_completion_percentage(self, obj):
-        from medical.models import ChildVaccineSchedule, VaccineRecord
-        total = ChildVaccineSchedule.objects.filter(child=obj).count()
-        taken = VaccineRecord.objects.filter(child=obj).count()
+        # ✅ يقرأ مباشرةً من الحقل المحسوب سلفاً (annotate) — لا يستدعي قاعدة البيانات مجدداً
+        taken = getattr(obj, 'taken_count', None)
+        total = getattr(obj, 'total_schedules', None)
+        if taken is None or total is None:
+            # احتياطي: في حال استدعينا من مكان آخر بدون annotate
+            from medical.models import ChildVaccineSchedule, VaccineRecord
+            total = ChildVaccineSchedule.objects.filter(child=obj).count()
+            taken = VaccineRecord.objects.filter(child=obj).count()
         return int((taken / total) * 100) if total > 0 else 0
 
     def get_next_vaccine(self, obj):
@@ -472,9 +477,13 @@ class ChildDetailSerializer(serializers.ModelSerializer):
         return result
 
     def get_stats(self, obj):
-        from medical.models import ChildVaccineSchedule
-        total = ChildVaccineSchedule.objects.filter(child=obj).count()
-        taken = VaccineRecord.objects.filter(child=obj).count()
+        # ✅ يقرأ مباشرةً من الحقل المحسوب سلفاً (annotate) — لا يستدعي قاعدة البيانات مجدداً
+        taken = getattr(obj, 'taken_count', None)
+        total = getattr(obj, 'total_schedules', None)
+        if taken is None or total is None:
+            from medical.models import ChildVaccineSchedule
+            total = ChildVaccineSchedule.objects.filter(child=obj).count()
+            taken = VaccineRecord.objects.filter(child=obj).count()
         remaining = total - taken
         return {
             'total': total,
