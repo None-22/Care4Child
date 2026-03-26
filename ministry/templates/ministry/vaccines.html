@@ -198,9 +198,9 @@
             <div class="fw-bold" style="color:var(--c-blue-900);">${v.name_ar || '—'}</div>
             ${v.name_en ? `<div class="text-muted small">${v.name_en}</div>` : ''}
         </td>
-        <td style="max-width:220px;">
+        <td style="max-width:280px; white-space: normal;">
             ${v.description
-                ? `<span class="text-muted small" title="${v.description.replace(/"/g, '&quot;')}">${v.description.length > 80 ? v.description.substring(0, 80) + '...' : v.description}</span>`
+                ? `<span class="text-muted small">${v.description}</span>`
                 : '<span class="text-muted fst-italic small">لا يوجد وصف</span>'}
         </td>
         <td>
