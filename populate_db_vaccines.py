@@ -123,13 +123,28 @@ def run():
         (v_objs['TD'], 1, 60, 'SCHOOL'),
     ]
 
+    # ─── تنظيف السجلات المكررة أولاً (لو حصل Deploy متعدد سابقاً) ───────────────
+    from django.db.models import Min
+    # احتفظ فقط بأصغر id لكل مجموعة (vaccine + dose_number + stage) واحذف الباقي
+    keep_ids = (
+        VaccineSchedule.objects
+        .values('vaccine_id', 'dose_number', 'stage')
+        .annotate(min_id=Min('id'))
+        .values_list('min_id', flat=True)
+    )
+    deleted_count, _ = VaccineSchedule.objects.exclude(id__in=keep_ids).delete()
+    if deleted_count:
+        print(f"  ✔ Cleaned up {deleted_count} duplicate vaccine schedule records.")
+
+    # ─── إضافة الجداول بأمان (get_or_create يمنع التكرار) ────────────────────
     for v, dose, age, stage in schedules_data:
-        VaccineSchedule.objects.create(
+        VaccineSchedule.objects.get_or_create(
             vaccine=v,
             dose_number=dose,
-            age_in_months=age,
-            stage=stage
+            stage=stage,
+            defaults={'age_in_months': age}
         )
+
 
     print("Successfully populated standard Yemen vaccines with Rich Data!")
 

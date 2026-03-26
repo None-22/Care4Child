@@ -38,9 +38,9 @@ from notifications.models import NotificationLog
 class ChildPagination(PageNumberPagination):
     """
     Pagination class dedicated to ChildViewSet only.
-    Returns 10 children per page to test pagination buttons.
+    Returns 50 children per page.
     """
-    page_size = 10
+    page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 200
 
