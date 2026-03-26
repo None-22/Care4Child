@@ -17,3 +17,4 @@ django-allauth==65.13.1
 django-colorfield==0.14.0
 django-extensions==4.1
 django-jazzmin==3.0.1
+python-dateutil==2.9.0.post0
