@@ -1,0 +1,47 @@
+# ============================================================
+# docker-compose.yml — Care4Child Full Stack
+# ============================================================
+# التشغيل:  docker compose up --build
+# الإيقاف:  docker compose down
+# ============================================================
+
+services:
+
+  # ─── قاعدة البيانات PostgreSQL ───────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: care4child_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Sarovic1922}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── تطبيق Django ────────────────────────────────────────
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.docker        # ملف البيئة الخاص بـ Docker
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py shell -c \"from django.contrib.auth import get_user_model; U=get_user_model(); U.objects.filter(username='Sarovic').exists() or U.objects.create_superuser('Sarovic','sarovic@care4child.com','sarovic1922')\" &&
+             python populate_db_vaccines.py &&
+             python populate_governorates.py &&
+             python populate_directorates.py &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+
+# ─── Volumes دائمة ────────────────────────────────────────
+volumes:
+  postgres_data:
