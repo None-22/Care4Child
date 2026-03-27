@@ -155,8 +155,20 @@
             if (!visitsMap.has(age)) {
                 let label;
                 if (age === 0) label = 'عند الولادة';
+                else if (age === 1.5) label = 'عمر شهر ونصف';
+                else if (age === 2.5) label = 'عمر شهرين ونصف';
+                else if (age === 3.5) label = 'عمر ثلاثة أشهر ونصف';
+                else if (age === 9) label = 'عمر 9 أشهر';
+                else if (age === 18) label = 'عمر سنة ونصف';
                 else if (age === 72) label = 'سن دخول المدرسة (6 سنوات)';
-                else label = `عمر ${age} أشهر`;
+                else {
+                    const absAge = Math.abs(age);
+                    if (absAge === 1) label = 'عمر شهر';
+                    else if (absAge === 2) label = 'عمر شهرين';
+                    else if (absAge >= 3 && absAge <= 10) label = `عمر ${age} أشهر`;
+                    else if (Number.isInteger(age)) label = `عمر ${age} شهراً`;
+                    else label = `عمر ${age} شهر`;
+                }
                 visitsMap.set(age, { label, vaccines: [] });
             }
             visitsMap.get(age).vaccines.push(item);

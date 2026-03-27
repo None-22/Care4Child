@@ -402,33 +402,37 @@
             }
         });
 
-        /* Polar Area - توزيع اللقاحات */
-        const vacMap = {};
-        act.forEach(r => { if (r.vaccine) vacMap[r.vaccine] = (vacMap[r.vaccine] || 0) + 1; });
-        const vacEntries = Object.entries(vacMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
-        const polarColors = ['#0a4275', '#1d74c4', '#268fe8', '#0d9488', '#d97706', '#dc2626'];
+        /* Pie Chart - توزيع اللقاحات */
+        const vacEntriesData = C.vaccines_distribution || [];
+        const vacEntries = vacEntriesData.map(v => [v.name, v.count]);
+        const chartColors = [
+            '#0a4275', '#1d74c4', '#268fe8', '#0d9488', '#14b8a6', 
+            '#d97706', '#f59e0b', '#dc2626', '#ef4444', '#6366f1', 
+            '#8b5cf6', '#d946ef'
+        ];
+        
         if (vacEntries.length) {
             new Chart(document.getElementById('polarChart'), {
-                type: 'polarArea',
+                type: 'pie',
                 data: {
                     labels: vacEntries.map(([n]) => n),
                     datasets: [{
                         data: vacEntries.map(([, c]) => c),
-                        backgroundColor: polarColors.slice(0, vacEntries.length).map(c => c + 'cc'),
-                        borderColor: polarColors.slice(0, vacEntries.length),
-                        borderWidth: 1.5
+                        backgroundColor: chartColors.slice(0, vacEntries.length),
+                        borderColor: _dk() ? '#161b22' : '#ffffff',
+                        borderWidth: 1.5,
+                        hoverOffset: 4
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed.r} سجل` } } },
-                    scales: { r: { ticks: { display: false }, grid: { color: _dk() ? '#21262d' : '#f1f5f9' } } }
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed} سجل` } } }
                 }
             });
             document.getElementById('polar-legend').innerHTML = vacEntries.map(([n, c], i) => `
             <div style="display:flex;align-items:center;gap:5px;">
-                <div style="width:7px;height:7px;border-radius:50%;background:${polarColors[i]};flex-shrink:0;"></div>
-                <span style="font-size:.68rem;font-weight:600;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n}</span>
+                <div style="width:7px;height:7px;border-radius:50%;background:${chartColors[i % chartColors.length]};flex-shrink:0;"></div>
+                <span title="${n}" style="font-size:.68rem;font-weight:600;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${n}</span>
                 <span style="font-size:.68rem;font-weight:800;color:var(--blue-d);margin-right:auto;">${c}</span>
             </div>`).join('');
         } else {

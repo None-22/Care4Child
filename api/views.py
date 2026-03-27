@@ -449,18 +449,26 @@ class DashboardStatsView(APIView):
                 'due_date': sched.due_date
             })
 
+        vaccine_dist_qs = records_qs.values('vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:12]
+        vaccines_distribution = [{'name': v['vaccine__name_ar'], 'count': v['count']} for v in vaccine_dist_qs]
+
         centers_report = []
         if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
-            from django.db.models import Count, Q
             centers = HealthCenter.objects.filter(is_active=True)\
                 .select_related('governorate', 'directorate')\
                 .annotate(
                     total_children=Count('children', distinct=True),
-                    completed_children=Count('children', filter=Q(children__is_completed=True), distinct=True)
+                    completed_children=Count('children', filter=Q(children__is_completed=True), distinct=True),
+                    defaulters_children=Count('children', filter=Q(
+                        children__is_completed=False,
+                        children__personal_schedule__due_date__lt=today, 
+                        children__personal_schedule__is_taken=False
+                    ), distinct=True)
                 )
             for center in centers:
                 ctotal = center.total_children
                 ccompleted = center.completed_children
+                cdefaulters = center.defaulters_children
                 crate = round((ccompleted / ctotal * 100), 1) if ctotal > 0 else 0
                 gov_name = center.governorate.name_ar if getattr(center, 'governorate', None) else 'غير محدد'
                 dir_name = center.directorate.name_ar if getattr(center, 'directorate', None) else 'غير محدد'
@@ -471,6 +479,7 @@ class DashboardStatsView(APIView):
                     'location': f"{gov_name} - {dir_name}",
                     'total_children': ctotal,
                     'completed_children': ccompleted,
+                    'defaulters_children': cdefaulters,
                     'coverage_rate': crate,
                     'status': 'High' if crate > 80 else ('Medium' if crate > 50 else 'Low')
                 })
@@ -494,7 +503,8 @@ class DashboardStatsView(APIView):
             },
             'charts': {
                 'vaccination_trend': vaccination_trend, 
-                'labels': chart_labels
+                'labels': chart_labels,
+                'vaccines_distribution': vaccines_distribution
             },
             'recent_activity': activity_data,
             'upcoming_appointments': upcoming_data,
