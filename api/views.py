@@ -433,11 +433,11 @@ class DashboardStatsView(APIView):
                 'staff': rec.staff.username if rec.staff else 'System'
             })
             
-        tomorrow = today + timedelta(days=1)
+        end_date = today + timedelta(days=14)
         upcoming_qs = ChildVaccineSchedule.objects.filter(
-            due_date__range=[today, tomorrow],
+            due_date__range=[today, end_date],
             is_taken=False
-        )
+        ).order_by('due_date')
         if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
             upcoming_qs = upcoming_qs.filter(child__health_center=user.health_center)
             
