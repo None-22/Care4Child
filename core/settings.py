@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'smart_selects',
     'django_filters',
+    'django_extensions',
+    'django_dbml',
 
     # --- My Apps (تطبيقاتنا) ---
     'users.apps.UsersConfig',

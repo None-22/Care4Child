@@ -276,7 +276,7 @@
         container.innerHTML = `<table class="ministry-table">
         <thead><tr>
             <th>#</th><th>المركز الصحي</th><th>كود المركز</th>
-            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th><th>إجراءات</th>
+            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th><th class="text-center">إجراءات</th>
         </tr></thead>
         <tbody>${centers.map((c, i) => `
         <tr class="${!c.is_active ? 'table-secondary opacity-75' : ''}">
@@ -287,19 +287,20 @@
             <td>${c.governorate_name || '—'}</td>
             <td>${c.directorate_name || '—'}</td>
             <td>${c.is_active
-                ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
-                : '<span class="badge badge-low rounded-pill px-3">موقوف</span>'}</td>
+                ? '<span class="badge bg-success-subtle text-success px-3 py-2 fw-bold"><i class="fas fa-circle me-1" style="font-size:0.5rem;"></i>نشط</span>'
+                : '<span class="badge bg-danger-subtle text-danger px-3 py-2 fw-bold"><i class="fas fa-circle me-1" style="font-size:0.5rem;"></i>موقوف</span>'}</td>
             <td class="text-muted small">${c.created_at ? c.created_at.substring(0, 10) : '—'}</td>
             <td>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-outline-primary rounded-pill"
+                <div class="d-flex gap-1 justify-content-center">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold"
                         onclick="openEditCenterModal(${c.id})" title="تعديل">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-edit me-1"></i>تعديل
                     </button>
-                    <button class="btn btn-sm ${c.is_active ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill"
-                        onclick="toggleCenterStatus(${c.id}, ${c.is_active})"
+                    <button class="btn btn-sm ${c.is_active ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill px-3 fw-bold"
+                        onclick="toggleCenterStatus(${c.id}, ${c.is_active}, '${c.name_ar || ''}')"
                         title="${c.is_active ? 'إيقاف المركز' : 'تفعيل المركز'}">
-                        <i class="fas fa-${c.is_active ? 'ban' : 'check-circle'}"></i>
+                        <i class="fas ${c.is_active ? 'fa-pause' : 'fa-play'} me-1"></i>
+                        ${c.is_active ? 'إيقاف' : 'تفعيل'}
                     </button>
                 </div>
             </td>
@@ -426,19 +427,49 @@
     }
 
     // ---- Soft Delete / Activate Center ----
-    async function toggleCenterStatus(id, isCurrentlyActive) {
+    async function toggleCenterStatus(id, isCurrentlyActive, centerName) {
+        const nameText = centerName ? ` ${centerName}` : '';
         const msg = isCurrentlyActive
-            ? 'تنبيه: سيتم إيقاف هذا المركز.\nموظفوه لن يتمكنوا من تسجيل أطفال جدد.\nسجلات الأطفال الحاليين تبقى سليمة.\n\nهل تريد المتابعة؟'
-            : 'هل تريد إعادة تفعيل هذا المركز؟';
-        if (!confirm(msg)) return;
+            ? `هل أنت متأكد من إيقاف المركز${nameText}؟ سيمنع هذا الإجراء جميع الموظفين من الدخول للنظام.`
+            : `هل أنت متأكد من تفعيل المركز${nameText}؟`;
+
+        const result = await Swal.fire({
+            title: 'تأكيد الإجراء',
+            text: msg,
+            icon: isCurrentlyActive ? 'warning' : 'info',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--c-primary)',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'نعم، متأكد',
+            cancelButtonText: 'إلغاء',
+            customClass: { popup: 'rounded-4 shadow border border-light' }
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await apiFetch(`/api/health-centers/${id}/`, {
                 method: 'PATCH',
                 body: JSON.stringify({ is_active: !isCurrentlyActive })
             });
             await loadCenters();
+
+            Swal.fire({
+                title: 'نجاح',
+                text: isCurrentlyActive ? 'تم إيقاف المركز الصحي بنجاح.' : 'تم تفعيل المركز الصحي بنجاح.',
+                icon: 'success',
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: 'var(--c-primary)',
+                customClass: { popup: 'rounded-4 shadow border border-light' }
+            });
         } catch (e) {
-            alert('حدث خطأ: ' + e.message);
+            Swal.fire({
+                title: 'خطأ',
+                text: 'حدث خطأ: ' + e.message,
+                icon: 'error',
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: 'var(--c-primary)'
+            });
         }
     }
 

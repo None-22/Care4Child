@@ -20,6 +20,21 @@ def center_staff_required(view_func):
             request.user.role in ['CENTER_STAFF', 'CENTER_MANAGER']
         )
 
+        # 3. Check Center Status
+        if is_authorized and not request.user.is_superuser:
+            if hasattr(request.user, 'health_center') and request.user.health_center:
+                if not request.user.health_center.is_active:
+                    from django.contrib.auth import logout
+                    
+                    if request.user.role == 'CENTER_STAFF':
+                        error_msg = "عذراً، المركز الصحي التابع لك موقوف حالياً، ولذلك تم إيقاف صلاحية دخولك للنظام كموظف."
+                    else:
+                        error_msg = "عذراً، هذا المركز الصحي موقوف حالياً. لا يمكنك تسجيل الدخول."
+                        
+                    logout(request)
+                    messages.error(request, error_msg)
+                    return redirect('login')
+
         if is_authorized:
             return view_func(request, *args, **kwargs)
         
@@ -52,6 +67,21 @@ def center_manager_required(view_func):
             request.user.is_superuser or 
             request.user.role == 'CENTER_MANAGER'
         )
+
+        # 3. Check Center Status
+        if is_authorized and not request.user.is_superuser:
+            if hasattr(request.user, 'health_center') and request.user.health_center:
+                if not request.user.health_center.is_active:
+                    from django.contrib.auth import logout
+                    
+                    if request.user.role == 'CENTER_STAFF':
+                        error_msg = "عذراً، المركز الصحي التابع لك موقوف حالياً، ولذلك تم إيقاف صلاحية دخولك للنظام كموظف."
+                    else:
+                        error_msg = "عذراً، هذا المركز الصحي موقوف حالياً. لا يمكنك تسجيل الدخول."
+                        
+                    logout(request)
+                    messages.error(request, error_msg)
+                    return redirect('login')
 
         if is_authorized:
             return view_func(request, *args, **kwargs)

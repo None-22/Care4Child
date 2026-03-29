@@ -565,3 +565,35 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         count = notifications.count()
         notifications.update(is_read=True)
         return Response({"message": f"{count} notifications marked as read.", "count": count})
+
+
+# ================= Custom Auth Token =================
+
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
+class CustomAuthTokenView(ObtainAuthToken):
+    """
+    تحقق من حالة المركز الصحي قبل إعطاء توكن للمستخدم.
+    """
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        
+        # تحقق مما إذا كان المستخدم موظفاً أو مديراً وينتمي إلى مركز غير نشط
+        if hasattr(user, 'role') and user.role in ['CENTER_MANAGER', 'CENTER_STAFF']:
+            if hasattr(user, 'health_center') and user.health_center:
+                if not user.health_center.is_active:
+                    if user.role == 'CENTER_STAFF':
+                        error_msg = 'عذراً، المركز الصحي التابع لك موقوف حالياً، ولذلك تم إيقاف صلاحية دخولك للنظام كموظف.'
+                    else:
+                        error_msg = 'عذراً، هذا المركز الصحي موقوف حالياً. لا يمكنك تسجيل الدخول.'
+                        
+                    return Response({'error': error_msg}, status=status.HTTP_403_FORBIDDEN)
+                
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk
+        })

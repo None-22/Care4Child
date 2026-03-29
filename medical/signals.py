@@ -60,7 +60,7 @@ def create_family_user(sender, instance, created, **kwargs):
                 role='CUSTOMER',  # دور جديد للأهالي
                 
                 first_name=instance.father_name.split()[0], # الاسم الأول للأب
-                last_name="Family"
+                last_name=instance.father_name.split()[-1] if len(instance.father_name.split()) > 1 else ""
             )
             
             # ربط الحساب بالعائلة
