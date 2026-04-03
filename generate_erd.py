@@ -469,9 +469,11 @@ def generate(fmt="png", theme="dark", app_filter=None, table_filter=None, output
     visible_names = {tbl["name"] for _, tbl in all_tables}
     for (from_t, from_f, to_t) in RELATIONS:
         if from_t in visible_names and to_t in visible_names:
+            accessor = from_f.removesuffix("_id")
             dg.edge(
                 from_t,
                 to_t,
+                xlabel=f"{accessor} ({to_t})",
                 fontname=t["font"],
                 fontsize="8",
                 fontcolor=t["edge_color"],
