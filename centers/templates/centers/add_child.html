@@ -183,29 +183,8 @@
         const govSelect = document.getElementById('govSelect');
         const dirSelect = document.getElementById('dirSelect');
 
-        // ---- Load Governorates from API ----
-        try {
-            const govData = await apiFetch('/api/governorates/');
-            const govs = Array.isArray(govData) ? govData : (govData.results || []);
-            govSelect.innerHTML = '<option value="" selected disabled>اختر المحافظة</option>';
-            govs.forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.textContent = g.name_ar;
-                govSelect.appendChild(opt);
-            });
-            // ديفولت: إب
-            const ibb = govs.find(g => g.name_ar.trim() === 'إب' || g.name_ar.trim() === 'اب');
-            if (ibb) {
-                govSelect.value = ibb.id;
-                govSelect.dispatchEvent(new Event('change'));
-            }
-        } catch (e) {
-            govSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
-            console.error('Failed to load governorates:', e);
-        }
-
         // ---- On Governorate Change -> Load Directorates ----
+        // ⚠️ يجب تسجيل الـ listener أولاً قبل dispatchEvent
         govSelect.addEventListener('change', async function () {
             const govId = this.value;
             dirSelect.innerHTML = '<option value="" selected disabled>جاري جلب المديريات...</option>';
@@ -232,6 +211,28 @@
                 console.error('Failed to load directorates:', e);
             }
         });
+
+        // ---- Load Governorates from API ----
+        try {
+            const govData = await apiFetch('/api/governorates/');
+            const govs = Array.isArray(govData) ? govData : (govData.results || []);
+            govSelect.innerHTML = '<option value="" selected disabled>اختر المحافظة</option>';
+            govs.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name_ar;
+                govSelect.appendChild(opt);
+            });
+            // ديفولت: إب
+            const ibb = govs.find(g => g.name_ar.trim() === 'إب' || g.name_ar.trim() === 'اب');
+            if (ibb) {
+                govSelect.value = ibb.id;
+                govSelect.dispatchEvent(new Event('change')); // الآن الـ listener موجود ✓
+            }
+        } catch (e) {
+            govSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
+            console.error('Failed to load governorates:', e);
+        }
 
         // ---- Manual location toggle ----
         document.getElementById('manualLocationSwitch').addEventListener('change', function () {
