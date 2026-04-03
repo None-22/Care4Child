@@ -9,7 +9,8 @@ from .views import (
     HealthCenterViewSet, UserViewSet, FamilyViewSet,
     ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
     UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView,
-    NotificationViewSet, AllVaccinesCoverageReportView
+    NotificationViewSet, AllVaccinesCoverageReportView,
+    TriggerRemindersCronView
 )
 
 # إنشاء Router
@@ -41,4 +42,7 @@ urlpatterns = [
     # Reports (New)
     path('reports/by-center/', ReportsByCenterView.as_view(), name='reports_by_center'),
     path('reports/all-vaccines-coverage/', AllVaccinesCoverageReportView.as_view(), name='all-vaccines-coverage'),
+    
+    # Webhook for Render cron jobs
+    path('cron/trigger-reminders/', TriggerRemindersCronView.as_view(), name='cron_trigger_reminders'),
 ]

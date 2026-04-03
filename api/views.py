@@ -664,3 +664,26 @@ class CustomAuthTokenView(ObtainAuthToken):
             'token': token.key,
             'user_id': user.pk
         })
+
+
+# ================= External Cron Webhook =================
+
+from django.core.management import call_command
+
+class TriggerRemindersCronView(APIView):
+    """
+    API لتشغيل إشعارات النظام من خلال خدمات مجانية مثل cron-job.org
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        secret = request.query_params.get('secret')
+        # تحقق بسيط من المفتاح لضمان الأمان
+        if secret != 'secure_care4child_cron_2026':
+            raise PermissionDenied("Invalid Secret Key!")
+            
+        try:
+            call_command('send_reminders')
+            return Response({"success": True, "message": "Notification engine ran successfully."})
+        except Exception as e:
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
