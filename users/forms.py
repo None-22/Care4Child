@@ -1,6 +1,69 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UsernameField
+from django.contrib.auth.password_validation import validate_password
 from centers.models import HealthCenter
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    new_password1 = forms.CharField(
+        label="كلمة المرور الجديدة",
+        required=False,
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'اتركها فارغة إذا لا تريد تغييرها',
+            'autocomplete': 'new-password',
+        })
+    )
+    new_password2 = forms.CharField(
+        label="تأكيد كلمة المرور الجديدة",
+        required=False,
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'أعد كتابة كلمة المرور الجديدة',
+            'autocomplete': 'new-password',
+        })
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'phone']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'الاسم الأول'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'اسم العائلة'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'رقم الهاتف'}),
+        }
+        labels = {
+            'username': 'اسم المستخدم',
+            'first_name': 'الاسم الأول',
+            'last_name': 'اسم العائلة',
+            'phone': 'رقم الهاتف',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password1')
+        p2 = cleaned_data.get('new_password2')
+        if p1 or p2:
+            if p1 != p2:
+                raise forms.ValidationError({'new_password2': 'كلمتا المرور غير متطابقتين.'})
+            if p1:
+                validate_password(p1, self.instance)
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        p1 = self.cleaned_data.get('new_password1')
+        if p1:
+            user.set_password(p1)
+        if commit:
+            user.save()
+        return user
 
 class CenterLoginForm(AuthenticationForm):
     username = UsernameField(

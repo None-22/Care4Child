@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}اللقاحات | وزارة الصحة{% endblock %}
+{% block title %}اللقاحات | مكتب الصحة{% endblock %}
 {% block page_title %}إدارة اللقاحات{% endblock %}
 
 {% block content %}
@@ -18,21 +18,41 @@
     </div>
 </div>
 
-<!-- Stats + Search row -->
+<!-- Stats + Filters + Search row -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="ministry-kpi">
-            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-syringe"></i></div>
+        <div class="ministry-kpi shadow-sm" style="border:1px solid #e2e8f0;">
+            <div class="kpi-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-syringe"></i></div>
             <div>
                 <p class="kpi-label">إجمالي اللقاحات</p>
-                <div class="kpi-value" id="vac-total">—</div>
+                <div class="kpi-value" id="vac-total" style="color:#1e293b;">—</div>
             </div>
         </div>
     </div>
-    <div class="col-md-9 d-flex align-items-center">
-        <div class="input-group">
-            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-            <input type="text" id="vac-search" class="form-control border-start-0" placeholder="ابحث باسم اللقاح...">
+    <div class="col-md-9 d-flex flex-wrap align-items-center gap-3">
+        <!-- Location Filters for Coverage Report -->
+        <div class="d-flex align-items-center gap-2 shadow-sm"
+            style="background:#f0f9ff; padding:0.4rem 0.8rem; border-radius:12px; border:1px dashed #93c5fd; flex:1; min-width:300px;">
+            <div
+                style="background:#dbeafe; color:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-chart-bar" style="font-size:0.8rem;"></i>
+            </div>
+            <span style="font-size:0.8rem; font-weight:800; color:#1d4ed8; white-space:nowrap;">التغطية بموجب:</span>
+
+            <select id="cov-governorate" class="form-select form-select-sm"
+                style="min-width:130px; border-radius:6px; font-weight:600; font-size:0.8rem; border-color:#93c5fd;">
+                <option value="">المستوى الوطني (الكل)</option>
+            </select>
+            <select id="cov-directorate" class="form-select form-select-sm"
+                style="min-width:130px; border-radius:6px; font-weight:600; font-size:0.8rem; border-color:#93c5fd;"
+                disabled>
+                <option value="">كافة المديريات</option>
+            </select>
+
+            <div id="cov-target-badge" class="badge"
+                style="background:#2563eb; color:#fff; padding:0.4rem 0.6rem; border-radius:6px; display:none; white-space:nowrap; font-weight:600;">
+                المستهدف: <span id="cov-target-count">0</span> طفل
+            </div>
         </div>
     </div>
 </div>
@@ -55,10 +75,15 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 650px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-syringe me-2"></i>إضافة لقاح جديد</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-syringe me-2"></i>إضافة لقاح جديد</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body px-4 py-2">
                 <div id="vac-error" class="alert alert-danger d-none"></div>
@@ -69,11 +94,11 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">الاسم (عربي) <span class="text-danger">*</span></label>
-                        <input type="text" id="v-name-ar" class="form-control" placeholder="مثال: السل (BCG)">
+                        <input type="text" id="v-name-ar" class="form-control">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">الاسم (English) <span class="text-danger">*</span></label>
-                        <input type="text" id="v-name-en" class="form-control" placeholder="e.g. BCG">
+                        <input type="text" id="v-name-en" class="form-control">
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">الوصف</label>
@@ -109,10 +134,15 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 650px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-edit me-2"></i>تعديل اللقاح</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-edit me-2"></i>تعديل اللقاح</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body px-4 py-2">
                 <div id="edit-vac-error" class="alert alert-danger d-none"></div>
@@ -163,18 +193,118 @@
 {% block extra_scripts %}
 <script>
     let allVaccines = [];
+    let governorates = [];
+    let directorates = [];
 
-    async function loadVaccines() {
+    // UI Elements
+    const govSelect = document.getElementById('cov-governorate');
+    const dirSelect = document.getElementById('cov-directorate');
+    const badgeEl = document.getElementById('cov-target-badge');
+    const countEl = document.getElementById('cov-target-count');
+
+    // 1. Fetch Master Data
+    async function loadMasterData() {
         const container = document.getElementById('vaccines-container');
         try {
-            // Ministry sees all vaccines including inactive (no has_description filter here so we see all)
+            // Fetch Locations
+            const [gRes, dRes] = await Promise.all([
+                apiFetch('/api/governorates/'),
+                apiFetch('/api/directorates/')
+            ]);
+            governorates = Array.isArray(gRes) ? gRes : (gRes.results || []);
+            directorates = Array.isArray(dRes) ? dRes : (dRes.results || []);
+
+            governorates.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id; opt.textContent = g.name_ar;
+                // Set Ibb as default if possible
+                if (g.name_ar.includes('إب') || g.name_ar.includes('اب')) opt.selected = true;
+                govSelect.appendChild(opt);
+            });
+            updateDirectoratesList();
+
+            // Fetch Vaccines
             allVaccines = await apiFetch('/api/vaccines/');
             document.getElementById('vac-total').textContent = allVaccines.filter(v => v.is_active !== false).length;
-            renderVaccines(allVaccines);
+
+            // Initial load of coverage stats
+            await loadCoverageStats();
+
         } catch (e) {
-            container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
+            container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات. الرجاء تحديث الصفحة.</div>';
         }
     }
+
+    function updateDirectoratesList() {
+        const gid = govSelect.value;
+        dirSelect.innerHTML = '<option value="">كافة المديريات</option>';
+        if (!gid) {
+            dirSelect.disabled = true;
+            return;
+        }
+        dirSelect.disabled = false;
+        const filtered = directorates.filter(d => String(d.governorate) === String(gid) || String(d.governorate.id) === String(gid));
+        filtered.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id; opt.textContent = d.name_ar;
+            dirSelect.appendChild(opt);
+        });
+    }
+
+    // 2. Fetch Coverage For All Vaccines
+    async function loadCoverageStats() {
+        const vaccineContainer = document.getElementById('vaccines-container');
+        vaccineContainer.innerHTML = `
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border" style="color:#2563eb; width:2rem; height:2rem;"></div>
+            <span class="ms-3" style="color:#2563eb; font-weight:bold; margin-top:5px;">جاري حساب التغطية...</span>
+        </div>`;
+
+        try {
+            let url = '/api/reports/all-vaccines-coverage/?';
+            if (govSelect.value) url += `governorate_id=${govSelect.value}&`;
+            if (dirSelect.value) url += `directorate_id=${dirSelect.value}`;
+
+            const res = await apiFetch(url);
+
+            // Map coverage data by vaccine_id
+            const covMap = {};
+            if (res.vaccines_coverage) {
+                res.vaccines_coverage.forEach(c => covMap[c.vaccine_id] = c);
+            }
+
+            // Update UI Target Badge
+            if (res.target_children > 0) {
+                countEl.textContent = res.target_children;
+                badgeEl.style.display = 'inline-block';
+            } else {
+                badgeEl.style.display = 'none';
+            }
+
+            // Combine with allVaccines
+            allVaccines = allVaccines.map(v => {
+                const stat = covMap[v.id];
+                return {
+                    ...v,
+                    coverage_stat: stat ? stat : { vaccinated_count: 0, coverage_percentage: 0 }
+                };
+            });
+
+            renderVaccines(allVaccines);
+        } catch (e) {
+            console.error(e);
+            vaccineContainer.innerHTML = '<div class="alert alert-danger m-3">فشل حساب التغطية.</div>';
+        }
+    }
+
+    // Handle Filter Changes
+    govSelect.addEventListener('change', () => {
+        updateDirectoratesList();
+        loadCoverageStats();
+    });
+    dirSelect.addEventListener('change', () => {
+        loadCoverageStats();
+    });
 
     function renderVaccines(vaccines) {
         const container = document.getElementById('vaccines-container');
@@ -186,80 +316,117 @@
     <thead><tr>
         <th>#</th>
         <th>اسم اللقاح</th>
-        <th>الوصف</th>
         <th>الجرعات</th>
+        <th style="width:250px;">التغطية الفعلية (التحصين)</th>
         <th>الحالة</th>
         <th>إجراءات</th>
     </tr></thead>
-    <tbody>${vaccines.map((v, i) => `
-    <tr class="${v.is_active === false ? 'table-secondary opacity-75' : ''}">
+    <tbody>${vaccines.map((v, i) => {
+            const pct = v.coverage_stat ? v.coverage_stat.coverage_percentage : 0;
+            const vc = v.coverage_stat ? v.coverage_stat.vaccinated_count : 0;
+            
+            let label = 'أطفال ملقحين';
+            if (vc === 1) label = 'طفل ملقح';
+            else if (vc === 2) label = 'طفلين ملقحين';
+            else if (vc >= 3 && vc <= 10) label = 'أطفال ملقحين';
+            else if (vc > 10) label = 'طفلاً ملقحاً';
+
+            const color = pct >= 80 ? '#0d9488' : pct >= 50 ? '#d97706' : pct > 0 ? '#dc2626' : '#94a3b8';
+            const bg = pct >= 80 ? '#ecfdf5' : pct >= 50 ? '#fffbeb' : pct > 0 ? '#fef2f2' : '#f8fafc';
+
+            return `<tr class="${v.is_active === false ? 'table-secondary opacity-75' : ''}">
         <td class="text-muted">${i + 1}</td>
         <td>
             <div class="fw-bold" style="color:var(--c-blue-900);">${v.name_ar || '—'}</div>
             ${v.name_en ? `<div class="text-muted small">${v.name_en}</div>` : ''}
-        </td>
-        <td style="max-width:280px; white-space: normal;">
-            ${v.description
-                ? `<span class="text-muted small">${v.description}</span>`
-                : '<span class="text-muted fst-italic small">لا يوجد وصف</span>'}
+            ${v.description ? `<div style="font-size:0.65rem; color:#64748b; margin-top:3px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>` : ''}
         </td>
         <td>
             ${v.schedules && v.schedules.length > 0
-                ? `<div class="d-flex flex-wrap gap-1">${v.schedules.map(s =>
-                    `<span class="badge ${s.stage === 'SCHOOL' ? 'bg-warning text-dark' : 'bg-info text-dark'}" style="font-size:0.72rem;">
+                    ? `<div class="d-flex flex-wrap gap-1">${v.schedules.map(s =>
+                        `<span class="badge ${s.stage === 'SCHOOL' ? 'bg-warning text-dark' : 'bg-info text-dark'}" style="font-size:0.72rem;">
                         جرعة ${s.dose_number} (${s.age_in_months} شهر)
                     </span>`).join('')}</div>`
-                : '<small class="text-muted">—</small>'}
+                    : '<small class="text-muted">—</small>'}
+        </td>
+        <td>
+            <div style="background:${bg}; border:1px solid ${color}40; padding:8px 12px; border-radius:8px;">
+                <div class="d-flex justify-content-between mb-1" style="font-size:0.7rem; font-weight:700; color:${color};">
+                    <span>${vc} ${label}</span>
+                    <span>${pct}%</span>
+                </div>
+                <div style="height:6px; background:${color}20; border-radius:4px; overflow:hidden;">
+                    <div style="height:100%; background:${color}; width:${pct}%; border-radius:4px;"></div>
+                </div>
+            </div>
         </td>
         <td>
             ${v.is_active !== false
-                ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
-                : '<span class="badge badge-low rounded-pill px-3">موقوف</span>'}
+                    ? '<span class="badge badge-high rounded-pill px-3">نشط</span>'
+                    : '<span class="badge badge-low rounded-pill px-3">موقوف</span>'}
         </td>
         <td>
             <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary rounded-pill"
+                <button class="btn btn-sm btn-outline-primary rounded-pill py-1 px-2"
                     onclick="openEditModal(${v.id})" title="تعديل">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm ${v.is_active !== false ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill"
+                <button class="btn btn-sm ${v.is_active !== false ? 'btn-outline-danger' : 'btn-outline-success'} rounded-pill py-1 px-2"
                     onclick="toggleVaccineStatus(${v.id}, ${v.is_active !== false})"
                     title="${v.is_active !== false ? 'إيقاف (أرشفة)' : 'تفعيل'}">
                     <i class="fas fa-${v.is_active !== false ? 'ban' : 'check-circle'}"></i>
                 </button>
             </div>
         </td>
-    </tr>`).join('')}
+    </tr>`}).join('')}
     </tbody></table>`;
     }
 
-    // Search
-    document.getElementById('vac-search').addEventListener('input', function () {
-        const q = this.value.trim().toLowerCase();
-        if (!q) { renderVaccines(allVaccines); return; }
-        renderVaccines(allVaccines.filter(v =>
-            (v.name_ar || '').toLowerCase().includes(q) ||
-            (v.name_en || '').toLowerCase().includes(q)
-        ));
-    });
+
 
     // ---- Dose Row Helper ----
     function addDoseRow(containerId, data = {}) {
         const container = document.getElementById(containerId);
+
+        // Add headers if this is the first row
+        if (container.querySelectorAll('.dose-row').length === 0) {
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'd-flex gap-2 mb-1 px-2 text-muted dose-header';
+            headerDiv.style.fontSize = '0.75rem';
+            headerDiv.style.fontWeight = 'bold';
+            headerDiv.innerHTML = `
+                <div style="flex:0.8;">رقم الجرعة <span class="text-danger">*</span></div>
+                <div style="flex:1.2;">عمر الطفل (بالأشهر) <span class="text-danger">*</span></div>
+                <div style="flex:1.5;">المرحلة المستهدفة <span class="text-danger">*</span></div>
+                <div style="width:32px;"></div>
+            `;
+            container.appendChild(headerDiv);
+        }
+
         const div = document.createElement('div');
-        div.className = 'dose-row d-flex gap-2 mb-2 align-items-center';
+        div.className = 'dose-row d-flex gap-2 mb-2 align-items-center bg-light p-2 rounded shadow-sm border border-white';
         div.innerHTML = `
-        <input type="number" class="form-control dose-number form-control-sm" placeholder="الجرعة" min="1" value="${data.dose_number || ''}" style="width:80px;">
-        <input type="number" class="form-control dose-age form-control-sm" placeholder="الشهر" min="0" step="0.5" value="${data.age_in_months !== undefined ? data.age_in_months : ''}" style="width:100px;">
-        <select class="form-select dose-stage form-select-sm" style="width:150px;">
+        <input type="number" class="form-control dose-number form-control-sm text-center" min="1" value="${data.dose_number || ''}" style="flex:0.8; font-weight:bold; border-color:#cbd5e1;">
+        <input type="number" class="form-control dose-age form-control-sm text-center" min="0" step="0.5" value="${data.age_in_months !== undefined ? data.age_in_months : ''}" style="flex:1.2; font-weight:bold; border-color:#cbd5e1;">
+        <select class="form-select dose-stage form-select-sm" style="flex:1.5; font-weight:600; color:#334155; border-color:#cbd5e1;">
             <option value="BASIC" ${data.stage !== 'SCHOOL' ? 'selected' : ''}>أساسي (رضّع)</option>
-            <option value="SCHOOL" ${data.stage === 'SCHOOL' ? 'selected' : ''}>مدرسي</option>
+            <option value="SCHOOL" ${data.stage === 'SCHOOL' ? 'selected' : ''}>مدرسي (أو حملات)</option>
         </select>
-        <button type="button" class="btn btn-danger btn-sm rounded-pill flex-shrink-0" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
+        <button type="button" class="btn btn-danger btn-sm rounded flex-shrink-0" style="width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="removeDoseRow(this)">
+            <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
         </button>`;
         container.appendChild(div);
     }
+
+    // Helper to remove row and its header if empty
+    window.removeDoseRow = function (btn) {
+        const container = btn.closest('#doses-container, #edit-doses-container');
+        btn.parentElement.remove();
+        if (container && container.querySelectorAll('.dose-row').length === 0) {
+            const h = container.querySelector('.dose-header');
+            if (h) h.remove();
+        }
+    };
 
     function collectDoses(containerId) {
         const doses = [];
@@ -288,7 +455,7 @@
         try {
             await apiFetch('/api/vaccines/', { method: 'POST', body: JSON.stringify(payload) });
             sucEl.innerHTML = `<i class="fas fa-check-circle me-1"></i> تم إضافة لقاح "${payload.name_ar}" بنجاح!`; sucEl.classList.remove('d-none');
-            await loadVaccines();
+            await loadMasterData();
             setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('addVaccineModal')).hide(), 1200);
             document.getElementById('v-name-ar').value = '';
             document.getElementById('v-name-en').value = '';
@@ -332,7 +499,7 @@
         try {
             await apiFetch(`/api/vaccines/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
             sucEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> تم حفظ التعديلات بنجاح!'; sucEl.classList.remove('d-none');
-            await loadVaccines();
+            await loadMasterData();
             setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('editVaccineModal')).hide(), 1200);
         } catch (e) { errEl.textContent = 'خطأ: ' + e.message; errEl.classList.remove('d-none'); }
     }
@@ -349,12 +516,12 @@
                 method: 'PATCH',
                 body: JSON.stringify({ is_active: !isCurrentlyActive })
             });
-            await loadVaccines();
+            await loadMasterData();
         } catch (e) {
             alert('حدث خطأ: ' + e.message);
         }
     }
 
-    document.addEventListener('DOMContentLoaded', loadVaccines);
+    document.addEventListener('DOMContentLoaded', loadMasterData);
 </script>
 {% endblock %}

@@ -9,7 +9,7 @@ from .views import (
     HealthCenterViewSet, UserViewSet, FamilyViewSet,
     ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
     UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView,
-    NotificationViewSet
+    NotificationViewSet, AllVaccinesCoverageReportView
 )
 
 # إنشاء Router
@@ -40,4 +40,5 @@ urlpatterns = [
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard_stats'),
     # Reports (New)
     path('reports/by-center/', ReportsByCenterView.as_view(), name='reports_by_center'),
+    path('reports/all-vaccines-coverage/', AllVaccinesCoverageReportView.as_view(), name='all-vaccines-coverage'),
 ]

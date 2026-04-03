@@ -26,9 +26,9 @@ def ministry_required(view_func):
 
         # 3. Handle Unauthorized
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'غير مصرح لك بالوصول. هذه الصفحة مخصصة لوزارة الصحة.'}, status=403)
+            return JsonResponse({'error': 'غير مصرح لك بالوصول. هذه الصفحة مخصصة لمكتب الصحة.'}, status=403)
 
-        messages.error(request, 'عذراً، هذه الصفحة مخصصة لمستخدمي وزارة الصحة فقط.')
+        messages.error(request, 'عذراً، هذه الصفحة مخصصة لمستخدمي مكتب الصحة فقط.')
         return redirect('login')
 
     return _wrapped_view

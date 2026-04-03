@@ -88,8 +88,15 @@
                 </div>
 
                 <div class="row g-4 mb-5">
+                    <!-- 0. Country (يدوي فقط) -->
+                    <div class="col-md-3 d-none" id="countryContainer">
+                        <label class="form-label fw-bold text-muted small">الدولة</label>
+                        <input type="text" name="country_text" class="form-control bg-light" id="countryInput"
+                            placeholder="اكتب اسم الدولة">
+                    </div>
+
                     <!-- 1. Governorate -->
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="govCol">
                         <label class="form-label fw-bold text-muted small">المحافظة</label>
                         <div id="govSelectContainer">
                             <select name="governorate_select" class="form-select bg-light" id="govSelect">
@@ -103,7 +110,7 @@
                     </div>
 
                     <!-- 2. Directorate -->
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="dirCol">
                         <label class="form-label fw-bold text-muted small">المديرية</label>
                         <div id="dirSelectContainer">
                             <select name="directorate_select" class="form-select bg-light" id="dirSelect" disabled>
@@ -117,7 +124,7 @@
                     </div>
 
                     <!-- 3. Place of birth -->
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="placeCol">
                         <label class="form-label fw-bold text-muted small">مكان الميلاد </label>
                         <input type="text" name="place_of_birth" class="form-control bg-light" id="placeOfBirth"
                             placeholder="التفاصيل" required>
@@ -187,6 +194,12 @@
                 opt.textContent = g.name_ar;
                 govSelect.appendChild(opt);
             });
+            // ديفولت: إب
+            const ibb = govs.find(g => g.name_ar.trim() === 'إب' || g.name_ar.trim() === 'اب');
+            if (ibb) {
+                govSelect.value = ibb.id;
+                govSelect.dispatchEvent(new Event('change'));
+            }
         } catch (e) {
             govSelect.innerHTML = '<option value="" selected disabled>فشل التحميل</option>';
             console.error('Failed to load governorates:', e);
@@ -223,10 +236,18 @@
         // ---- Manual location toggle ----
         document.getElementById('manualLocationSwitch').addEventListener('change', function () {
             const isManual = this.checked;
+            document.getElementById('countryContainer').classList.toggle('d-none', !isManual);
             document.getElementById('govSelectContainer').classList.toggle('d-none', isManual);
             document.getElementById('govTextContainer').classList.toggle('d-none', !isManual);
             document.getElementById('dirSelectContainer').classList.toggle('d-none', isManual);
             document.getElementById('dirTextContainer').classList.toggle('d-none', !isManual);
+
+            // صغّر الحقول الثلاثة لـ col-md-3 عند اليدوي وإلا col-md-4
+            ['govCol', 'dirCol', 'placeCol'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.toggle('col-md-3', isManual);
+                el.classList.toggle('col-md-4', !isManual);
+            });
 
             govSelect.disabled = isManual;
             dirSelect.disabled = isManual;

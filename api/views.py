@@ -25,6 +25,7 @@ from .serializers import (
     GovernorateSerializer, DirectorateSerializer,
     HealthCenterListSerializer, HealthCenterDetailSerializer, HealthCenterCreateUpdateSerializer,
     UserListSerializer, UserDetailSerializer, UserCreateSerializer, UserUpdateSerializer,
+    ProfileSelfUpdateSerializer,
     FamilyListSerializer, FamilyDetailSerializer, FamilyCreateUpdateSerializer,
     ChildListSerializer, ChildDetailSerializer, ChildCreateUpdateSerializer,
     VaccineListSerializer, VaccineDetailSerializer, VaccineCreateUpdateSerializer,
@@ -164,11 +165,21 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserUpdateSerializer
         return UserListSerializer
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
-        """بيانات المستخدم الحالي"""
-        serializer = UserDetailSerializer(request.user)
-        return Response(serializer.data)
+        """بيانات المستخدم الحالي / تعديل البروفايل الشخصي"""
+        if request.method == 'GET':
+            serializer = UserDetailSerializer(request.user)
+            return Response(serializer.data)
+
+        # PATCH — تعديل البروفايل
+        serializer = ProfileSelfUpdateSerializer(
+            request.user, data=request.data, partial=True
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'تم تحديث البروفايل بنجاح.'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
         # ميزة الأتمتة الذكية:
@@ -345,7 +356,8 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
         return VaccineRecord.objects.filter(child__family__account=user)
 
     def perform_create(self, serializer):
-        serializer.save(staff=self.request.user)
+        from django.utils import timezone
+        serializer.save(staff=self.request.user, date_given=timezone.now().date())
 
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -545,6 +557,60 @@ class ReportsByCenterView(APIView):
             
         report_data.sort(key=lambda x: x['coverage_rate'], reverse=True)
         return Response(report_data)
+
+
+# ============== Vaccine Coverage Report View ==============
+
+class AllVaccinesCoverageReportView(APIView):
+    """
+    API تقرير تغطية لكل اللقاحات مفلترة حسب المحافظة (ومديرية محددة اختيارياً)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        governorate_id = request.query_params.get('governorate_id')
+        directorate_id = request.query_params.get('directorate_id')
+        
+        vaccines = Vaccine.objects.all()
+        
+        children_qs = Child.objects.all()
+        records_qs = VaccineRecord.objects.all()
+        
+        if directorate_id:
+            children_qs = children_qs.filter(health_center__directorate_id=directorate_id)
+            records_qs = records_qs.filter(child__health_center__directorate_id=directorate_id)
+        elif governorate_id:
+            children_qs = children_qs.filter(health_center__governorate_id=governorate_id)
+            records_qs = records_qs.filter(child__health_center__governorate_id=governorate_id)
+            
+        total_children = children_qs.count()
+        
+        # Group by vaccine and count distinct children
+        coverage_data = records_qs.values('vaccine').annotate(
+            vaccinated_count=Count('child', distinct=True)
+        )
+        
+        counts_map = {item['vaccine']: item['vaccinated_count'] for item in coverage_data}
+        
+        result = []
+        for v in vaccines:
+            v_count = counts_map.get(v.id, 0)
+            result.append({
+                'vaccine_id': v.id,
+                'vaccine_name': v.name_ar,
+                'vaccinated_count': v_count,
+                'total_children': total_children,
+                'coverage_percentage': round((v_count / total_children * 100), 1) if total_children > 0 else 0
+            })
+            
+        return Response({
+            'filters': {
+                'governorate_id': governorate_id,
+                'directorate_id': directorate_id
+            },
+            'target_children': total_children,
+            'vaccines_coverage': result
+        })
 
 
 # ================= Notifications =================

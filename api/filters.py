@@ -8,6 +8,9 @@ class ChildFilter(django_filters.FilterSet):
     # فلترات شخصية للطفل فقط
     gender = django_filters.CharFilter(field_name='gender')
     is_completed = django_filters.BooleanFilter(field_name='is_completed')
+    health_center = django_filters.NumberFilter(field_name='health_center__id')
+    governorate = django_filters.NumberFilter(field_name='health_center__governorate__id')
+    directorate = django_filters.NumberFilter(field_name='health_center__directorate__id')
     
     # فلترات تاريخ الميلاد
     birth_year = django_filters.NumberFilter(field_name='date_of_birth__year')
@@ -18,7 +21,7 @@ class ChildFilter(django_filters.FilterSet):
 
     class Meta:
         model = Child
-        fields = ['gender', 'is_completed', 'birth_year', 'birth_month']
+        fields = ['gender', 'is_completed', 'health_center', 'governorate', 'directorate', 'birth_year', 'birth_month']
 
     def filter_by_age_months(self, queryset, name, value):
         """

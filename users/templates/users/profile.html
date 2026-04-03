@@ -8,51 +8,238 @@
 <div class="row g-4 fade-in-up">
     <div class="col-12 col-lg-8 mx-auto">
         <div class="saas-card p-0">
+
+            <!-- Banner -->
             <div class="saas-wave-banner p-5 text-center" style="border-radius: var(--radius-md) var(--radius-md) 0 0;">
                 <div class="avatar shadow-lg mx-auto mb-3"
-                    style="width: 110px; height: 110px; font-size: 3rem; background-color: var(--c-surface); color: var(--c-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 4px solid rgba(255,255,255,0.2);">
+                    style="width:110px;height:110px;font-size:3rem;background-color:var(--c-surface);color:var(--c-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;border:4px solid rgba(255,255,255,0.2);">
                     {{ user.get_full_name|first|default:user.username|first|upper }}
                 </div>
-                <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
-                <p class="mb-0" style="color: rgba(255, 255, 255, 0.9); font-size: 1.05rem;">
+                <h2 class="fw-bold mb-1" id="bannerName">{{ user.get_full_name|default:user.username }}</h2>
+                <p class="mb-0" style="color:rgba(255,255,255,0.9);font-size:1.05rem;">
                     {{ user.get_role_display|default:"مستخدم" }}
                 </p>
             </div>
+
             <div class="card-body-styled">
-                <!-- User Details Grid -->
-                <div class="row g-4 pt-3">
-                    <div class="col-12">
-                        <label class="form-label text-muted"><i class="fas fa-user ms-1"></i> اسم المستخدم</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.username }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> الاسم الأول</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.first_name|default:"غير متوفر" }}
+
+                <!-- VIEW MODE -->
+                <div id="viewMode">
+                    <div class="row g-4 pt-3">
+                        <div class="col-12">
+                            <label class="form-label text-muted"><i class="fas fa-user ms-1"></i> اسم المستخدم</label>
+                            <div class="form-control bg-light border-0 shadow-sm" id="view_username">{{ user.username }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> الاسم الأول</label>
+                            <div class="form-control bg-light border-0 shadow-sm" id="view_first_name">{{ user.first_name|default:"—" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> اسم العائلة</label>
+                            <div class="form-control bg-light border-0 shadow-sm" id="view_last_name">{{ user.last_name|default:"—" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="fas fa-phone ms-1"></i> رقم الهاتف</label>
+                            <div class="form-control bg-light border-0 shadow-sm" id="view_phone" dir="ltr" style="text-align:right;">{{ user.phone|default:"—" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="fas fa-shield-alt ms-1"></i> الدور والصلاحية</label>
+                            <div class="form-control bg-light border-0 shadow-sm text-primary fw-bold">
+                                {{ user.get_role_display|default:"مستخدم" }}
+                                <i class="fas fa-lock ms-2 text-muted" style="font-size:0.8rem;" title="غير قابل للتعديل"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="fas fa-calendar-alt ms-1"></i> تاريخ الانضمام</label>
+                            <div class="form-control bg-light border-0 shadow-sm" dir="ltr" style="text-align:right;">{{ user.date_joined|date:"Y-m-d" }}</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-id-card ms-1"></i> اسم العائلة</label>
-                        <div class="form-control bg-light border-0 shadow-sm">{{ user.last_name|default:"غير متوفر" }}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-shield-alt ms-1"></i> الدور
-                            والصلاحية</label>
-                        <div class="form-control bg-light border-0 shadow-sm text-primary fw-bold">{{ user.get_role_display|default:"مستخدم" }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted"><i class="fas fa-calendar-alt ms-1"></i> تاريخ الانضمام</label>
-                        <div class="form-control bg-light border-0 shadow-sm" dir="ltr" style="text-align: right;">{{ user.date_joined|date:"Y-m-d" }}</div>
+                    <div class="text-center mt-5 pt-3 border-top">
+                        <button type="button" id="enableEditBtn" class="btn btn-primary px-5 py-2 rounded-3 shadow-sm">
+                            <i class="fas fa-edit ms-2"></i> تعديل المعلومات
+                        </button>
                     </div>
                 </div>
 
-                <!-- Action section -->
-                <div class="text-center mt-5 pt-3 border-top">
-                    <!-- Currently readonly as per typical medical SaaS without explicit edit functionality required here -->
-                    <p class="text-muted mt-3 h6"><i class="fas fa-info-circle ms-1"></i> لتعديل البيانات يرجى التواصل مع مسؤول النظام.</p>
+                <!-- EDIT MODE -->
+                <div id="editMode" style="display:none;">
+                    <div class="row g-4 pt-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="fas fa-user ms-1 text-primary"></i> اسم المستخدم</label>
+                            <input type="text" id="edit_username" class="form-control" value="{{ user.username }}">
+                            <div class="text-danger small mt-1 d-none" id="err_username"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold"><i class="fas fa-id-card ms-1 text-primary"></i> الاسم الأول</label>
+                            <input type="text" id="edit_first_name" class="form-control" value="{{ user.first_name }}">
+                            <div class="text-danger small mt-1 d-none" id="err_first_name"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold"><i class="fas fa-id-card ms-1 text-primary"></i> اسم العائلة</label>
+                            <input type="text" id="edit_last_name" class="form-control" value="{{ user.last_name }}">
+                            <div class="text-danger small mt-1 d-none" id="err_last_name"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold"><i class="fas fa-phone ms-1 text-primary"></i> رقم الهاتف</label>
+                            <input type="text" id="edit_phone" class="form-control" value="{{ user.phone|default:'' }}" dir="ltr" style="text-align:right;">
+                            <div class="text-danger small mt-1 d-none" id="err_phone"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-shield-alt ms-1 text-primary"></i> الدور والصلاحية
+                                <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">غير قابل للتعديل</span>
+                            </label>
+                            <div class="form-control bg-light border-0 shadow-sm text-primary fw-bold">
+                                {{ user.get_role_display|default:"مستخدم" }}
+                                <i class="fas fa-lock ms-2 text-muted" style="font-size:0.8rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تغيير كلمة المرور -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-3">
+                            <i class="fas fa-key ms-2 text-warning"></i> تغيير كلمة المرور
+                            <small class="fw-normal">(اتركها فارغة إذا لا تريد تغييرها)</small>
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">كلمة المرور الجديدة</label>
+                                <input type="password" id="edit_new_password" class="form-control" placeholder="اتركها فارغة إذا لا تريد تغييرها" autocomplete="new-password">
+                                <div class="text-danger small mt-1 d-none" id="err_new_password"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">تأكيد كلمة المرور</label>
+                                <input type="password" id="edit_confirm_password" class="form-control" placeholder="أعد كتابة كلمة المرور الجديدة" autocomplete="new-password">
+                                <div class="text-danger small mt-1 d-none" id="err_confirm_password"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="globalError" class="alert alert-danger mt-3 rounded-3 d-none"></div>
+
+                    <div class="d-flex gap-3 justify-content-center mt-5 pt-3 border-top">
+                        <button type="button" id="saveBtn" class="btn btn-success px-5 py-2 rounded-3 shadow-sm">
+                            <i class="fas fa-save ms-2"></i> حفظ التعديلات
+                        </button>
+                        <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary px-4 py-2 rounded-3">
+                            <i class="fas fa-times ms-2"></i> إلغاء
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const viewMode  = document.getElementById('viewMode');
+    const editMode  = document.getElementById('editMode');
+    const enableBtn = document.getElementById('enableEditBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    const saveBtn   = document.getElementById('saveBtn');
+
+    enableBtn.addEventListener('click', function () {
+        clearErrors();
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    cancelBtn.addEventListener('click', function () {
+        editMode.style.display = 'none';
+        viewMode.style.display = 'block';
+    });
+
+    saveBtn.addEventListener('click', async function () {
+        clearErrors();
+
+        const payload = {
+            username:         document.getElementById('edit_username').value.trim(),
+            first_name:       document.getElementById('edit_first_name').value.trim(),
+            last_name:        document.getElementById('edit_last_name').value.trim(),
+            phone:            document.getElementById('edit_phone').value.trim(),
+            new_password:     document.getElementById('edit_new_password').value,
+            confirm_password: document.getElementById('edit_confirm_password').value,
+        };
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm ms-2"></span> جاري الحفظ...';
+
+        try {
+            const res = await apiFetch('/api/users/me/', {
+                method: 'PATCH',
+                body: JSON.stringify(payload),
+            });
+
+            if (res !== null) {
+                document.getElementById('view_username').textContent   = payload.username || '—';
+                document.getElementById('view_first_name').textContent = payload.first_name || '—';
+                document.getElementById('view_last_name').textContent  = payload.last_name  || '—';
+                document.getElementById('view_phone').textContent      = payload.phone      || '—';
+                document.getElementById('bannerName').textContent =
+                    (payload.first_name + ' ' + payload.last_name).trim() || payload.username;
+
+                document.getElementById('edit_new_password').value     = '';
+                document.getElementById('edit_confirm_password').value = '';
+
+                editMode.style.display = 'none';
+                viewMode.style.display = 'block';
+
+                Swal.fire({
+                    title: 'نجاح',
+                    text: 'تم تحديث المعلومات الشخصية بنجاح.',
+                    icon: 'success',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: 'var(--c-primary)',
+                    customClass: { popup: 'rounded-4 shadow border border-light' }
+                });
+            }
+        } catch (err) {
+            try {
+                const errBody = JSON.parse(err.message.replace(/^API Error \d+: /, ''));
+                showFieldErrors(errBody);
+            } catch {
+                const ge = document.getElementById('globalError');
+                ge.textContent = err.message;
+                ge.classList.remove('d-none');
+            }
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save ms-2"></i> حفظ التعديلات';
+        }
+    });
+
+    function clearErrors() {
+        document.querySelectorAll('[id^="err_"]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('d-none');
+        });
+        const ge = document.getElementById('globalError');
+        ge.textContent = '';
+        ge.classList.add('d-none');
+    }
+
+    function showFieldErrors(errObj) {
+        let hasField = false;
+        for (const [field, msgs] of Object.entries(errObj)) {
+            const el = document.getElementById('err_' + field);
+            if (el) {
+                el.textContent = Array.isArray(msgs) ? msgs[0] : msgs;
+                el.classList.remove('d-none');
+                hasField = true;
+            }
+        }
+        if (!hasField) {
+            const ge = document.getElementById('globalError');
+            ge.textContent = JSON.stringify(errObj);
+            ge.classList.remove('d-none');
+        }
+    }
+})();
+</script>
 {% endblock %}

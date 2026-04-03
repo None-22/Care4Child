@@ -70,6 +70,27 @@ class HealthCenterCreateUpdateSerializer(serializers.ModelSerializer):
         model = HealthCenter
         fields = ['name_ar', 'name_en', 'address', 'working_hours', 
                   'license_number', 'governorate', 'directorate', 'is_active', 'password']
+        validators = []  # نعطل validators الافتراضية ونستخدم validate() المخصص
+
+    def validate(self, attrs):
+        name_ar     = attrs.get('name_ar')
+        governorate = attrs.get('governorate')
+        directorate = attrs.get('directorate')
+
+        if name_ar and governorate and directorate:
+            qs = HealthCenter.objects.filter(
+                name_ar=name_ar,
+                governorate=governorate,
+                directorate=directorate,
+            )
+            # عند التعديل نستثني المركز الحالي
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    'يوجد مركز بنفس الاسم في هذه المحافظة والمديرية بالفعل.'
+                )
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -197,6 +218,55 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'phone': {'validators': [validate_phone_number]},
         }
 
+
+
+
+class ProfileSelfUpdateSerializer(serializers.ModelSerializer):
+    """سيريالايزر تعديل البروفايل الشخصي — الدور غير قابل للتعديل"""
+    # username مخصص يقبل عربي ومسافات
+    username = serializers.CharField(max_length=150, validators=[])
+    new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ["username", "first_name", "last_name", "phone", "new_password", "confirm_password"]
+        extra_kwargs = {
+            "first_name": {"validators": [validate_name]},
+            "last_name": {"validators": [validate_name]},
+            "phone": {"validators": [validate_phone_number]},
+        }
+
+    def validate_username(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("اسم المستخدم لا يمكن أن يكون فارغاً.")
+        qs = CustomUser.objects.filter(username=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("اسم المستخدم هذا مستخدم بالفعل.")
+        return value
+
+    def validate(self, attrs):
+        p1 = attrs.get("new_password", "")
+        p2 = attrs.get("confirm_password", "")
+        if p1 or p2:
+            if p1 != p2:
+                raise serializers.ValidationError({"confirm_password": "كلمتا المرور غير متطابقتين."})
+            from django.contrib.auth.password_validation import validate_password
+            validate_password(p1, self.instance)
+        return attrs
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("new_password", None)
+        validated_data.pop("confirm_password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 # ============== Family ==============
 
@@ -394,7 +464,7 @@ class VaccineRecordCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = VaccineRecord
         fields = ['child', 'vaccine', 'dose_number', 'staff', 'date_given', 'notes']
-        read_only_fields = ['staff']
+        read_only_fields = ['staff', 'date_given']
 
 
 # ============== Child Detail & Create ==============
@@ -409,6 +479,7 @@ class ChildDetailSerializer(serializers.ModelSerializer):
     stats = serializers.SerializerMethodField()
     birth_governorate_name = serializers.CharField(source='birth_governorate.name_ar', read_only=True, default='')
     birth_directorate_name = serializers.CharField(source='birth_directorate.name_ar', read_only=True, default='')
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, default='النظام')
 
     class Meta:
         model = Child
@@ -417,7 +488,7 @@ class ChildDetailSerializer(serializers.ModelSerializer):
                   'birth_governorate', 'birth_governorate_name',
                   'birth_directorate', 'birth_directorate_name', 'place_of_birth',
                   'is_completed', 'completed_date',
-                  'vaccine_records', 'upcoming_vaccines', 'full_vaccine_schedule', 'stats', 'created_at']
+                  'vaccine_records', 'upcoming_vaccines', 'full_vaccine_schedule', 'stats', 'created_at', 'created_by_name']
     
     def get_age(self, obj):
         from datetime import date
@@ -499,6 +570,7 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
     mother_name = serializers.CharField(write_only=True, validators=[validate_name])
     
     # حقول إضافية للموقع اليدوي (اختياري)
+    country_text = serializers.CharField(write_only=True, required=False, allow_blank=True)
     governorate_text = serializers.CharField(write_only=True, required=False, allow_blank=True)
     directorate_text = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
@@ -509,7 +581,7 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
             'father_name', 'mother_name', 
             'birth_governorate', 
             'birth_directorate', 'place_of_birth',
-            'governorate_text', 'directorate_text'
+            'country_text', 'governorate_text', 'directorate_text'
         ]
         extra_kwargs = {
             'full_name': {'validators': [validate_name]},
@@ -525,13 +597,15 @@ class ChildCreateUpdateSerializer(serializers.ModelSerializer):
         f_name = validated_data.pop('father_name')
         m_name = validated_data.pop('mother_name')
         
+        country_text = validated_data.pop('country_text', None)
         gov_text = validated_data.pop('governorate_text', None)
         dir_text = validated_data.pop('directorate_text', None)
         
         # 2. منطق الموقع الهجين (Hybrid Location Logic)
         if gov_text and dir_text:
             current_place = validated_data.get('place_of_birth', '')
-            validated_data['place_of_birth'] = f"{gov_text} - {dir_text} - {current_place}"
+            parts = [p for p in [country_text, gov_text, dir_text, current_place] if p]
+            validated_data['place_of_birth'] = ' - '.join(parts)
             validated_data['birth_governorate'] = None
             validated_data['birth_directorate'] = None
 

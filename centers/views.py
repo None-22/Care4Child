@@ -85,12 +85,15 @@ def registry_view(request):
 
 
 @login_required
-@center_staff_required
 def child_detail_view(request, child_id):
     """
     Child detail shell view. Passes only the child_id to the template.
     All detail data is fetched client-side from /api/children/<id>/
     """
+    if not (request.user.is_superuser or request.user.role in ['CENTER_STAFF', 'CENTER_MANAGER', 'MINISTRY']):
+        messages.error(request, "ليس لديك صلاحية للوصول.")
+        return redirect('users:login')
+        
     return render(request, 'centers/child_detail.html', {'child_id': child_id})
 
 
@@ -122,6 +125,42 @@ def add_child_view(request):
                     created_by=request.user,
                     health_center=request.user.health_center
                 )
+                
+                # أشعار لوزارة الصحة عند التسجيل من خارج المنظومة
+                is_manual = not request.POST.get('governorate_select') and request.POST.get('governorate_text')
+                if is_manual:
+                    from users.models import CustomUser
+                    from notifications.models import NotificationLog
+                    
+                    ministry_users = CustomUser.objects.filter(role='MINISTRY', is_active=True)
+                    
+                    center = child.health_center
+                    center_gov = center.directorate.governorate.name_ar if center and center.directorate else "غير معروف"
+                    center_dir = center.directorate.name_ar if center and center.directorate else "غير معروف"
+                    center_name = center.name_ar if center else "غير معروف"
+                    creator_name = request.user.get_full_name() or request.user.username
+                    
+                    body_html = f"""
+                    <div class="small" data-child-id="{child.id}">
+                      تم إضافة طفل من خارج النظام: 
+                      <span class="fw-bold text-primary"><i class="fas fa-child ms-1"></i>{child.full_name}</span>
+                      <br>
+                      <span class="text-muted mt-1 d-block"><i class="fas fa-map-marker-alt ms-1"></i>محل ميلاده الأصلي: <span class="fw-bold text-dark">{child.place_of_birth}</span></span>
+                      <hr class="my-2">
+                      <span class="d-block mb-1 text-muted"><i class="fas fa-hospital ms-1 text-primary"></i> مسجل في: <span class="fw-bold text-dark">{center_gov} - {center_dir} - {center_name}</span></span>
+                      <span class="d-block text-muted"><i class="fas fa-user-edit ms-1 text-info"></i> بواسطة الموظف: <span class="fw-bold text-dark">{creator_name}</span></span>
+                    </div>
+                    """
+                    
+                    logs = [
+                        NotificationLog(
+                            recipient=mu,
+                            title="تنبيه: طفل مسجل من خارج المنظومة",
+                            body=body_html,
+                            notification_type='SYSTEM'
+                        ) for mu in ministry_users
+                    ]
+                    NotificationLog.objects.bulk_create(logs)
                 
                 # رسالة النجاح
                 fam = child.family

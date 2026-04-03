@@ -57,10 +57,57 @@ def children_view(request):
 @ministry_required
 def users_view(request):
     """
-    Ministry system users overview.
-    Lists all users with their roles.
+    Ministry Users Management Dashboard
     """
     return render(request, 'ministry/users.html')
+
+
+@login_required
+@ministry_required
+def notifications_view(request):
+    """
+    Ministry Notifications List Page
+    """
+    return render(request, 'ministry/notifications.html')
+
+import re
+from django.shortcuts import get_object_or_404
+from notifications.models import NotificationLog
+from medical.models import Child
+
+@login_required
+@ministry_required
+def notification_detail_view(request, pk):
+    """
+    Ministry Notification Detail Page (Marks as read and extracts child info)
+    """
+    notif = get_object_or_404(NotificationLog, pk=pk, recipient=request.user)
+    
+    if not notif.is_read:
+        notif.is_read = True
+        notif.save()
+        
+    # Try both storage formats (new: data-child-id, old: href="/center/child/ID/")
+    child = None
+    match = re.search(r'data-child-id="(\d+)"', notif.body)
+    if not match:
+        match = re.search(r'/center/child/(\d+)/', notif.body)
+    
+    if match:
+        child_id = match.group(1)
+        child = Child.objects.select_related(
+            'health_center',
+            'health_center__directorate',
+            'health_center__directorate__governorate',
+            'birth_governorate',
+            'birth_directorate',
+            'created_by',
+        ).filter(id=child_id).first()
+        
+    return render(request, 'ministry/notification_detail.html', {
+        'notification': notif,
+        'child': child
+    })
 
 
 @login_required

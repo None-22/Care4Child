@@ -61,7 +61,7 @@
                 </div>
                 <div>
                     <span class="brand-title">Care4Child</span>
-                    <div class="ministry-badge">وزارة الصحة</div>
+                    <div class="ministry-badge">مكتب الصحة</div>
                 </div>
             </a>
 
@@ -170,6 +170,18 @@
             </div>
 
             <div class="header-actions">
+
+                <!-- Notifications Button -->
+                {% if request.user.role == 'MINISTRY' %}
+                <div class="me-3">
+                    <a href="{% url 'ministry:notifications' %}" class="d-flex align-items-center text-decoration-none text-dark position-relative" title="الإشعارات التلقائية">
+                        <div class="avatar shadow-sm border" style="width:45px; height:45px; border-radius:50%; background-color: var(--c-surface); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--c-primary);">
+                            <i class="fas fa-bell"></i>
+                            <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.65rem; margin-top: 2px; margin-left: -5px; border: 2px solid white;">0</span>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
 
                 <!-- User Menu -->
                 <div class="dropdown">
@@ -303,6 +315,30 @@
             };
         })();
     </script>
+    
+    <!-- Notifications JS -->
+    {% if request.user.role == 'MINISTRY' %}
+    <script>
+        async function loadUnreadCount() {
+            try {
+                const rs = await apiFetch('/api/notifications/');
+                const notifs = rs.results || rs;
+                const unread = notifs.filter(n => !n.is_read).length;
+                const badge = document.getElementById('notif-badge');
+                if (badge) {
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '+99' : unread;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+            } catch(e) {}
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadUnreadCount);
+    </script>
+    {% endif %}
 
     {% block extra_scripts %}{% endblock %}
 

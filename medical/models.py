@@ -127,7 +127,7 @@ class Child(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['family', 'full_name', 'date_of_birth'],
+                fields=['family', 'full_name'],
                 name='unique_child_registration'
             )
         ]

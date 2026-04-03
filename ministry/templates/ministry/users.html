@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}مستخدمو النظام | وزارة الصحة{% endblock %}
+{% block title %}مستخدمو النظام | مكتب الصحة{% endblock %}
 {% block page_title %}مستخدمو النظام{% endblock %}
 
 {% block content %}
@@ -51,7 +51,7 @@
         <select id="u-role-filter" class="form-select">
             <option value="all">جميع الأدوار</option>
             <option value="ADMIN">مدير النظام</option>
-            <option value="MINISTRY">وزارة الصحة</option>
+            <option value="MINISTRY">مكتب الصحة</option>
             <option value="CENTER_MANAGER">مدير مركز</option>
             <option value="CENTER_STAFF">موظف مركز</option>
             <option value="CUSTOMER">ولي أمر</option>
@@ -83,7 +83,7 @@ let allUsers = [];
 
 const roleConfig = {
     'ADMIN':          { label: 'مدير النظام',  cls: 'bg-danger-subtle text-danger' },
-    'MINISTRY':       { label: 'وزارة الصحة', cls: 'bg-primary-subtle text-primary' },
+    'MINISTRY':       { label: 'مكتب الصحة', cls: 'bg-primary-subtle text-primary' },
     'CENTER_MANAGER': { label: 'مدير مركز',   cls: 'bg-purple-subtle text-purple', style: 'background:#ede0f7;color:#8e44ad;' },
     'CENTER_STAFF':   { label: 'موظف مركز',   cls: 'bg-success-subtle text-success' },
     'CUSTOMER':       { label: 'ولي أمر',      cls: 'bg-warning-subtle text-warning' },

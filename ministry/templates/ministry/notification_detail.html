@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}تفاصيل الإشعار{% endblock %}
+
+{% block extra_head %}
+<style>
+.section-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.section-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.section-header .icon-wrap {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.section-body { padding: 24px; }
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+.info-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+}
+.info-item .lbl {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.info-item .val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.highlight-item {
+    background: rgba(43,99,172,0.05);
+    border-color: rgba(43,99,172,0.2);
+}
+.highlight-item .val { color: var(--c-primary); }
+.warning-item {
+    background: rgba(245,158,11,0.05);
+    border-color: rgba(245,158,11,0.25);
+}
+.warning-item .val { color: #b45309; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- زر الرجوع -->
+<div class="mb-4">
+    <a href="{% url 'ministry:notifications' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+        <i class="fas fa-arrow-right me-2"></i>رجوع للإشعارات
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <!-- ① بطاقة عنوان الإشعار -->
+    <div class="col-12">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="icon-wrap bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">{{ notification.title }}</h5>
+                    <small class="text-muted"><i class="fas fa-clock me-1"></i>{{ notification.created_at|date:"l، j F Y — H:i" }}</small>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 ms-auto">
+                    <i class="fas fa-check me-1"></i>مقروء
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {% if child %}
+
+    <!-- ② أين وُلد الطفل (خارج المنظومة) -->
+    <div class="col-12">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="icon-wrap bg-warning bg-opacity-15 text-warning">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">مكان ميلاد الطفل الأصلي (خارج المنظومة)</h6>
+                    <small class="text-muted">هذه المنطقة غير مدرجة حالياً في بيانات النظام</small>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-user"></i>اسم الطفل</div>
+                        <div class="val">{{ child.full_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-calendar"></i>تاريخ الميلاد</div>
+                        <div class="val">{{ child.date_of_birth|date:"Y-m-d" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-venus-mars"></i>الجنس</div>
+                        <div class="val">{% if child.gender == 'M' %}ذكر{% else %}أنثى{% endif %}</div>
+                    </div>
+                    <div class="info-item warning-item" style="grid-column: 1 / -1;">
+                        <div class="lbl"><i class="fas fa-globe-asia text-warning"></i>مكان الميلاد المُدخل يدوياً</div>
+                        <div class="val" style="font-size: 1.15rem;">{{ child.place_of_birth|default:"لم يُحدد" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ③ أين سُجّل الطفل (داخل المنظومة) -->
+    <div class="col-12">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="icon-wrap bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">مكان تسجيل الطفل في المنظومة</h6>
+                    <small class="text-muted">المركز والمنطقة التي تم تسجيل الطفل فيها</small>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="info-grid">
+                    {% if child.health_center %}
+                    <div class="info-item highlight-item">
+                        <div class="lbl"><i class="fas fa-hospital text-primary"></i>المركز الصحي</div>
+                        <div class="val">{{ child.health_center.name_ar }}</div>
+                    </div>
+                    {% if child.health_center.directorate %}
+                    <div class="info-item highlight-item">
+                        <div class="lbl"><i class="fas fa-sitemap text-primary"></i>المديرية</div>
+                        <div class="val">{{ child.health_center.directorate.name_ar }}</div>
+                    </div>
+                    <div class="info-item highlight-item">
+                        <div class="lbl"><i class="fas fa-map text-primary"></i>المحافظة</div>
+                        <div class="val">{{ child.health_center.directorate.governorate.name_ar }}</div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="info-item col-span-3">
+                        <div class="val text-muted">لا تتوفر معلومات عن المركز</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ④ الموظف الذي سجّله -->
+    <div class="col-12">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="icon-wrap bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">الموظف الذي أجرى التسجيل</h6>
+                    <small class="text-muted">بيانات الموظف المسؤول عن إدخال هذا الطفل</small>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-id-badge"></i>الاسم</div>
+                        <div class="val">
+                            {% if child.created_by %}
+                                {{ child.created_by.get_full_name|default:child.created_by.username }}
+                            {% else %}النظام{% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-calendar-plus"></i>تاريخ التسجيل</div>
+                        <div class="val">{{ child.created_at|date:"Y-m-d" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl"><i class="fas fa-clock"></i>وقت التسجيل</div>
+                        <div class="val">{{ child.created_at|date:"H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- حالة: لم يُعثر على الطفل -->
+    <div class="col-12">
+        <div class="section-card section-body text-center py-5 text-muted">
+            <i class="fas fa-exclamation-circle fa-3x mb-3 opacity-50"></i>
+            <h5>لم يُعثر على بيانات الطفل المرتبط بهذا الإشعار</h5>
+            <p class="small">ربما تم حذف السجل، أو أن الإشعار لا يحتوي على رابط طفل.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

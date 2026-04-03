@@ -48,21 +48,21 @@ THEMES = {
     },
     "light": {
         "bg":           "#FFFFFF",
-        "graph_bg":     "#F6F8FA",
-        "header_medical":       "#1E8A5E",
-        "header_centers":       "#3B48C0",
-        "header_users":         "#1B6CA8",
-        "header_notifications": "#D48800",
-        "header_auth":          "#C0392B",
-        "header_django":        "#636E72",
+        "graph_bg":     "#FFFFFF",
+        "header_medical":       "#1565C0",
+        "header_centers":       "#1565C0",
+        "header_users":         "#1565C0",
+        "header_notifications": "#1565C0",
+        "header_auth":          "#1565C0",
+        "header_django":        "#1565C0",
         "header_font":          "#FFFFFF",
         "row_bg":       "#FFFFFF",
-        "row_alt":      "#F1F5F9",
-        "row_font":     "#24292E",
-        "border":       "#D0D7DE",
-        "pk_color":     "#B8860B",
-        "fk_color":     "#5B5BD6",
-        "edge_color":   "#0969DA",
+        "row_alt":      "#FFFFFF",
+        "row_font":     "#000000",
+        "border":       "#000000",
+        "pk_color":     "#000000",
+        "fk_color":     "#000000",
+        "edge_color":   "#000000",
         "font":         "arial",
     },
     "minimal": {
@@ -301,6 +301,7 @@ RELATIONS = [
 # ─────────────────────────────────────────────────────────────
 def build_label(tbl, app, theme):
     t = THEMES[theme]
+    # Use uniform blue header for all apps in light/minimal theme
     header_color = t[f"header_{app}"]
     header_font  = t["header_font"]
     row_bg       = t["row_bg"]
@@ -318,16 +319,16 @@ def build_label(tbl, app, theme):
 
     rows = ""
     for i, (fname, ftype, fkey) in enumerate(tbl["fields"]):
-        bg = row_bg if i % 2 == 0 else row_alt
+        bg = row_bg
 
         if fkey == "PK":
-            key_badge = f'<FONT COLOR="{pk_color}"><B>[PK] </B></FONT>'
+            key_badge = f'<FONT COLOR="{pk_color}"><B>PK </B></FONT>'
         elif "FK" in fkey or "1:1" in fkey:
-            key_badge = f'<FONT COLOR="{fk_color}"><B>[{fkey}] </B></FONT>'
+            key_badge = f'<FONT COLOR="{fk_color}"><B>{fkey} </B></FONT>'
         elif fkey == "UQ":
-            key_badge = f'<FONT COLOR="#3DD68C"><B>[UQ] </B></FONT>'
+            key_badge = f'<FONT COLOR="{fk_color}"><B>UQ </B></FONT>'
         elif fkey == "NULL":
-            key_badge = f'<FONT COLOR="#888888"><I>[?] </I></FONT>'
+            key_badge = ""
         else:
             key_badge = ""
 
@@ -335,12 +336,12 @@ def build_label(tbl, app, theme):
             f'<TR>'
             f'<TD ALIGN="LEFT" BGCOLOR="{bg}">'
             f'<FONT FACE="{font}" COLOR="{row_font}" POINT-SIZE="10">'
-            f'{key_badge}<B>{fname}</B>'
+            f'{key_badge}{fname}'
             f'</FONT>'
             f'</TD>'
             f'<TD ALIGN="LEFT" BGCOLOR="{bg}">'
-            f'<FONT FACE="{font}" COLOR="#888888" POINT-SIZE="9">'
-            f'<I>{ftype}</I>'
+            f'<FONT FACE="{font}" COLOR="{row_font}" POINT-SIZE="9">'
+            f'{ftype}'
             f'</FONT>'
             f'</TD>'
             f'</TR>'
@@ -356,15 +357,11 @@ def build_label(tbl, app, theme):
         )
 
     label = (
-        f'<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" '
-        f'BGCOLOR="{border}">'
+        f'<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" '
+        f'BGCOLOR="{row_bg}">'
         f'<TR><TD COLSPAN="2" BGCOLOR="{header_color}" ALIGN="CENTER">'
-        f'<FONT FACE="{font}" COLOR="{header_font}" POINT-SIZE="12">'
+        f'<FONT FACE="{font}" COLOR="{header_font}" POINT-SIZE="11">'
         f'<B>{tbl["name"]}</B>'
-        f'</FONT>'
-        f'<BR/>'
-        f'<FONT FACE="{font}" COLOR="{header_font}" POINT-SIZE="8">'
-        f'{tbl["db_table"]}'
         f'</FONT>'
         f'</TD></TR>'
         f'{rows}'
@@ -426,10 +423,10 @@ def generate(fmt="png", theme="dark", app_filter=None, table_filter=None, output
         format=fmt,
         graph_attr={
             "bgcolor":    t["graph_bg"],
-            "rankdir":    "LR",
-            "splines":    "spline",
-            "nodesep":    "1.0",
-            "ranksep":    "1.8",
+            "rankdir":    "TB",
+            "splines":    "ortho",
+            "nodesep":    "0.8",
+            "ranksep":    "1.2",
             "fontname":   t["font"],
             "fontcolor":  t["row_font"],
             "pad":        "0.5",
@@ -446,11 +443,11 @@ def generate(fmt="png", theme="dark", app_filter=None, table_filter=None, output
         },
         edge_attr={
             "color":     t["edge_color"],
-            "arrowhead": "crow",
+            "arrowhead": "normal",
             "arrowtail": "none",
-            "dir":       "both",
-            "arrowsize": "0.8",
-            "penwidth":  "1.5",
+            "dir":       "forward",
+            "arrowsize": "0.7",
+            "penwidth":  "1.0",
             "style":     "solid",
         },
     )
@@ -458,37 +455,23 @@ def generate(fmt="png", theme="dark", app_filter=None, table_filter=None, output
     # group by app (subgraph clusters)
     for app, tables in selected_schema.items():
         cluster_name = f"cluster_{app}"
-        app_colors = {
-            "medical":       t["header_medical"],
-            "centers":       t["header_centers"],
-            "users":         t["header_users"],
-            "notifications": t["header_notifications"],
-            "auth":          t["header_auth"],
-        }
         with dg.subgraph(name=cluster_name) as c:
             c.attr(
-                label=app.upper(),
-                style="rounded,dashed",
-                color=app_colors.get(app, "#555555"),
-                fontcolor=app_colors.get(app, "#555555"),
-                fontname=t["font"],
-                fontsize="13",
-                penwidth="2",
-                bgcolor=t["bg"] + "33",  # slight tint
+                label="",
+                style="invis",
+                penwidth="0",
             )
             for tbl in tables:
                 label = build_label(tbl, app, theme)
                 c.node(tbl["name"], label=label)
 
-    # add edges (node-to-node, label shows the FK field to avoid messy lines)
+    # add edges (node-to-node)
     visible_names = {tbl["name"] for _, tbl in all_tables}
     for (from_t, from_f, to_t) in RELATIONS:
         if from_t in visible_names and to_t in visible_names:
-            accessor = from_f.removesuffix("_id")
             dg.edge(
                 from_t,
                 to_t,
-                xlabel=f"{accessor} ({to_t})",
                 fontname=t["font"],
                 fontsize="8",
                 fontcolor=t["edge_color"],

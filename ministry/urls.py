@@ -10,4 +10,6 @@ urlpatterns = [
     path('vaccines/', views.vaccines_view, name='vaccines'),
     path('children/', views.children_view, name='children'),
     path('users/', views.users_view, name='users'),
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('notifications/<int:pk>/', views.notification_detail_view, name='notification_detail'),
 ]

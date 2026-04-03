@@ -1,21 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}لوحة الوزارة | Care4Child{% endblock %}
-{% block page_title %}لوحة الوزارة{% endblock %}
+{% block title %}لوحة مكتب الصحة | Care4Child{% endblock %}
+{% block page_title %}لوحة مكتب الصحة{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="{% static 'css/ministry_dashboard.css' %}">
 {% endblock %}
-
 {% block content %}
 <div class="row">
     <div class="col-12">
         <div class="ministry-banner mb-3">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <div class="mb-3 mb-md-0">
-                    <h2 class="text-white mb-2"><i class="fas fa-landmark me-2"></i>لوحة وزارة الصحة</h2>
+                    <h2 class="text-white mb-2"><i class="fas fa-landmark me-2"></i>لوحة مكتب الصحة</h2>
                     <p class="mb-0" style="color:rgba(255,255,255,0.85);">
                         <i class="fas fa-globe me-1"></i>نظرة شاملة على أداء منظومة التطعيم الوطنية &nbsp;·&nbsp;
                         <i class="fas fa-clock me-1"></i><span id="live-time"></span>
@@ -165,6 +164,8 @@
             </div>
         </div>
     </div>
+
+
 
     <!-- ROW 2: Stacked + Ranking -->
     <div class="charts-mid">
@@ -487,23 +488,25 @@
             }).join('');
         }
 
+
+
     });
 
     /* إعادة رسم الـ charts عند تبديل الثيم */
-    new MutationObserver(function(mutations) {
-        mutations.forEach(function(m) {
+    new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
             if (m.attributeName === 'data-theme') {
                 var dk = document.documentElement.getAttribute('data-theme') === 'dark';
                 var gridClr = dk ? '#21262d' : '#f1f5f9';
                 var tickClr = dk ? '#8b949e' : '#94a3b8';
-                Object.values(Chart.instances || {}).forEach(function(ch) {
+                Object.values(Chart.instances || {}).forEach(function (ch) {
                     var s = ch.options.scales;
                     if (!s) return;
-                    ['x','y','r'].forEach(function(ax) {
+                    ['x', 'y', 'r'].forEach(function (ax) {
                         if (!s[ax]) return;
-                        if (s[ax].grid)        s[ax].grid.color = gridClr;
-                        if (s[ax].ticks)       s[ax].ticks.color = tickClr;
-                        if (s[ax].angleLines)  s[ax].angleLines.color = dk ? '#30363d' : '#e8f0f9';
+                        if (s[ax].grid) s[ax].grid.color = gridClr;
+                        if (s[ax].ticks) s[ax].ticks.color = tickClr;
+                        if (s[ax].angleLines) s[ax].angleLines.color = dk ? '#30363d' : '#e8f0f9';
                     });
                     ch.update('none');
                 });

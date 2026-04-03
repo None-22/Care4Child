@@ -90,4 +90,4 @@ class HealthCenter(models.Model):
     class Meta:
         verbose_name = "مركز صحي"
         verbose_name_plural = "المراكز الصحية"
-
+        unique_together = ('name_ar', 'governorate', 'directorate')

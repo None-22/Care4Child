@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}سجل الأطفال | وزارة الصحة{% endblock %}
+{% block title %}سجل الأطفال | مكتب الصحة{% endblock %}
 {% block page_title %}سجل الأطفال {% endblock %}
 
 {% block content %}
@@ -49,99 +49,85 @@
         <span class="badge bg-secondary-subtle text-dark">يُعرض: <span id="ch-count">—</span></span>
     </div>
 
-    <!-- Filters Row (Registry Style) -->
-    <div class="px-3 pt-3 pb-3 border-bottom bg-white">
-        <!-- Main Search & Status & Toggle Button -->
-        <div class="d-flex flex-column flex-md-row gap-2 mb-2">
-            <div class="input-group flex-grow-1">
-                <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="ch-search" class="form-control border-start-0 bg-light"
-                    placeholder="ابحث باسم الطفل أو الأسرة...">
-            </div>
-            <select id="ch-filter" class="form-select w-auto bg-light" style="min-width: 200px;">
-                <option value="all">الجميع</option>
-                <option value="completed">مكتمل</option>
-                <option value="pending">غير مكتمل</option>
-            </select>
-            <!-- الزر المسئول عن الفلاتر المتقدمة -->
-            <button class="btn border bg-light text-muted d-flex align-items-center px-3" type="button"
-                data-bs-toggle="collapse" data-bs-target="#advancedMinistryFilters" aria-expanded="false"
-                aria-controls="advancedMinistryFilters"
-                onmouseover="this.classList.remove('bg-light', 'text-muted'); this.classList.add('btn-primary', 'text-white')"
-                onmouseout="this.classList.remove('btn-primary', 'text-white'); this.classList.add('bg-light', 'text-muted')">
-                <i class="fas fa-filter me-2"></i> فلاتر متقدمة
-            </button>
-        </div>
-
-        <!-- Advanced Filters (Collapsible) -->
-        <div class="collapse" id="advancedMinistryFilters">
-            <div class="row g-2 pt-2 mt-1 border-top align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">الجنس</label>
-                    <select id="ch-gender" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        <option value="M">ذكر</option>
-                        <option value="F">أنثى</option>
+    <!-- Search and Filters Section -->
+    <div class="row mb-4" style="margin-top: -10px;">
+        <div class="col-12">
+            <div class="saas-card p-3 shadow-sm" style="border-radius: 12px;">
+                <div class="d-flex flex-column flex-md-row gap-2 mb-3">
+                    <div class="input-group flex-grow-1 shadow-sm" style="border-radius:8px; overflow:hidden;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="ch-search" class="form-control border-start-0"
+                            placeholder="ابحث باسم الطفل أو الأسرة..." oninput="debounceSearch()">
+                    </div>
+                    <select id="ch-status" class="form-select w-auto shadow-sm" style="min-width: 180px; border-radius:8px;" onchange="applyFilters()">
+                        <option value="all">كل الحالات</option>
+                        <option value="pending">قيد التحصين</option>
+                        <option value="completed">مكتملين التحصين</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">سنة الميلاد</label>
-                    <select id="ch-year" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">شهر الميلاد</label>
-                    <select id="ch-month" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        <option value="1">يناير</option>
-                        <option value="2">فبراير</option>
-                        <option value="3">مارس</option>
-                        <option value="4">أبريل</option>
-                        <option value="5">مايو</option>
-                        <option value="6">يونيو</option>
-                        <option value="7">يوليو</option>
-                        <option value="8">أغسطس</option>
-                        <option value="9">سبتمبر</option>
-                        <option value="10">أكتوبر</option>
-                        <option value="11">نوفمبر</option>
-                        <option value="12">ديسمبر</option>
-                    </select>
-                </div>
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-sm btn-light text-danger border w-100" onclick="clearFilters()">
-                        <i class="fas fa-times me-1"></i>مسح الفلاتر
+                    <button class="btn btn-light border text-primary d-flex align-items-center px-4 shadow-sm fw-bold" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false" style="border-radius:8px;">
+                        <i class="fas fa-filter me-2"></i> فلاتر متقدمة
                     </button>
+                </div>
+
+                <div class="collapse show" id="advancedFilters">
+                    <div class="row g-2 pt-3 border-top align-items-end mt-1">
+                        <!-- Governorate -->
+                        <div class="col-md col-6">
+                            <label class="form-label small text-muted mb-1 fw-bold">المحافظة</label>
+                            <select id="ch-gov" class="form-select form-select-sm" onchange="onGovChange()">
+                                <option value="" disabled selected>جاري التحميل...</option>
+                            </select>
+                        </div>
+                        <!-- Directorate -->
+                        <div class="col-md col-6">
+                            <label class="form-label small text-muted mb-1 fw-bold">المديرية</label>
+                            <select id="ch-dir" class="form-select form-select-sm" onchange="onDirChange()">
+                                <option value="all">الكل</option>
+                            </select>
+                        </div>
+                        <!-- Center -->
+                        <div class="col-md col-6">
+                            <label class="form-label small text-muted mb-1 fw-bold">المركز الصحي</label>
+                            <select id="ch-center" class="form-select form-select-sm" onchange="applyFilters()">
+                                <option value="all">الكل</option>
+                            </select>
+                        </div>
+                        <!-- Gender -->
+                        <div class="col-md col-6">
+                            <label class="form-label small text-muted mb-1 fw-bold">الجنس</label>
+                            <select id="ch-gender" class="form-select form-select-sm" onchange="applyFilters()">
+                                <option value="all">الكل</option>
+                                <option value="M">ذكر</option>
+                                <option value="F">أنثى</option>
+                            </select>
+                        </div>
+                        <!-- Year -->
+                        <div class="col-md col-6">
+                            <label class="form-label small text-muted mb-1 fw-bold">سنة الميلاد</label>
+                            <select id="ch-year" class="form-select form-select-sm" onchange="applyFilters()">
+                                <option value="all">الكل</option>
+                            </select>
+                        </div>
+                        <div class="col-md-auto col-12 mt-2 mt-md-0">
+                            <button class="btn btn-sm btn-outline-danger w-100" onclick="clearFilters()" style="margin-bottom: 2px;">
+                                <i class="fas fa-times me-1"></i>مسح الفلاتر
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Table -->
-    <div id="children-container" class="table-responsive">
-        <div class="d-flex justify-content-center py-5">
-            <div class="spinner-border text-primary spinner-border-sm"></div>
-            <span class="ms-3 text-muted">جاري التحميل...</span>
-        </div>
+    <div id="children-container" class="table-responsive bg-white rounded shadow-sm border" style="min-height: 300px; display: none;">
+        <!-- Injected Table -->
     </div>
-
-    <!-- Pagination Bar -->
-    <div class="d-flex justify-content-center align-items-center gap-4 bg-white border-top rounded-bottom pagination-container"
-        id="pagination-bar" style="display:none!important;">
-
-        <!-- Prev Button Container (في العربي يمين) -->
+    
+    <div id="pagination-bar" class="d-flex justify-content-between align-items-center p-3 border rounded-bottom bg-light mt-0" style="display: none;">
         <div id="pag-prev-container"></div>
-
-        <!-- Page Numbers Array -->
-        <nav aria-label="Page navigation" class="d-flex align-items-center gap-2">
-            <span class="text-muted small fw-bold">الصفحة:</span>
-            <ul class="pagination mb-0 align-items-center gap-2" id="pagination-controls">
-                <!-- Numbers go here -->
-            </ul>
-        </nav>
-
-        <!-- Next Button Container (في العربي يسار) -->
+        <ul id="pagination-controls" class="pagination pagination-md mb-0 shadow-sm fade-in-up"></ul>
         <div id="pag-next-container"></div>
     </div>
 </div>
@@ -152,83 +138,206 @@
 <script>
     // ============ State ============
     const PAGE_SIZE = 50;
-    let currentPage = 1;
+    let currentPage = sessionStorage.getItem('min_ch_page') ? parseInt(sessionStorage.getItem('min_ch_page')) : 1;
     let totalCount = 0;
     let totalPages = 1;
-    let searchTimer = null;
+
+    // Elements
+    const searchInp = document.getElementById('ch-search');
+    const statusSel = document.getElementById('ch-status');
+    const govSel = document.getElementById('ch-gov');
+    const dirSel = document.getElementById('ch-dir');
+    const centerSel = document.getElementById('ch-center');
+    const genderSel = document.getElementById('ch-gender');
+    const yearSel = document.getElementById('ch-year');
+
+    const tableContainer = document.getElementById('children-container');
+    const pagBar = document.getElementById('pagination-bar');
 
     // ============ Boot ============
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function () {
         initYearFilter();
-        loadChildren(1);
         loadKpis();
-
-        // Live search with debounce
-        document.getElementById('ch-search').addEventListener('input', () => {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => loadChildren(1), 400);
-        });
-        ['ch-filter', 'ch-gender', 'ch-year', 'ch-month'].forEach(id => {
-            document.getElementById(id).addEventListener('change', () => loadChildren(1));
-        });
+        await loadGovernoratesBase();
+        restoreFilters();
+        // The first load is triggered by restoreFilters() or after gov loads
+        loadChildren(currentPage);
     });
 
-    // ============ Year Filter Init ============
     function initYearFilter() {
-        const sel = document.getElementById('ch-year');
         const now = new Date().getFullYear();
         for (let y = now; y >= now - 10; y--) {
             const opt = document.createElement('option');
             opt.value = y; opt.textContent = y;
-            sel.appendChild(opt);
+            yearSel.appendChild(opt);
         }
     }
 
-    // ============ KPIs (global totals, independent of filter) ============
+    // ============ Loaders ============
+    async function loadGovernoratesBase() {
+        try {
+            const data = await apiFetch('/api/governorates/');
+            const arr = Array.isArray(data) ? data : (data.results || []);
+            govSel.innerHTML = '<option value="all">الكل</option>';
+            let ibbId = null;
+            
+            arr.forEach(g => {
+                govSel.innerHTML += `<option value="${g.id}">${g.name_ar}</option>`;
+                if (g.name_ar.includes('إب') || g.name_ar.includes('اب')) {
+                    ibbId = g.id;
+                }
+            });
+
+            // Set default to Ibb if no session exists
+            if (!sessionStorage.getItem('min_ch_gov') && ibbId) {
+                govSel.value = ibbId;
+                await loadDirectoratesBase(ibbId);
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadDirectoratesBase(govId) {
+        if (!govId || govId === 'all') {
+            dirSel.innerHTML = '<option value="all">الكل</option>';
+            centerSel.innerHTML = '<option value="all">الكل</option>';
+            return;
+        }
+        try {
+            dirSel.innerHTML = '<option value="all">الكل</option>';
+            const data = await apiFetch(`/api/directorates/?governorate=${govId}`);
+            const arr = Array.isArray(data) ? data : (data.results || []);
+            arr.forEach(d => {
+                dirSel.innerHTML += `<option value="${d.id}">${d.name_ar}</option>`;
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadCentersBase(dirId) {
+        if (!dirId || dirId === 'all') {
+            centerSel.innerHTML = '<option value="all">الكل</option>';
+            return;
+        }
+        try {
+            centerSel.innerHTML = '<option value="all">الكل</option>';
+            const data = await apiFetch(`/api/health-centers/?directorate=${dirId}`);
+            const arr = Array.isArray(data) ? data : (data.results || []);
+            arr.forEach(c => {
+                centerSel.innerHTML += `<option value="${c.id}">${c.name_ar}</option>`;
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    // ============ Interactions ============
+    async function onGovChange() {
+        await loadDirectoratesBase(govSel.value);
+        centerSel.innerHTML = '<option value="all">الكل</option>';
+        applyFilters();
+    }
+
+    async function onDirChange() {
+        await loadCentersBase(dirSel.value);
+        applyFilters();
+    }
+
+    let searchTimeout;
+    function debounceSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { applyFilters(); }, 500);
+    }
+
+    function applyFilters() {
+        saveFilters();
+        loadChildren(1);
+    }
+
+    function clearFilters() {
+        searchInp.value = '';
+        statusSel.value = 'all';
+        genderSel.value = 'all';
+        yearSel.value = 'all';
+        
+        // Reset Gov to Ibb or All depending on what exists
+        let ibb = Array.from(govSel.options).find(o => o.text.includes('إب') || o.text.includes('اب'));
+        if(ibb) govSel.value = ibb.value;
+        else govSel.value = 'all';
+
+        onGovChange(); // This will clear dirs and centers and call applyFilters
+    }
+
+    // ============ Session Persistence ============
+    function saveFilters() {
+        sessionStorage.setItem('min_ch_search', searchInp.value);
+        sessionStorage.setItem('min_ch_status', statusSel.value);
+        sessionStorage.setItem('min_ch_gov', govSel.value);
+        sessionStorage.setItem('min_ch_dir', dirSel.value);
+        sessionStorage.setItem('min_ch_cen', centerSel.value);
+        sessionStorage.setItem('min_ch_gen', genderSel.value);
+        sessionStorage.setItem('min_ch_year', yearSel.value);
+        sessionStorage.setItem('min_ch_page', currentPage);
+    }
+
+    async function restoreFilters() {
+        if (sessionStorage.getItem('min_ch_search')) searchInp.value = sessionStorage.getItem('min_ch_search');
+        if (sessionStorage.getItem('min_ch_status')) statusSel.value = sessionStorage.getItem('min_ch_status');
+        if (sessionStorage.getItem('min_ch_gen')) genderSel.value = sessionStorage.getItem('min_ch_gen');
+        if (sessionStorage.getItem('min_ch_year')) yearSel.value = sessionStorage.getItem('min_ch_year');
+        
+        let sGov = sessionStorage.getItem('min_ch_gov');
+        if (sGov) {
+            govSel.value = sGov;
+            await loadDirectoratesBase(sGov);
+            
+            let sDir = sessionStorage.getItem('min_ch_dir');
+            if (sDir) {
+                dirSel.value = sDir;
+                await loadCentersBase(sDir);
+                
+                let sCen = sessionStorage.getItem('min_ch_cen');
+                if (sCen) centerSel.value = sCen;
+            }
+        }
+    }
+
+    // ============ Data Fetching ============
     async function loadKpis() {
         try {
-            // Total
             const total = await apiFetch('/api/children/?page_size=1&page=1');
             document.getElementById('ch-total').textContent = total.count ?? '—';
 
-            // Completed
             const comp = await apiFetch('/api/children/?is_completed=True&page_size=1&page=1');
             const completedCount = comp.count ?? 0;
             document.getElementById('ch-completed').textContent = completedCount;
 
             const totalC = total.count ?? 0;
             document.getElementById('ch-pending').textContent = totalC - completedCount;
-        } catch (e) {
-            console.error('KPIs error', e);
-        }
+        } catch (e) {}
     }
 
-    // ============ Load Children (server-side pagination + filters) ============
     async function loadChildren(page = 1) {
         currentPage = page;
-        const container = document.getElementById('children-container');
-        container.innerHTML = `<div class="d-flex justify-content-center py-5">
+        saveFilters(); // preserve current page
+        
+        tableContainer.style.display = 'block';
+        tableContainer.innerHTML = `<div class="d-flex justify-content-center py-5">
             <div class="spinner-border text-primary spinner-border-sm"></div>
-            <span class="ms-3 text-muted">جاري التحميل...</span>
+            <span class="ms-3 text-muted fw-bold">جاري التحميل...</span>
         </div>`;
+        pagBar.style.display = 'none';
 
         const params = [`page=${page}`];
 
-        const filter = document.getElementById('ch-filter').value;
-        if (filter === 'completed') params.push('is_completed=True');
-        else if (filter === 'pending') params.push('is_completed=False');
-
-        const search = document.getElementById('ch-search').value.trim();
+        const search = searchInp.value.trim();
         if (search) params.push(`search=${encodeURIComponent(search)}`);
+        
+        const status = statusSel.value;
+        if (status === 'completed') params.push(`is_completed=True`);
+        else if (status === 'pending') params.push(`is_completed=False`);
 
-        const gender = document.getElementById('ch-gender').value;
-        if (gender) params.push(`gender=${gender}`);
-
-        const year = document.getElementById('ch-year').value;
-        if (year) params.push(`birth_year=${year}`);
-
-        const month = document.getElementById('ch-month').value;
-        if (month) params.push(`birth_month=${month}`);
+        if (govSel.value && govSel.value !== 'all') params.push(`governorate=${govSel.value}`);
+        if (dirSel.value && dirSel.value !== 'all') params.push(`directorate=${dirSel.value}`);
+        if (centerSel.value && centerSel.value !== 'all') params.push(`health_center=${centerSel.value}`);
+        if (genderSel.value && genderSel.value !== 'all') params.push(`gender=${genderSel.value}`);
+        if (yearSel.value && yearSel.value !== 'all') params.push(`birth_year=${yearSel.value}`);
 
         try {
             const data = await apiFetch('/api/children/?' + params.join('&'));
@@ -239,38 +348,38 @@
             renderTable(data.results || []);
             renderPagination();
         } catch (e) {
-            container.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
+            tableContainer.innerHTML = '<div class="alert alert-danger m-3">فشل تحميل البيانات.</div>';
         }
     }
 
     // ============ Table Rendering ============
     function renderTable(children) {
-        const container = document.getElementById('children-container');
         if (!children.length) {
-            container.innerHTML = '<p class="text-center text-muted py-5">لا توجد نتائج.</p>';
+            tableContainer.innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-box-open fa-3x mb-3 opacity-50"></i>
+                <p class="fw-bold mt-2">لا توجد نتائج مطابقة لبحثك.</p>
+            </div>`;
             return;
         }
+        
         const rows = children.map((c, i) => {
             const rowNum = (currentPage - 1) * PAGE_SIZE + i + 1;
-            return `<tr>
-                <td class="text-muted">${rowNum}</td>
-                <td class="fw-bold">${c.full_name || '—'}</td>
+            return `<tr style="cursor:pointer;" onclick="window.location.href='/center/child/${c.id}/'" title="اضغط لعرض تفاصيل الطفل">
+                <td class="text-muted fw-bold py-3">${rowNum}</td>
+                <td class="fw-bold text-primary">${c.full_name || '—'}</td>
                 <td class="text-muted small">${c.date_of_birth || '—'}</td>
-                <td>${c.gender === 'M'
-                    ? '<span class="badge bg-primary-subtle text-primary">ذكر</span>'
-                    : '<span class="badge bg-danger-subtle text-danger">أنثى</span>'}</td>
+                <td>${c.gender === 'M' ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">ذكر</span>' : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">أنثى</span>'}</td>
                 <td class="text-muted small">${c.family_name || '—'}</td>
                 <td class="text-muted small">${c.health_center_name || '<em>غير مسجل</em>'}</td>
-                <td>${c.is_completed
-                    ? '<span class="badge badge-high rounded-pill px-3">مكتمل ✓</span>'
-                    : '<span class="badge badge-low rounded-pill px-3">غير مكتمل</span>'}</td>
+                <td>${c.is_completed ? '<span class="badge bg-success shadow-sm px-3 py-2"><i class="fas fa-check me-1"></i>مكتمل</span>' : '<span class="badge bg-warning text-dark shadow-sm px-3 py-2"><i class="fas fa-hourglass-half me-1"></i>مستمر</span>'}</td>
             </tr>`;
         }).join('');
 
-        container.innerHTML = `<table class="ministry-table">
-            <thead><tr>
-                <th>#</th><th>اسم الطفل</th><th>تاريخ الميلاد</th><th>النوع</th>
-                <th>الأسرة</th><th>المركز الصحي</th><th>الحالة</th>
+        tableContainer.innerHTML = `<table class="ministry-table table table-hover align-middle row-border mb-0 bg-white">
+            <thead class="bg-light border-bottom"><tr>
+                <th class="py-3 text-muted">#</th><th class="py-3 text-muted">اسم الطفل</th><th class="py-3 text-muted">تاريخ الميلاد</th><th class="py-3 text-muted">النوع</th>
+                <th class="py-3 text-muted">الأبوين</th><th class="py-3 text-muted">المركز الصحي</th><th class="py-3 text-muted">الحالة</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -278,15 +387,13 @@
 
     // ============ Pagination ============
     function renderPagination() {
-        const bar = document.getElementById('pagination-bar');
         const ctrl = document.getElementById('pagination-controls');
         const prevCont = document.getElementById('pag-prev-container');
         const nextCont = document.getElementById('pag-next-container');
 
-        if (totalPages <= 1) { bar.style.display = 'none'; return; }
-        bar.style.display = 'flex';
+        if (totalPages <= 1) { pagBar.style.display = 'none'; return; }
+        pagBar.style.display = 'flex';
 
-        // Smart page numbers with ellipsis
         const delta = 2;
         let pages = [];
         for (let p = 1; p <= totalPages; p++) {
@@ -295,14 +402,8 @@
             }
         }
 
-        // 1. Prev Button (السابق - يمين باللغة العربية)
-        prevCont.innerHTML = `
-            <button class="btn btn-light rounded-pill px-5 py-2 fw-bold text-muted border-0 shadow-sm d-flex align-items-center"
-                ${currentPage === 1 ? 'disabled style="opacity:0.5"' : `onclick="goPage(${currentPage - 1})"`}>
-                <i class="fas fa-chevron-right me-2 small"></i> السابق
-            </button>`;
+        prevCont.innerHTML = `<button class="btn btn-white border px-4 py-2 shadow-sm rounded-pill fw-bold text-muted d-flex align-items-center" ${currentPage === 1 ? 'disabled style="opacity:0.5"' : `onclick="goPage(${currentPage - 1})"`}><i class="fas fa-chevron-right me-2 small"></i> السابق</button>`;
 
-        // 2. Numbers
         let html = '';
         let prev = null;
         for (const p of pages) {
@@ -310,40 +411,21 @@
                 html += `<li class="page-item disabled"><span class="page-link fs-5 border-0 bg-transparent text-muted mt-n1">...</span></li>`;
             }
             if (p === currentPage) {
-                html += `<li class="page-item active">
-                    <a class="page-link" href="#" onclick="return false;">${p}</a>
-                </li>`;
+                html += `<li class="page-item active"><a class="page-link shadow-sm rounded-circle mx-1" href="#" onclick="return false;" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">${p}</a></li>`;
             } else {
-                html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="goPage(${p}); return false;">${p}</a>
-                </li>`;
+                html += `<li class="page-item"><a class="page-link rounded-circle mx-1 border-0 text-dark" href="#" onclick="goPage(${p}); return false;" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">${p}</a></li>`;
             }
             prev = p;
         }
         ctrl.innerHTML = html;
 
-        // 3. Next Button (التالي - يسار باللغة العربية)
-        nextCont.innerHTML = `
-            <button class="btn btn-light rounded-pill px-5 py-2 fw-bold text-muted border-0 shadow-sm d-flex align-items-center"
-                ${currentPage === totalPages ? 'disabled style="opacity:0.5"' : `onclick="goPage(${currentPage + 1})"`}>
-                التالي <i class="fas fa-chevron-left ms-2 small"></i>
-            </button>`;
+        nextCont.innerHTML = `<button class="btn btn-white border px-4 py-2 shadow-sm rounded-pill fw-bold text-muted d-flex align-items-center" ${currentPage === totalPages ? 'disabled style="opacity:0.5"' : `onclick="goPage(${currentPage + 1})"`}>التالي <i class="fas fa-chevron-left ms-2 small"></i></button>`;
     }
 
     function goPage(p) {
         if (p < 1 || p > totalPages) return;
         window.scrollTo({ top: 0, behavior: 'smooth' });
         loadChildren(p);
-    }
-
-    // ============ Clear Filters ============
-    function clearFilters() {
-        document.getElementById('ch-search').value = '';
-        document.getElementById('ch-filter').value = 'all';
-        document.getElementById('ch-gender').value = '';
-        document.getElementById('ch-year').value = '';
-        document.getElementById('ch-month').value = '';
-        loadChildren(1);
     }
 </script>
 {% endblock %}

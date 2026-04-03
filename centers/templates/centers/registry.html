@@ -5,14 +5,13 @@
 
 {% block content %}
 
-<!-- Header Area -->
 <div class="row">
     <div class="col-12">
         <div class="ministry-banner mb-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3">
                 <div class="mb-3 mb-md-0">
-                    <h2 class="text-white mb-2"><i class="fas fa-book-medical me-2"></i>السجل العام</h2>
-                    <p class="mb-0" style="color: rgba(255,255,255,0.85);">عرض تفصيلي لجميع الأطفال وحالة تطعيماتهم.</p>
+                    <h2 class="text-white mb-2"><i class="fas fa-book-medical me-2"></i>السجل الإلكتروني</h2>
+                    <p class="mb-0" style="color: rgba(255,255,255,0.85);">عرض تفصيلي لأطفال مركزك وحالة تطعيماتهم.</p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{% url 'centers:add_child' %}"
@@ -24,11 +23,11 @@
                     </a>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- Search Bar & Filters -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="saas-card p-3">
@@ -44,7 +43,6 @@
                     <option value="active" selected>قيد التحصين</option>
                     <option value="archived">مكتملين التحصين</option>
                 </select>
-                <!-- زر إظهار/إخفاء الفلاتر المتقدمة -->
                 <button class="btn border bg-light text-muted d-flex align-items-center px-3" type="button"
                     data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false"
                     aria-controls="advancedFilters"
@@ -54,10 +52,9 @@
                 </button>
             </div>
 
-            <!-- Advanced Filters (Collapsible) -->
             <div class="collapse" id="advancedFilters">
-                <div class="row g-2 pt-2 border-top">
-                    <div class="col-md-3">
+                <div class="row g-2 pt-2 border-top align-items-end">
+                    <div class="col-md col-6">
                         <label class="form-label small text-muted mb-1">الجنس</label>
                         <select id="gender-filter" class="form-select form-select-sm" onchange="applyFilters()">
                             <option value="">الكل</option>
@@ -65,14 +62,13 @@
                             <option value="F">أنثى</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md col-6">
                         <label class="form-label small text-muted mb-1">سنة الميلاد</label>
                         <select id="year-filter" class="form-select form-select-sm" onchange="applyFilters()">
                             <option value="">الكل</option>
-                            <!-- يتم ملئها بـ JS -->
-                        </select>
+                            </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md col-6">
                         <label class="form-label small text-muted mb-1">شهر الميلاد</label>
                         <select id="month-filter" class="form-select form-select-sm" onchange="applyFilters()">
                             <option value="">الكل</option>
@@ -90,7 +86,7 @@
                             <option value="12">ديسمبر (12)</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md col-6">
                         <label class="form-label small text-muted mb-1">العمر الحالي</label>
                         <select id="age-filter" class="form-select form-select-sm" onchange="applyFilters()">
                             <option value="">الكل</option>
@@ -106,9 +102,16 @@
                             <option value="24">سنتين (24 شهر)</option>
                         </select>
                     </div>
-                    <div class="col-12 mt-2 text-end">
-                        <button class="btn btn-sm btn-light text-danger" onclick="clearFilters()"><i
-                                class="fas fa-times me-1"></i>مسح الفلاتر</button>
+                    <div class="col-md col-6">
+                        <label class="form-label small text-muted mb-1">المركز الصحي</label>
+                        <select id="center-filter" class="form-select form-select-sm" onchange="applyFilters()">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto col-12 mt-2 mt-md-0">
+                        <button class="btn btn-sm btn-light text-danger w-100" onclick="clearFilters()" style="margin-bottom: 2px;">
+                            <i class="fas fa-times me-1"></i>مسح الفلاتر
+                        </button>
                     </div>
                 </div>
             </div>
@@ -117,7 +120,6 @@
 </div>
 
 
-<!-- Registry Table -->
 <div class="row">
     <div class="col-12">
         <div class="ministry-card">
@@ -133,25 +135,19 @@
                     <div class="spinner-border text-primary spinner-border-sm"></div>
                     <span class="ms-3 text-muted fw-bold">جاري تحميل السجل...</span>
                 </div>
-                <!-- Table will be injected here by JS -->
                 <div id="registry-table-container"></div>
             </div>
-            <!-- Pagination Bar -->
             <div class="d-flex justify-content-center align-items-center gap-4 border-top rounded-bottom pagination-container"
                 id="pagination-bar" style="display:none!important;">
 
-                <!-- Prev Button Container (في العربي يمين) -->
                 <div id="pag-prev-container"></div>
 
-                <!-- Page Numbers Array -->
                 <nav aria-label="Page navigation" class="d-flex align-items-center gap-2">
                     <span class="text-muted small fw-bold">الصفحة:</span>
                     <ul class="pagination mb-0 align-items-center gap-2" id="pagination-controls">
-                        <!-- Numbers go here -->
-                    </ul>
+                        </ul>
                 </nav>
 
-                <!-- Next Button Container (في العربي يسار) -->
                 <div id="pag-next-container"></div>
             </div>
         </div>
@@ -161,6 +157,7 @@
 <script src="{% static 'js/api.js' %}"></script>
 <script>
     // ============ State ============
+    const MY_CENTER_ID = {{ user.health_center_id|default:'null' }};
     let currentStatus = 'active';
     let currentSearch = '';
     let vaccineGroups = [];   // [{label, doses: [{id, dose_number, age_in_months, is_group_end}]}]
@@ -174,8 +171,24 @@
     // ============ Boot ============
     document.addEventListener('DOMContentLoaded', async () => {
         await loadVaccineStructure();
+        await loadCenterOptions();
         await loadChildren();
     });
+
+    async function loadCenterOptions() {
+        try {
+            const centers = await apiFetch('/api/health-centers/');
+            const sel = document.getElementById('center-filter');
+            centers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name_ar;
+                sel.appendChild(opt);
+            });
+            // الديفولت: مركز المستخدم الحالي
+            if (MY_CENTER_ID) sel.value = MY_CENTER_ID;
+        } catch (e) { console.error('loadCenterOptions:', e); }
+    }
 
     // ============ Vaccine Structure (Hardcoded to match book) ============
     async function loadVaccineStructure() {
@@ -277,6 +290,8 @@
 
         if (currentSearch) params.push(`search=${encodeURIComponent(currentSearch)}`);
 
+
+
         // --- فلاتر متقدمة ---
         const gender = document.getElementById('gender-filter')?.value;
         if (gender) params.push(`gender=${gender}`);
@@ -289,6 +304,9 @@
 
         const age = document.getElementById('age-filter')?.value;
         if (age) params.push(`age_in_months=${age}`);
+
+        const centerFilter = document.getElementById('center-filter')?.value;
+        if (centerFilter) params.push(`health_center=${centerFilter}`);
 
         const url = `/api/children/?` + params.join('&');
 
@@ -572,6 +590,7 @@
         document.getElementById('year-filter').value = '';
         document.getElementById('month-filter').value = '';
         document.getElementById('age-filter').value = '';
+        document.getElementById('center-filter').value = '';
         applyFilters();
     }
 

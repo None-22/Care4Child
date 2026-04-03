@@ -10,11 +10,11 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
     # أنواع المستخدمين
     USER_TYPE_CHOICES = (
-        ('ADMIN', 'مدير النظام'),        # الوزارة/المبرمج
+        ('ADMIN', 'مدير النظام'),        # مكتب الصحة/المبرمج
         ('CENTER_MANAGER', 'مدير مركز'), # مدير المركز (جديد)
         ('CENTER_STAFF', 'موظف مركز'),   # الموظف داخل المركز
         ('CUSTOMER', 'ولي أمر'),         # (اختياري)
-        ('MINISTRY', 'وزارة الصحة'),     # وزارة الصحة
+        ('MINISTRY', 'مكتب الصحة'),     # مكتب الصحة
     )
     
     role = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='CENTER_STAFF', verbose_name="نوع الحساب")
