@@ -415,7 +415,7 @@ class DashboardStatsView(APIView):
         children_qs = Child.objects.all()
         records_qs = VaccineRecord.objects.all()
         
-        if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
+        if user.role in ['CENTER_MANAGER', 'CENTER_STAFF'] and user.health_center:
             children_qs = children_qs.filter(health_center=user.health_center)
             records_qs = records_qs.filter(staff__health_center=user.health_center)
         
@@ -445,20 +445,21 @@ class DashboardStatsView(APIView):
                 'staff': rec.staff.username if rec.staff else 'System'
             })
             
-        end_date = today + timedelta(days=14)
+        # المواعيد القادمة: من اليوم حتى 7 أيام قادمة فقط
+        end_date = today + timedelta(days=7)
         upcoming_qs = ChildVaccineSchedule.objects.filter(
             due_date__range=[today, end_date],
             is_taken=False
         ).order_by('due_date')
-        if user.role in ['CENTER_MANAGER', 'HEALTH_STAFF'] and user.health_center:
+        if user.role in ['CENTER_MANAGER', 'CENTER_STAFF'] and user.health_center:
             upcoming_qs = upcoming_qs.filter(child__health_center=user.health_center)
             
         upcoming_data = []
-        for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine')[:5]:
+        for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine')[:10]:
             upcoming_data.append({
                 'child_name': sched.child.full_name,
                 'vaccine': sched.vaccine_schedule.vaccine.name_ar,
-                'due_date': sched.due_date
+                'due_date': sched.due_date,
             })
 
         vaccine_dist_qs = records_qs.values('vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:12]

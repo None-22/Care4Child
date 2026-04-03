@@ -216,7 +216,8 @@
                 </h4>
                 <span style="font-size:.63rem;color:var(--muted);font-weight:600;">إجمالي السجلات</span>
             </div>
-            <div class="cc-b d-flex flex-wrap align-items-center justify-content-center gap-3" style="padding:1rem;min-width:0;">
+            <div class="cc-b d-flex flex-wrap align-items-center justify-content-center gap-3"
+                style="padding:1rem;min-width:0;">
                 <div style="height:120px;flex:0 0 120px;"><canvas id="polarChart"></canvas></div>
                 <div id="polar-legend" style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px;"></div>
             </div>
@@ -406,11 +407,11 @@
         const vacEntriesData = C.vaccines_distribution || [];
         const vacEntries = vacEntriesData.map(v => [v.name, v.count]);
         const chartColors = [
-            '#0a4275', '#1d74c4', '#268fe8', '#0d9488', '#14b8a6', 
-            '#d97706', '#f59e0b', '#dc2626', '#ef4444', '#6366f1', 
+            '#0a4275', '#1d74c4', '#268fe8', '#0d9488', '#14b8a6',
+            '#d97706', '#f59e0b', '#dc2626', '#ef4444', '#6366f1',
             '#8b5cf6', '#d946ef'
         ];
-        
+
         if (vacEntries.length) {
             new Chart(document.getElementById('polarChart'), {
                 type: 'pie',
@@ -494,17 +495,15 @@
         const aEl = document.getElementById('appt-list');
         if (!appts.length) { aEl.innerHTML = '<div class="emp"><i class="fas fa-calendar-check"></i><p>لا مواعيد قادمة</p></div>'; }
         else {
-            const td = new Date().toISOString().slice(0, 10);
             aEl.innerHTML = appts.map(a => {
                 const ini = (a.child_name || '؟').split(' ').slice(0, 2).map(w => w[0]).join('');
-                const isT = String(a.due_date) === td;
                 return `<div class="api">
                 <div class="apav">${ini}</div>
                 <div style="min-width:0;flex:1;">
                     <div class="apnm">${a.child_name || '—'}</div>
                     <div class="apvc"><i class="fas fa-syringe me-1" style="color:var(--green);font-size:.58rem;"></i>${a.vaccine || ''}</div>
                 </div>
-                <span class="apbg ${isT ? 't' : ''}">${isT ? 'اليوم' : (a.due_date || '')}</span>
+                <span class="apbg">${a.due_date || ''}</span>
             </div>`;
             }).join('');
         }
