@@ -11,9 +11,15 @@ logger = logging.getLogger(__name__)
 # --- Initialize Firebase App (Safe Singleton) ---
 try:
     # 1. Path to serviceAccountKey.json
-    # يفضل وضعه في مجلد آمن خارج الكود أو في الـ root
-    cred_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
-    
+    # Priority: env var → Render secret file → local path
+    cred_path = os.environ.get(
+        'FIREBASE_KEY_PATH',
+        '/etc/secrets/serviceAccountKey.json'  # Render Secret File default path
+    )
+    # Fallback to local (for development)
+    if not os.path.exists(cred_path):
+        cred_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
+
     if os.path.exists(cred_path):
         if not firebase_admin._apps:
             cred = credentials.Certificate(cred_path)
