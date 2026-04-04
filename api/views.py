@@ -633,6 +633,14 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notifications.update(is_read=True)
         return Response({"message": f"{count} notifications marked as read.", "count": count})
 
+    @action(detail=True, methods=['post'], url_path='mark-read')
+    def mark_one_read(self, request, pk=None):
+        """تمييز إشعار واحد كمقروء"""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save(update_fields=['is_read'])
+        return Response({"message": "Notification marked as read.", "id": notification.id})
+
 
 # ================= Custom Auth Token =================
 

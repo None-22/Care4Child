@@ -45,6 +45,18 @@ class FCMService:
             try:
                 message = messaging.Message(
                     notification=messaging.Notification(title=title, body=body),
+                    android=messaging.AndroidConfig(
+                        priority='high',
+                        notification=messaging.AndroidNotification(
+                            sound='default',
+                            click_action='FLUTTER_NOTIFICATION_CLICK',
+                        ),
+                    ),
+                    apns=messaging.APNSConfig(
+                        payload=messaging.APNSPayload(
+                            aps=messaging.Aps(sound='default', content_available=True),
+                        ),
+                    ),
                     token=user.fcm_token,
                     data={'type': notification_type, 'click_action': 'FLUTTER_NOTIFICATION_CLICK'}
                 )
