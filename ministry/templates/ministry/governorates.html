@@ -23,7 +23,8 @@
             <div class="ministry-card-header">
                 <h3><i class="fas fa-map text-primary"></i> المحافظات</h3>
                 <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal"
-                    data-bs-target="#addGovModal" style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important; color: white;">
+                    data-bs-target="#addGovModal"
+                    style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important; color: white;">
                     <i class="fas fa-plus me-1"></i> إضافة
                 </button>
             </div>
@@ -41,7 +42,8 @@
             <div class="ministry-card-header">
                 <h3><i class="fas fa-city text-success"></i> المديريات</h3>
                 <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal"
-                    data-bs-target="#addDirModal" style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important; color: white;">
+                    data-bs-target="#addDirModal"
+                    style="background: linear-gradient(135deg, var(--c-blue-700) 0%, var(--c-blue-400) 100%) !important; border: none !important; color: white;">
                     <i class="fas fa-plus me-1"></i> إضافة
                 </button>
             </div>
@@ -59,10 +61,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-map me-2"></i>إضافة محافظة جديدة</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-map me-2"></i>إضافة محافظة جديدة</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="gov-error" class="alert alert-danger d-none"></div>
@@ -99,10 +106,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-edit me-2"></i>تعديل المحافظة</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-edit me-2"></i>تعديل المحافظة</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="edit-gov-error" class="alert alert-danger d-none"></div>
@@ -140,10 +152,15 @@
     <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-city me-2"></i>إضافة مديرية جديدة</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-city me-2"></i>إضافة مديرية جديدة</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="dir-error" class="alert alert-danger d-none"></div>
@@ -184,10 +201,15 @@
     <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content border-0 shadow" style="border-radius:16px;">
             <div class="modal-header border-bottom pb-2 pt-3 px-4">
-                <div class="ministry-banner" style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
-                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i class="fas fa-edit me-2"></i>تعديل المديرية</h5>
+                <div class="ministry-banner"
+                    style="border-radius: 50px; padding: 10px 28px; display: inline-block; margin-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.1rem;"><i
+                            class="fas fa-edit me-2"></i>تعديل المديرية</h5>
                 </div>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fas fa-times"></i></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close"
+                    style="background:#ef4444;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);flex-shrink:0;transition:all .2s;"
+                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="modal-body p-4 pt-2">
                 <div id="edit-dir-error" class="alert alert-danger d-none"></div>
@@ -258,7 +280,12 @@
             filterSel.innerHTML = '<option value="">كل المحافظات</option>';
         }
 
+        let ibbId = null;
+
         govData.forEach(g => {
+            if (g.name_ar === 'إب' || g.name_ar === 'اب' || g.name_ar.includes('إب')) {
+                ibbId = g.id;
+            }
             if (addSel) {
                 const optAdd = document.createElement('option');
                 optAdd.value = g.id; optAdd.textContent = g.name_ar;
@@ -275,6 +302,11 @@
                 filterSel.appendChild(optFilter);
             }
         });
+
+        // تعيين إب كقيمة افتراضية في نافذة "إضافة مديرية"
+        if (ibbId && addSel) {
+            addSel.value = ibbId;
+        }
     }
 
     // Filter directorates by governorate

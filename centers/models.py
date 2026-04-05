@@ -53,7 +53,13 @@ class HealthCenter(models.Model):
     name_en = models.CharField(max_length=255, blank=True, null=True, verbose_name="اسم المركز (إنجليزي)")
     # city = removed as redundant
     address = models.TextField(verbose_name="العنوان التفصيلي")
-    working_hours = models.CharField(max_length=255, blank=True, null=True, verbose_name="ساعات العمل")
+    WORKING_HOURS_CHOICES = (
+        ('فترة صباحية (8:00 ص - 1:00 م)', 'فترة صباحية (8:00 ص - 1:00 م)'),
+        ('فترة مسائية (4:00 م - 9:00 م)', 'فترة مسائية (4:00 م - 9:00 م)'),
+        ('فترتين (8 ص - 1 م / 4 م - 9 م)', 'فترتين (8 ص - 1 م / 4 م - 9 م)'),
+        ('على مدار الساعة (24/7)', 'على مدار الساعة (24/7)')
+    )
+    working_hours = models.CharField(max_length=255, choices=WORKING_HOURS_CHOICES, blank=True, null=True, verbose_name="ساعات العمل")
 
     # حقول إدارية
     license_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="رقم الترخيص", help_text="رقم آخر غير كود المركز")

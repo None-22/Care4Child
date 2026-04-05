@@ -12,6 +12,18 @@ class DirectorateAdmin(admin.ModelAdmin):
     list_filter = ('governorate',)
     search_fields = ('name_ar', 'code')
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "governorate":
+            # تعيين محافظة "إب" بشكل افتراضي
+            try:
+                from .models import Governorate
+                ibb = Governorate.objects.filter(name_ar__contains="إب").first()
+                if ibb:
+                    kwargs["initial"] = ibb.pk
+            except Exception:
+                pass
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib import messages
@@ -24,6 +36,18 @@ class HealthCenterForm(forms.ModelForm):
         widget=forms.PasswordInput,
         required=False,
         help_text="عند إضافة مركز جديد، أدخل كلمة المرور هنا لإنشاء حساب مدير تلقائياً (اسم المستخدم سيكون اسم المركز)."
+    )
+    working_hours = forms.ChoiceField(
+        label="ساعات العمل",
+        choices=HealthCenter.WORKING_HOURS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    working_hours = forms.ChoiceField(
+        label="ساعات العمل",
+        choices=HealthCenter.WORKING_HOURS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     class Meta:
@@ -43,6 +67,18 @@ class HealthCenterAdmin(admin.ModelAdmin):
             'smart-selects/admin/js/chainedfk.js',
             'smart-selects/admin/js/bindfields.js',
         )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "governorate":
+            # تعيين محافظة "إب" بشكل افتراضي
+            try:
+                from .models import Governorate
+                ibb = Governorate.objects.filter(name_ar__contains="إب").first()
+                if ibb:
+                    kwargs["initial"] = ibb.pk
+            except Exception:
+                pass
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         is_new = obj.pk is None

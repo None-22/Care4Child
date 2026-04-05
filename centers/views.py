@@ -222,24 +222,59 @@ def add_staff_view(request):
         last_name = request.POST.get('last_name')
         phone = request.POST.get('phone')
         
-        # التأكد من عدم وجود المستخدم
+        # التأكد من عدم وجود المستخدم أو محاولة النقل (Transfer Logic)
         from django.contrib.auth import get_user_model
         User = get_user_model()
         
         from django.db import IntegrityError
         
         try:
-            if User.objects.filter(username__iexact=username).exists():
-                messages.error(request, "اسم المستخدم هذا موجود مسبقاً، يرجى اختيار اسم آخر.")
-                return render(request, 'centers/add_staff.html', {
-                    'old_username': username,
-                    'old_first': first_name,
-                    'old_last': last_name,
-                    'old_phone': phone,
-                    'username_error': True
-                })
+            existing_user = User.objects.filter(username__iexact=username).first()
+            if existing_user:
+                # التحقق إذا كانت كلمة المرور صحيحة للقيام بعملية النقل التلقائي
+                if existing_user.check_password(password):
+                    if existing_user.role in ['ADMIN', 'MINISTRY']:
+                        messages.error(request, "لا يمكن نقل حسابات الإدارة العليا لمركزك. يرجى استخدام اسم مستخدم آخر.")
+                        return render(request, 'centers/add_staff.html', {
+                            'old_username': username, 'old_first': first_name,
+                            'old_last': last_name, 'old_phone': phone, 'username_error': True
+                        })
+                    else:
+                        # التأكد من إخلاء الطرف (أن الموظف ليس نشطاً في مركز آخر)
+                        if existing_user.is_active and existing_user.health_center != request.user.health_center:
+                            messages.error(request, f"هذا الموظف لا يزال مسجلاً كـ (نشط) في مركز آخر ({existing_user.health_center.name_ar if existing_user.health_center else 'غير محدد'}). يجب إيقاف حسابه في المركز القديم أولاً (إخلاء طرف) لتتمكن من سحبه.")
+                            return render(request, 'centers/add_staff.html', {
+                                'old_username': username, 'old_first': first_name,
+                                'old_last': last_name, 'old_phone': phone, 'username_error': True
+                            })
+                            
+                        # التأكد إذا كان مسجلاً ونشطاً في نفس المركز
+                        if existing_user.is_active and existing_user.health_center == request.user.health_center:
+                            messages.warning(request, "هذا الموظف مسجل ونشط بالفعل في مركزك!")
+                            return redirect('centers:dashboard')
+
+                        # عملية نقل الموظف (Re-assignment) أو إعادة تفعيله
+                        existing_user.health_center = request.user.health_center
+                        existing_user.is_active = True
+                        existing_user.first_name = first_name
+                        existing_user.last_name = last_name
+                        existing_user.phone = phone
+                        existing_user.role = 'CENTER_STAFF'
+                        existing_user.save()
+                        
+                        messages.success(request, f"حساب الموظف ({username}) كان موجوداً مسبقاً، تمت مصادقته ونقله لمركزك بنجاح!")
+                        return redirect('centers:dashboard')
+                else:
+                    messages.error(request, "اسم المستخدم موجود مسبقاً! إذا كان الموظف لديه حساب قديم وتريد ضمه لمركزك، يرجى إدخال كلمة مروره القديمة الصحيحة. أو اختر اسم مستخدم جديد.")
+                    return render(request, 'centers/add_staff.html', {
+                        'old_username': username,
+                        'old_first': first_name,
+                        'old_last': last_name,
+                        'old_phone': phone,
+                        'username_error': True
+                    })
             else:
-                # إنشاء الموظف
+                # إنشاء الموظف الجديد
                 staff_user = User.objects.create_user(
                     username=username, 
                     password=password, 
@@ -256,7 +291,7 @@ def add_staff_view(request):
                 return redirect('centers:dashboard')
 
         except IntegrityError:
-            messages.error(request, "اسم المستخدم هذا موجود بالفعل، يرجى اختيار اسم آخر. (حدث تعارض)")
+            messages.error(request, "حدث تعارض أثناء إنشاء الحساب، يرجى المحاولة باسم مختلف.")
             return render(request, 'centers/add_staff.html', {
                 'old_username': username,
                 'old_first': first_name,
