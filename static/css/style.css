@@ -172,6 +172,7 @@ a {
     flex: 1;
     padding: 2rem 1.25rem;
     overflow-y: auto;
+    min-height: 0;
 }
 
 .nav-label {
