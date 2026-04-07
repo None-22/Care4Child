@@ -285,9 +285,9 @@
             {% if messages %}
             {% for message in messages %}
             Swal.fire({
-                title: "{% if message.tags == 'success' %}نجاح{% elif message.tags == 'error' %}خطأ{% else %}تنبيه{% endif %}",
-                text: "{{ message|escapejs }}",
-                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}",
+                title: "{% if message.tags == 'success' %}نجاح{% elif message.tags == 'error' %}خطأ{% elif message.tags == 'info' %}معلومة{% else %}تنبيه{% endif %}",
+                html: `<div dir='rtl' style='font-size:1rem; white-space:pre-line'>{{ message|escapejs }}</div>`,
+                icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% else %}success{% endif %}",
                 confirmButtonText: "حسناً",
                 confirmButtonColor: "var(--c-primary)",
                 customClass: { popup: 'rounded-4 shadow border border-light' }
