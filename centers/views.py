@@ -19,6 +19,7 @@ import json
 def record_vaccine(request, child_id, schedule_id):
     schedule = get_object_or_404(VaccineSchedule, pk=schedule_id)
     child = get_object_or_404(Child, pk=child_id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     # التحقق من عدم التكرار
     exists = VaccineRecord.objects.filter(
@@ -28,9 +29,10 @@ def record_vaccine(request, child_id, schedule_id):
     ).exists()
     
     if exists:
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': 'هذا اللقاح مسجل مسبقاً لهذا الطفل!'})
         messages.warning(request, "هذا اللقاح مسجل مسبقاً لهذا الطفل!")
     else:
-        # 1. تسجيل الواقعة (أخذ اللقاح)
         VaccineRecord.objects.create(
             child=child,
             vaccine=schedule.vaccine,
@@ -39,17 +41,13 @@ def record_vaccine(request, child_id, schedule_id):
             staff=request.user
         )
         
-        # 2. تحديث الكرت (الشطب على الموعد)
         from medical.models import ChildVaccineSchedule
         ChildVaccineSchedule.objects.filter(
             child=child, 
             vaccine_schedule=schedule
         ).update(is_taken=True)
 
-        messages.success(request, f"تم تسجيل جرعة {schedule.vaccine.name_ar} بنجاح!")
-
-        # 3. التحقق من الاكتمال (Auto-Archive Logic) - معدل
-        # نتحقق فقط من اللقاحات "الأساسية"
+        # التحقق من الاكتمال
         remaining_basic = ChildVaccineSchedule.objects.filter(
             child=child, 
             is_taken=False,
@@ -59,7 +57,10 @@ def record_vaccine(request, child_id, schedule_id):
             child.is_completed = True
             child.completed_date = timezone.now().date()
             child.save()
-            messages.info(request, "مبروك! هذا الطفل استكمل جميع اللقاحات وتمت أرشفته.")
+
+        if is_ajax:
+            return JsonResponse({'success': True, 'date_given': str(timezone.now().date())})
+        messages.success(request, f"تم تسجيل جرعة {schedule.vaccine.name_ar} بنجاح!")
     
     return redirect('centers:child_detail', child_id=child.id)
 

@@ -535,6 +535,13 @@
             aEl.innerHTML = appts.map((a, idx) => {
                 const ini = (a.child_name || '؟').split(' ').slice(0, 2).map(w => w[0]).join('');
                 const vaccCount = (a.vaccines || []).length;
+                const age = a.age_in_months;
+                let ageLabel = '';
+                if (age !== null && age !== undefined) {
+                    if (age === 0) ageLabel = 'عند الولادة';
+                    else if (age < 12) ageLabel = `عمر ${age} شهر`;
+                    else ageLabel = `عمر ${(age / 12) % 1 === 0 ? age / 12 : (age / 12).toFixed(1)} سنة`;
+                }
                 return `<div class="api">
                 <div class="apav">${ini}</div>
                 <div style="min-width:0;flex:1;">
@@ -542,6 +549,7 @@
                     <div class="apvc">
                         <i class="fas fa-syringe me-1" style="color:var(--green);font-size:.58rem;"></i>
                         ${vaccCount} لقاح${vaccCount > 1 ? 'ات' : ''}
+                        ${ageLabel ? `&nbsp;·&nbsp;<i class="fas fa-child me-1" style="color:var(--blue);font-size:.58rem;"></i><span style="color:var(--blue);font-weight:700;">${ageLabel}</span>` : ''}
                     </div>
                 </div>
                 <div class="d-flex flex-column align-items-end gap-1">

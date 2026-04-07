@@ -174,7 +174,7 @@
         await loadVaccineStructure();
         await loadCenterOptions();
         
-        // Restore state from sessionStorage
+        // Restore state from localStorage
         const savedPage = restoreFiltersState();
         
         if (savedPage && savedPage > 1) {
@@ -194,8 +194,10 @@
                 opt.textContent = c.name_ar;
                 sel.appendChild(opt);
             });
-            // الديفولت: مركز المستخدم الحالي
-            if (MY_CENTER_ID) sel.value = MY_CENTER_ID;
+            // الديفولت: مركز المستخدم الحالي — فقط لو ما في قيمة محفوظة
+            const saved = localStorage.getItem('registryFilters');
+            const hasSavedCenter = saved && JSON.parse(saved).center;
+            if (MY_CENTER_ID && !hasSavedCenter) sel.value = MY_CENTER_ID;
         } catch (e) { console.error('loadCenterOptions:', e); }
     }
 
@@ -328,6 +330,7 @@
 
             renderTable();
             renderPagination();
+            saveFiltersState(currentPage);
 
             loadingEl.classList.remove('d-flex');
             loadingEl.classList.add('d-none');
@@ -592,11 +595,11 @@
             center: document.getElementById('center-filter')?.value || '',
             page: forcePage !== null ? forcePage : currentPage
         };
-        sessionStorage.setItem('registryFilters', JSON.stringify(state));
+        localStorage.setItem('registryFilters', JSON.stringify(state));
     }
 
     function restoreFiltersState() {
-        const saved = sessionStorage.getItem('registryFilters');
+        const saved = localStorage.getItem('registryFilters');
         if (saved) {
             try {
                 const state = JSON.parse(saved);
@@ -639,7 +642,7 @@
         document.getElementById('month-filter').value = '';
         document.getElementById('age-filter').value = '';
         document.getElementById('center-filter').value = MY_CENTER_ID || '';
-        sessionStorage.removeItem('registryFilters');
+        localStorage.removeItem('registryFilters');
         applyFilters();
     }
 

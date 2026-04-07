@@ -316,7 +316,7 @@
                 if (response.ok || response.redirected) {
                     // نجح التسجيل — حدّث الزر مباشرة بدون reload
                     const today = new Date().toISOString().split('T')[0];
-                    const actionDiv = btn.closest('div.text-end');
+                    const actionDiv = btn.closest('div.text-center') || btn.closest('div.text-end') || btn.parentElement;
                     actionDiv.innerHTML = `
                         <span class="text-success small fw-bold d-block mb-1">
                             <i class="fas fa-check-circle me-1"></i>مكتمل

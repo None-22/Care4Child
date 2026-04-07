@@ -459,10 +459,14 @@ class DashboardStatsView(APIView):
         for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine'):
             key = (sched.child.id, str(sched.due_date))
             if key not in grouped:
+                dob = sched.child.date_of_birth
+                due = sched.due_date
+                age_months = (due.year - dob.year) * 12 + (due.month - dob.month) if dob else 0
                 grouped[key] = {
                     'child_id': sched.child.id,
                     'child_name': sched.child.full_name,
                     'due_date': sched.due_date,
+                    'age_in_months': age_months,
                     'vaccines': []
                 }
             v = sched.vaccine_schedule.vaccine

@@ -517,6 +517,12 @@ class ChildDetailSerializer(serializers.ModelSerializer):
         # ثانياً: من مركز الموظف الذي أنشأ السجل
         if obj.created_by and obj.created_by.health_center:
             return obj.created_by.health_center.name_ar
+        # ثالثاً: من أول موظف سجّل لقاحاً لهذا الطفل
+        first_record = obj.vaccine_records.select_related('staff__health_center').filter(
+            staff__health_center__isnull=False
+        ).first()
+        if first_record and first_record.staff and first_record.staff.health_center:
+            return first_record.staff.health_center.name_ar
         return ''
     
     def get_age(self, obj):
