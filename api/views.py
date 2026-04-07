@@ -453,14 +453,28 @@ class DashboardStatsView(APIView):
         ).order_by('due_date')
         if user.role in ['CENTER_MANAGER', 'CENTER_STAFF'] and user.health_center:
             upcoming_qs = upcoming_qs.filter(child__health_center=user.health_center)
-            
-        upcoming_data = []
-        for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine')[:10]:
-            upcoming_data.append({
-                'child_name': sched.child.full_name,
-                'vaccine': sched.vaccine_schedule.vaccine.name_ar,
-                'due_date': sched.due_date,
+
+        # تجميع المواعيد حسب (الطفل + التاريخ)
+        grouped = {}
+        for sched in upcoming_qs.select_related('child', 'vaccine_schedule__vaccine'):
+            key = (sched.child.id, str(sched.due_date))
+            if key not in grouped:
+                grouped[key] = {
+                    'child_id': sched.child.id,
+                    'child_name': sched.child.full_name,
+                    'due_date': sched.due_date,
+                    'vaccines': []
+                }
+            v = sched.vaccine_schedule.vaccine
+            grouped[key]['vaccines'].append({
+                'schedule_id': sched.id,
+                'vaccine_id': v.id,
+                'name': v.name_ar,
+                'dose_number': sched.vaccine_schedule.dose_number,
+                'description': v.description or '',
             })
+
+        upcoming_data = list(grouped.values())[:10]
 
         vaccine_dist_qs = records_qs.values('vaccine__name_ar').annotate(count=Count('id')).order_by('-count')[:12]
         vaccines_distribution = [{'name': v['vaccine__name_ar'], 'count': v['count']} for v in vaccine_dist_qs]

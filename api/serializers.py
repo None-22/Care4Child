@@ -345,15 +345,34 @@ class ChildListSerializer(serializers.ModelSerializer):
 
     def get_next_vaccine(self, obj):
         from medical.models import ChildVaccineSchedule
-        next_schedule = ChildVaccineSchedule.objects.filter(child=obj, is_taken=False).order_by('due_date').first()
+        import datetime
+        next_schedules = ChildVaccineSchedule.objects.filter(child=obj, is_taken=False).order_by('due_date')
+        first_schedule = next_schedules.first()
         
-        if next_schedule:
-            import datetime
+        if first_schedule:
+            # حساب عمر الطفل الفعلي عند موعد اللقاح (بالأشهر)
+            dob = obj.date_of_birth
+            due = first_schedule.due_date
+            age_months_real = (due.year - dob.year) * 12 + (due.month - dob.month)
+
+            # استخراج جميع الجرعات التي تستحق في نفس الشهر والسنة
+            same_date_schedules = next_schedules.filter(
+                due_date__year=first_schedule.due_date.year,
+                due_date__month=first_schedule.due_date.month
+            )
+            vaccines_list = []
+            for s in same_date_schedules:
+                v_name = s.vaccine_schedule.vaccine.name_ar
+                if v_name not in vaccines_list:
+                    vaccines_list.append(v_name)
+                    
             return {
-                'id': next_schedule.id,
-                'vaccine_name': next_schedule.vaccine_schedule.vaccine.name_ar,
-                'due_date': next_schedule.due_date,
-                'is_overdue': next_schedule.due_date < datetime.date.today(),
+                'id': first_schedule.id,
+                'vaccine_name': vaccines_list[0] if vaccines_list else first_schedule.vaccine_schedule.vaccine.name_ar,
+                'vaccines': vaccines_list,
+                'due_date': first_schedule.due_date,
+                'age_in_months': age_months_real,
+                'is_overdue': first_schedule.due_date and first_schedule.due_date < datetime.date.today(),
             }
         return None
 

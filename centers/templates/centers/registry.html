@@ -170,9 +170,18 @@
 
     // ============ Boot ============
     document.addEventListener('DOMContentLoaded', async () => {
+        initYearFilter();
         await loadVaccineStructure();
         await loadCenterOptions();
-        await loadChildren();
+        
+        // Restore state from sessionStorage
+        const savedPage = restoreFiltersState();
+        
+        if (savedPage && savedPage > 1) {
+            await loadChildren(savedPage);
+        } else {
+            await loadChildren(1);
+        }
     });
 
     async function loadCenterOptions() {
@@ -391,7 +400,7 @@
         if (p < 1 || p > totalPages) return;
         // Scroll to top of table smoothly
         document.getElementById('registry-scroll-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        loadChildren(p);
+        loadChildren(p).then(() => saveFiltersState());
     }
 
     // ============ Table Rendering ============
@@ -572,25 +581,65 @@
         }
     }
 
-    // Call on load
-    document.addEventListener('DOMContentLoaded', () => {
-        initYearFilter();
-    });
+    function saveFiltersState(forcePage = null) {
+        const state = {
+            status: document.getElementById('status-filter').value,
+            search: document.getElementById('search-input').value,
+            gender: document.getElementById('gender-filter')?.value || '',
+            year: document.getElementById('year-filter')?.value || '',
+            month: document.getElementById('month-filter')?.value || '',
+            age: document.getElementById('age-filter')?.value || '',
+            center: document.getElementById('center-filter')?.value || '',
+            page: forcePage !== null ? forcePage : currentPage
+        };
+        sessionStorage.setItem('registryFilters', JSON.stringify(state));
+    }
+
+    function restoreFiltersState() {
+        const saved = sessionStorage.getItem('registryFilters');
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                if (state.status) document.getElementById('status-filter').value = state.status;
+                if (state.search) document.getElementById('search-input').value = state.search;
+                
+                // For advanced filters, expanding the container if they were used
+                let hasAdvanced = false;
+                if (state.gender) { document.getElementById('gender-filter').value = state.gender; hasAdvanced = true; }
+                if (state.year) { document.getElementById('year-filter').value = state.year; hasAdvanced = true; }
+                if (state.month) { document.getElementById('month-filter').value = state.month; hasAdvanced = true; }
+                if (state.age) { document.getElementById('age-filter').value = state.age; hasAdvanced = true; }
+                if (state.center) { document.getElementById('center-filter').value = state.center; hasAdvanced = true; }
+                
+                if (hasAdvanced) {
+                    const bsCollapse = new bootstrap.Collapse(document.getElementById('advancedFilters'), {toggle: false});
+                    bsCollapse.show();
+                }
+
+                currentStatus = state.status || 'active';
+                currentSearch = state.search || '';
+                return state.page || 1;
+            } catch(e) { console.error('Error restoring filters:', e); }
+        }
+        return 1;
+    }
 
     function applyFilters() {
         currentStatus = document.getElementById('status-filter').value;
         currentSearch = document.getElementById('search-input').value.trim();
+        saveFiltersState(1); // On new filter, save page 1
         loadChildren(1); // always reset to page 1 when filters change
     }
 
     function clearFilters() {
-        document.getElementById('status-filter').value = 'all';
+        document.getElementById('status-filter').value = 'active';
         document.getElementById('search-input').value = '';
         document.getElementById('gender-filter').value = '';
         document.getElementById('year-filter').value = '';
         document.getElementById('month-filter').value = '';
         document.getElementById('age-filter').value = '';
-        document.getElementById('center-filter').value = '';
+        document.getElementById('center-filter').value = MY_CENTER_ID || '';
+        sessionStorage.removeItem('registryFilters');
         applyFilters();
     }
 

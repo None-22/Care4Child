@@ -203,23 +203,54 @@
                 let actionEl = '';
                 if (taken) {
                     actionEl = `
-                    <div class="text-end" style="min-width: 90px;">
+                    <div class="text-end" style="min-width: 120px; white-space: nowrap;">
                         <span class="text-success small fw-bold d-block mb-1"><i class="fas fa-check-circle me-1"></i>مكتمل</span>
                         <span class="text-muted small" style="font-size:0.75rem;"><i class="fas fa-calendar-alt me-1"></i>${item.date_given || '—'}</span>
                     </div>`;
                 } else {
-                    const btnClass = isMinistry ? "btn-secondary opacity-50 pe-none" : "btn-primary record-vaccine-btn";
-                    const isDis = isMinistry ? 'disabled title="غير مصرح لك كموظف مكتب صحة"' : '';
+                    let isFuture = false;
+                    let dueString = '';
+                    if (child.date_of_birth) {
+                        const dob = new Date(child.date_of_birth);
+                        const ageMonths = item.age_in_months;
+                        const dueDate = new Date(dob);
+                        dueDate.setMonth(dueDate.getMonth() + Math.floor(ageMonths));
+                        dueDate.setDate(dueDate.getDate() + Math.round((ageMonths % 1) * 30));
+                        
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        
+                        // 14 days grace period
+                        const earlyGraceDate = new Date(dueDate.getTime() - 14 * 86400000);
+                        
+                        if (today < earlyGraceDate) {
+                            isFuture = true;
+                            // Format correctly as YYYY-MM-DD
+                            dueString = dueDate.getFullYear() + '-' + String(dueDate.getMonth() + 1).padStart(2, '0') + '-' + String(dueDate.getDate()).padStart(2, '0');
+                        }
+                    }
+
+                    let btnClass = isMinistry ? "btn-secondary opacity-50 pe-none" : "btn-primary record-vaccine-btn";
+                    let isDis = isMinistry ? 'disabled title="غير مصرح لك كموظف مكتب صحة"' : '';
+                    let extraLabel = '';
+                    
+                    if (!isMinistry && isFuture) {
+                        btnClass = "btn-light text-muted border pe-none";
+                        isDis = `disabled title="لا يحق للطفل أخذه إلا بعد تاريخ ${dueString}"`;
+                        extraLabel = `<span class="d-block text-danger mt-1 text-center" style="font-size:0.7rem; font-weight:600; white-space: nowrap;"><i class="fas fa-clock me-1"></i>موعده: ${dueString}</span>`;
+                    }
+
                     actionEl = `
-                    <div class="text-end" style="min-width: 90px;">
+                    <div class="text-center" style="min-width: 120px; flex-shrink: 0;">
                         <button
-                            class="btn ${btnClass} btn-sm rounded-pill px-3 shadow-sm"
+                            class="btn ${btnClass} btn-sm rounded-pill px-4 shadow-sm"
                             data-child-id="${child.id}"
                             data-schedule-id="${item.schedule_id}"
                             data-vaccine-name="${item.vaccine_name_ar || item.vaccine_name || ''}"
                             ${isDis}>
-                            <i class="fas fa-syringe me-1"></i>تسجيل
+                            <i class="fas ${isFuture ? 'fa-lock' : 'fa-syringe'} me-1"></i>${isFuture ? 'مغلق' : 'تسجيل'}
                         </button>
+                        ${extraLabel}
                     </div>`;
                 }
 

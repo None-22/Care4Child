@@ -4,6 +4,153 @@
 {% block title %}اللقاحات | مكتب الصحة{% endblock %}
 {% block page_title %}إدارة اللقاحات{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ── Vaccine Filter Bar ── */
+.vac-filter-bar {
+    background: var(--c-blue-50);
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    border: 1px dashed var(--c-blue-400);
+}
+[data-theme="dark"] .vac-filter-bar {
+    background: var(--c-blue-100);
+    border-color: var(--c-blue-500);
+}
+.vac-filter-icon {
+    background: var(--c-blue-100);
+    color: var(--c-blue-600);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+[data-theme="dark"] .vac-filter-icon {
+    background: var(--c-blue-50);
+    color: var(--c-blue-700);
+}
+.vac-filter-label {
+    font-size: 0.8rem; font-weight: 800;
+    color: var(--c-blue-700);
+    white-space: nowrap;
+}
+[data-theme="dark"] .vac-filter-label {
+    color: var(--c-blue-900);
+}
+.vac-filter-select {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    border-color: var(--c-blue-400) !important;
+}
+.vac-target-badge {
+    background: var(--c-blue-600);
+    color: #fff;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.78rem;
+}
+[data-theme="dark"] .vac-target-badge {
+    background: var(--c-blue-500);
+}
+
+/* ── Coverage Cell ── */
+.cov-cell {
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+.cov-bar-track {
+    height: 6px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.cov-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* ── Dose Badge ── */
+.dose-badge-basic {
+    background: var(--c-blue-50);
+    color: var(--c-blue-700);
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+.dose-badge-school {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+[data-theme="dark"] .dose-badge-basic {
+    background: var(--c-blue-100);
+    color: var(--c-blue-900);
+}
+[data-theme="dark"] .dose-badge-school {
+    background: rgba(245,158,11,0.15);
+    color: #fbbf24;
+}
+
+/* ── Vaccine name in table ── */
+.vac-name-ar {
+    font-weight: 700;
+    color: var(--c-blue-900);
+}
+.vac-name-en {
+    font-size: 0.78rem;
+    color: var(--c-text-muted);
+}
+.vac-desc {
+    font-size: 0.65rem;
+    color: var(--c-text-muted);
+    margin-top: 3px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Dose row in modal ── */
+.dose-row {
+    background: var(--c-bg) !important;
+    border-color: var(--c-border-strong) !important;
+}
+[data-theme="dark"] .dose-row {
+    background: var(--c-border) !important;
+}
+
+/* ── Coverage colors (theme-aware) ── */
+.cov-high  { background: #ecfdf5; border: 1px solid rgba(13,148,136,.25); color: #0d9488; }
+.cov-mid   { background: #fffbeb; border: 1px solid rgba(217,119,6,.25);  color: #d97706; }
+.cov-low   { background: #fef2f2; border: 1px solid rgba(220,38,38,.25);  color: #dc2626; }
+.cov-none  { background: var(--c-bg); border: 1px solid var(--c-border);  color: var(--c-text-muted); }
+
+.cov-high-track  { background: rgba(13,148,136,.15); }
+.cov-mid-track   { background: rgba(217,119,6,.15);  }
+.cov-low-track   { background: rgba(220,38,38,.15);  }
+.cov-none-track  { background: var(--c-border); }
+
+.cov-high-fill  { background: #0d9488; }
+.cov-mid-fill   { background: #d97706; }
+.cov-low-fill   { background: #dc2626; }
+.cov-none-fill  { background: var(--c-text-muted); }
+
+[data-theme="dark"] .cov-high { background: rgba(13,148,136,.15); color: #2dd4bf; border-color: rgba(45,212,191,.2); }
+[data-theme="dark"] .cov-mid  { background: rgba(217,119,6,.15);  color: #fbbf24; border-color: rgba(251,191,36,.2); }
+[data-theme="dark"] .cov-low  { background: rgba(220,38,38,.15);  color: #f87171; border-color: rgba(248,113,113,.2); }
+[data-theme="dark"] .cov-high-fill { background: #2dd4bf; }
+[data-theme="dark"] .cov-mid-fill  { background: #fbbf24; }
+[data-theme="dark"] .cov-low-fill  { background: #f87171; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="ministry-banner mb-4">
@@ -21,36 +168,30 @@
 <!-- Stats + Filters + Search row -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="ministry-kpi shadow-sm" style="border:1px solid #e2e8f0;">
-            <div class="kpi-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-syringe"></i></div>
+        <div class="ministry-kpi shadow-sm">
+            <div class="kpi-icon kpi-ministry-blue"><i class="fas fa-syringe"></i></div>
             <div>
                 <p class="kpi-label">إجمالي اللقاحات</p>
-                <div class="kpi-value" id="vac-total" style="color:#1e293b;">—</div>
+                <div class="kpi-value" id="vac-total">—</div>
             </div>
         </div>
     </div>
     <div class="col-md-9 d-flex flex-wrap align-items-center gap-3">
         <!-- Location Filters for Coverage Report -->
-        <div class="d-flex align-items-center gap-2 shadow-sm"
-            style="background:#f0f9ff; padding:0.4rem 0.8rem; border-radius:12px; border:1px dashed #93c5fd; flex:1; min-width:300px;">
-            <div
-                style="background:#dbeafe; color:#2563eb; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+        <div class="vac-filter-bar d-flex align-items-center gap-2 shadow-sm" style="flex:1; min-width:300px;">
+            <div class="vac-filter-icon">
                 <i class="fas fa-chart-bar" style="font-size:0.8rem;"></i>
             </div>
-            <span style="font-size:0.8rem; font-weight:800; color:#1d4ed8; white-space:nowrap;">التغطية بموجب:</span>
+            <span class="vac-filter-label">التغطية بموجب:</span>
 
-            <select id="cov-governorate" class="form-select form-select-sm"
-                style="min-width:130px; border-radius:6px; font-weight:600; font-size:0.8rem; border-color:#93c5fd;">
+            <select id="cov-governorate" class="form-select form-select-sm vac-filter-select" style="min-width:130px;">
                 <option value="">المستوى الوطني (الكل)</option>
             </select>
-            <select id="cov-directorate" class="form-select form-select-sm"
-                style="min-width:130px; border-radius:6px; font-weight:600; font-size:0.8rem; border-color:#93c5fd;"
-                disabled>
+            <select id="cov-directorate" class="form-select form-select-sm vac-filter-select" style="min-width:130px;" disabled>
                 <option value="">كافة المديريات</option>
             </select>
 
-            <div id="cov-target-badge" class="badge"
-                style="background:#2563eb; color:#fff; padding:0.4rem 0.6rem; border-radius:6px; display:none; white-space:nowrap; font-weight:600;">
+            <div id="cov-target-badge" class="vac-target-badge" style="display:none;">
                 المستهدف: <span id="cov-target-count">0</span> طفل
             </div>
         </div>
@@ -324,39 +465,39 @@
     <tbody>${vaccines.map((v, i) => {
             const pct = v.coverage_stat ? v.coverage_stat.coverage_percentage : 0;
             const vc = v.coverage_stat ? v.coverage_stat.vaccinated_count : 0;
-            
+
             let label = 'أطفال ملقحين';
             if (vc === 1) label = 'طفل ملقح';
             else if (vc === 2) label = 'طفلين ملقحين';
             else if (vc >= 3 && vc <= 10) label = 'أطفال ملقحين';
             else if (vc > 10) label = 'طفلاً ملقحاً';
 
-            const color = pct >= 80 ? '#0d9488' : pct >= 50 ? '#d97706' : pct > 0 ? '#dc2626' : '#94a3b8';
-            const bg = pct >= 80 ? '#ecfdf5' : pct >= 50 ? '#fffbeb' : pct > 0 ? '#fef2f2' : '#f8fafc';
+            // color class based on coverage
+            const covClass = pct >= 80 ? 'cov-high' : pct >= 50 ? 'cov-mid' : pct > 0 ? 'cov-low' : 'cov-none';
 
             return `<tr class="${v.is_active === false ? 'table-secondary opacity-75' : ''}">
         <td class="text-muted">${i + 1}</td>
         <td>
-            <div class="fw-bold" style="color:var(--c-blue-900);">${v.name_ar || '—'}</div>
-            ${v.name_en ? `<div class="text-muted small">${v.name_en}</div>` : ''}
-            ${v.description ? `<div style="font-size:0.65rem; color:#64748b; margin-top:3px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.description}</div>` : ''}
+            <div class="vac-name-ar">${v.name_ar || '—'}</div>
+            ${v.name_en ? `<div class="vac-name-en">${v.name_en}</div>` : ''}
+            ${v.description ? `<div class="vac-desc" title="${v.description}">${v.description}</div>` : ''}
         </td>
         <td>
             ${v.schedules && v.schedules.length > 0
                     ? `<div class="d-flex flex-wrap gap-1">${v.schedules.map(s =>
-                        `<span class="badge ${s.stage === 'SCHOOL' ? 'bg-warning text-dark' : 'bg-info text-dark'}" style="font-size:0.72rem;">
+                        `<span class="${s.stage === 'SCHOOL' ? 'dose-badge-school' : 'dose-badge-basic'}">
                         جرعة ${s.dose_number} (${s.age_in_months} شهر)
                     </span>`).join('')}</div>`
                     : '<small class="text-muted">—</small>'}
         </td>
         <td>
-            <div style="background:${bg}; border:1px solid ${color}40; padding:8px 12px; border-radius:8px;">
-                <div class="d-flex justify-content-between mb-1" style="font-size:0.7rem; font-weight:700; color:${color};">
+            <div class="cov-cell ${covClass}">
+                <div class="d-flex justify-content-between mb-1" style="font-size:0.7rem; font-weight:700;">
                     <span>${vc} ${label}</span>
                     <span>${pct}%</span>
                 </div>
-                <div style="height:6px; background:${color}20; border-radius:4px; overflow:hidden;">
-                    <div style="height:100%; background:${color}; width:${pct}%; border-radius:4px;"></div>
+                <div class="cov-bar-track ${covClass}-track">
+                    <div class="cov-bar-fill ${covClass}-fill" style="width:${pct}%;"></div>
                 </div>
             </div>
         </td>

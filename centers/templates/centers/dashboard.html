@@ -267,6 +267,43 @@
     </div>
 
 </div><!-- /db-wrap -->
+
+<!-- ═══════════ Modal: تفاصيل الموعد ═══════════ -->
+<div class="modal fade" id="apptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;">
+            <div class="modal-header" style="background:var(--amber-l);border-bottom:none;border-radius:16px 16px 0 0;padding:1rem 1.25rem;">
+                <div>
+                    <h6 class="modal-title fw-bold mb-0" style="color:var(--amber);font-size:.9rem;">
+                        <i class="fas fa-calendar-check me-2"></i><span id="modal-child-name">—</span>
+                    </h6>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">
+                        <i class="far fa-calendar-alt me-1"></i><span id="modal-due-date">—</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;">اضغط على لقاح لعرض تفاصيله</p>
+                <div id="modal-vaccines-list"></div>
+                <!-- تفاصيل اللقاح المختار -->
+                <div id="vaccine-detail-panel" style="display:none;margin-top:1rem;padding:1rem;background:var(--blue-l);border-radius:12px;">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-syringe" style="color:#fff;font-size:.7rem;"></i>
+                        </div>
+                        <div>
+                            <div id="detail-name" style="font-weight:700;font-size:.82rem;color:var(--blue-d);"></div>
+                            <div id="detail-dose" style="font-size:.68rem;color:var(--muted);"></div>
+                        </div>
+                    </div>
+                    <div id="detail-desc" style="font-size:.74rem;color:#374151;line-height:1.6;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -495,17 +532,67 @@
         const aEl = document.getElementById('appt-list');
         if (!appts.length) { aEl.innerHTML = '<div class="emp"><i class="fas fa-calendar-check"></i><p>لا مواعيد قادمة</p></div>'; }
         else {
-            aEl.innerHTML = appts.map(a => {
+            aEl.innerHTML = appts.map((a, idx) => {
                 const ini = (a.child_name || '؟').split(' ').slice(0, 2).map(w => w[0]).join('');
+                const vaccCount = (a.vaccines || []).length;
                 return `<div class="api">
                 <div class="apav">${ini}</div>
                 <div style="min-width:0;flex:1;">
                     <div class="apnm">${a.child_name || '—'}</div>
-                    <div class="apvc"><i class="fas fa-syringe me-1" style="color:var(--green);font-size:.58rem;"></i>${a.vaccine || ''}</div>
+                    <div class="apvc">
+                        <i class="fas fa-syringe me-1" style="color:var(--green);font-size:.58rem;"></i>
+                        ${vaccCount} لقاح${vaccCount > 1 ? 'ات' : ''}
+                    </div>
                 </div>
-                <span class="apbg">${a.due_date || ''}</span>
+                <div class="d-flex flex-column align-items-end gap-1">
+                    <span class="apbg">${a.due_date || ''}</span>
+                    <button class="btn btn-sm appt-detail-btn"
+                        style="font-size:.6rem;padding:2px 8px;border-radius:99px;background:var(--amber-l);color:var(--amber);border:none;font-weight:700;"
+                        data-idx="${idx}">
+                        تفاصيل <i class="fas fa-chevron-left ms-1" style="font-size:.55rem;"></i>
+                    </button>
+                </div>
             </div>`;
             }).join('');
+
+            // فتح الـ modal عند الضغط على "تفاصيل"
+            aEl.querySelectorAll('.appt-detail-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const a = appts[+btn.dataset.idx];
+                    document.getElementById('modal-child-name').textContent = a.child_name || '—';
+                    document.getElementById('modal-due-date').textContent = a.due_date || '—';
+                    document.getElementById('vaccine-detail-panel').style.display = 'none';
+
+                    const vaccines = a.vaccines || [];
+                    document.getElementById('modal-vaccines-list').innerHTML = vaccines.map((v, vi) =>
+                        `<div class="d-flex align-items-center gap-2 mb-2 vaccine-pill"
+                            style="cursor:pointer;padding:8px 12px;border-radius:10px;background:#f8fafc;border:1.5px solid #e2e8f0;transition:all .15s;"
+                            data-vi="${vi}" data-appt-idx="${btn.dataset.idx}">
+                            <i class="fas fa-syringe" style="color:var(--blue);font-size:.7rem;flex-shrink:0;"></i>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:700;font-size:.78rem;color:var(--blue-d);">${v.name}</div>
+                                <div style="font-size:.65rem;color:var(--muted);">جرعة ${v.dose_number}</div>
+                            </div>
+                            <i class="fas fa-chevron-left" style="color:var(--muted);font-size:.6rem;"></i>
+                        </div>`
+                    ).join('');
+
+                    // عرض تفاصيل اللقاح عند الضغط عليه
+                    document.querySelectorAll('.vaccine-pill').forEach(pill => {
+                        pill.addEventListener('click', () => {
+                            document.querySelectorAll('.vaccine-pill').forEach(p => p.style.background = '#f8fafc');
+                            pill.style.background = 'var(--blue-l)';
+                            const v = appts[+pill.dataset.apptIdx].vaccines[+pill.dataset.vi];
+                            document.getElementById('detail-name').textContent = v.name;
+                            document.getElementById('detail-dose').textContent = `جرعة ${v.dose_number}`;
+                            document.getElementById('detail-desc').textContent = v.description || 'لا توجد معلومات إضافية لهذا اللقاح.';
+                            document.getElementById('vaccine-detail-panel').style.display = 'block';
+                        });
+                    });
+
+                    new bootstrap.Modal(document.getElementById('apptModal')).show();
+                });
+            });
         }
 
         /* Activity */
