@@ -490,6 +490,7 @@ class VaccineRecordCreateUpdateSerializer(serializers.ModelSerializer):
 
 class ChildDetailSerializer(serializers.ModelSerializer):
     health_center = HealthCenterListSerializer(read_only=True)
+    health_center_name = serializers.SerializerMethodField()
     family = FamilyListSerializer(read_only=True)
     age = serializers.SerializerMethodField()
     vaccine_records = VaccineRecordListSerializer(source='vaccine_record_set', many=True, read_only=True)
@@ -503,11 +504,20 @@ class ChildDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Child
         fields = ['id', 'full_name', 'date_of_birth', 'age', 'gender',
-                  'health_center', 'family',
+                  'health_center', 'health_center_name', 'family',
                   'birth_governorate', 'birth_governorate_name',
                   'birth_directorate', 'birth_directorate_name', 'place_of_birth',
                   'is_completed', 'completed_date',
                   'vaccine_records', 'upcoming_vaccines', 'full_vaccine_schedule', 'stats', 'created_at', 'created_by_name']
+
+    def get_health_center_name(self, obj):
+        # أولاً: من health_center المباشر
+        if obj.health_center:
+            return obj.health_center.name_ar
+        # ثانياً: من مركز الموظف الذي أنشأ السجل
+        if obj.created_by and obj.created_by.health_center:
+            return obj.created_by.health_center.name_ar
+        return ''
     
     def get_age(self, obj):
         from datetime import date
