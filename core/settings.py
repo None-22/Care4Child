@@ -187,3 +187,18 @@ REST_FRAMEWORK = {
 
 
 
+
+# Graph Models (django-extensions) — لون رأس الجداول أزرق
+GRAPH_MODELS = {
+    'color_code_deletions': True,
+    'rankdir': 'TB',
+    'bgcolor': 'white',
+    'fontname': 'Helvetica',
+    'node': {
+        'shape': 'plaintext',
+        'fontname': 'Helvetica',
+    },
+    'theme': 'original',
+    'arrow_shape': 'normal',
+    'header_color': '#1D74C4',  # أزرق
+}

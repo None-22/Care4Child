@@ -140,3 +140,38 @@ def handle_vaccine_record_deletion(sender, instance, **kwargs):
             child.is_completed = False
             child.completed_date = None
             child.save(update_fields=['is_completed', 'completed_date'])
+
+@receiver(post_save, sender=VaccineSchedule)
+def backfill_vaccine_schedule(sender, instance, created, **kwargs):
+    """
+    عند إضافة جرعة لقاح جديدة (VaccineSchedule):
+    نقوم بإضافتها تلقائياً لجميع الأطفال الحاليين في النظام
+    بشرط أن لا يكون عمر الطفل قد تجاوز العمر المحدد للجرعة.
+    """
+    if created:
+        today = timezone.now().date()
+        months_int = int(instance.age_in_months)
+        days_extra = int((instance.age_in_months - months_int) * 30)
+        
+        personal_schedule_list = []
+        
+        # جلب جميع الأطفال الذين لديهم تاريخ ميلاد
+        children = Child.objects.filter(date_of_birth__isnull=False)
+        
+        for child in children:
+            due_date = child.date_of_birth + relativedelta(months=months_int) + timedelta(days=days_extra)
+            
+            # إذا كان تاريخ الاستحقاق اليوم أو في المستقبل (أي أن الطفل لم يتجاوز العمر المطلوب)
+            if due_date >= today:
+                personal_schedule_list.append(
+                    ChildVaccineSchedule(
+                        child=child,
+                        vaccine_schedule=instance,
+                        due_date=due_date,
+                        is_taken=False
+                    )
+                )
+                
+        # حفظ السجلات دفعة واحدة في قاعدة البيانات لتحسين الأداء
+        if personal_schedule_list:
+            ChildVaccineSchedule.objects.bulk_create(personal_schedule_list)
