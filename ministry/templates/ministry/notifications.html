@@ -144,6 +144,11 @@
             });
             
             container.innerHTML = html;
+
+            // ← بعد عرض الإشعارات تحدّث الشارة في الهيدر فوراً
+            if (typeof window.refreshNotifBadge === 'function') {
+                setTimeout(window.refreshNotifBadge, 500);
+            }
             
         } catch (error) {
             console.error('Failed to load notifications:', error);

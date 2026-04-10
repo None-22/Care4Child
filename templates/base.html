@@ -319,7 +319,8 @@
     <!-- Notifications JS -->
     {% if request.user.role == 'MINISTRY' %}
     <script>
-        async function loadUnreadCount() {
+        // دالة مشتركة يمكن استدعاؤها من أي صفحة
+        window.refreshNotifBadge = async function () {
             try {
                 const rs = await apiFetch('/api/notifications/');
                 const notifs = rs.results || rs;
@@ -334,9 +335,13 @@
                     }
                 }
             } catch(e) {}
-        }
-        
-        document.addEventListener('DOMContentLoaded', loadUnreadCount);
+        };
+
+        // تحديث عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', window.refreshNotifBadge);
+
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(window.refreshNotifBadge, 30000);
     </script>
     {% endif %}
 

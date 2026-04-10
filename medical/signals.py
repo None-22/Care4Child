@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from .models import Child, VaccineSchedule, ChildVaccineSchedule, Family, VaccineRecord
 from dateutil.relativedelta import relativedelta
@@ -175,3 +175,26 @@ def backfill_vaccine_schedule(sender, instance, created, **kwargs):
         # حفظ السجلات دفعة واحدة في قاعدة البيانات لتحسين الأداء
         if personal_schedule_list:
             ChildVaccineSchedule.objects.bulk_create(personal_schedule_list)
+
+
+@receiver(pre_delete, sender=Child)
+def cleanup_family_if_last_child(sender, instance, **kwargs):
+    """
+    عند حذف طفل:
+    - نتحقق إذا كان الطفل هو الوحيد في العائلة
+    - إذا نعم: نحذف حساب المستخدم المرتبط بالعائلة ثم نحذف العائلة تلقائياً
+    - إذا لا: نترك العائلة كما هي (لا يزال فيها أطفال آخرون)
+    """
+    family = instance.family
+    if not family:
+        return
+
+    # نحسب الأطفال المتبقين بعد الحذف (نستثني الطفل الحالي)
+    remaining_children = Child.objects.filter(family=family).exclude(pk=instance.pk).count()
+
+    if remaining_children == 0:
+        # الطفل هو الأخير في العائلة — نحذف حساب المستخدم والعائلة
+        user_account = family.account
+        if user_account:
+            user_account.delete()  # حذف الحساب أولاً لتجنب أخطاء المفاتيح الخارجية
+        family.delete()  # ثم حذف العائلة
