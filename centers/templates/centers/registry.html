@@ -174,8 +174,13 @@
         await loadVaccineStructure();
         await loadCenterOptions();
         
-        // Restore state from localStorage
+        // Restore state from localStorage (other filters only)
         const savedPage = restoreFiltersState();
+
+        // دائماً نضبط المركز على مركز المستخدم المسجّل دخوله — نعيد الضبط بعد restoreFiltersState
+        if (MY_CENTER_ID) {
+            document.getElementById('center-filter').value = MY_CENTER_ID;
+        }
         
         if (savedPage && savedPage > 1) {
             await loadChildren(savedPage);
@@ -194,10 +199,8 @@
                 opt.textContent = c.name_ar;
                 sel.appendChild(opt);
             });
-            // الديفولت: مركز المستخدم الحالي — فقط لو ما في قيمة محفوظة
-            const saved = localStorage.getItem('registryFilters');
-            const hasSavedCenter = saved && JSON.parse(saved).center;
-            if (MY_CENTER_ID && !hasSavedCenter) sel.value = MY_CENTER_ID;
+            // الافتراضي دائماً مركز المستخدم المسجّل، بصرف النظر عن أي قيمة محفوظة
+            if (MY_CENTER_ID) sel.value = MY_CENTER_ID;
         } catch (e) { console.error('loadCenterOptions:', e); }
     }
 
