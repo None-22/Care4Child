@@ -177,24 +177,36 @@ def backfill_vaccine_schedule(sender, instance, created, **kwargs):
             ChildVaccineSchedule.objects.bulk_create(personal_schedule_list)
 
 
-@receiver(pre_delete, sender=Child)
+@receiver(post_delete, sender=Child)
 def cleanup_family_if_last_child(sender, instance, **kwargs):
     """
-    عند حذف طفل:
-    - نتحقق إذا كان الطفل هو الوحيد في العائلة
-    - إذا نعم: نحذف حساب المستخدم المرتبط بالعائلة ثم نحذف العائلة تلقائياً
-    - إذا لا: نترك العائلة كما هي (لا يزال فيها أطفال آخرون)
+    بعد حذف الطفل من قاعدة البيانات:
+    - نتحقق إذا لا يوجد أطفال آخرون في هذه العائلة
+    - إذا نعم: نحذف حساب المستخدم (وسيحذف Django العائلة تلقائياً بالـ CASCADE)
+    - إذا لا: نترك العائلة كما هي
+
+    ملاحظة: نستخدم post_delete وليس pre_delete
+    لأن في pre_delete الطفل لا يزال في قاعدة البيانات،
+    فحذف الحساب → CASCADE يحذف العائلة → PROTECT يمنعه (الطفل موجود) → خطأ 500
+    في post_delete الطفل محذوف فعلاً → لا يوجد تعارض
     """
-    family = instance.family
-    if not family:
+    family_id = instance.family_id  # نحفظ الـ ID مباشرة
+    if not family_id:
         return
 
-    # نحسب الأطفال المتبقين بعد الحذف (نستثني الطفل الحالي)
-    remaining_children = Child.objects.filter(family=family).exclude(pk=instance.pk).count()
+    try:
+        family = Family.objects.get(pk=family_id)
+    except Family.DoesNotExist:
+        return  # العائلة حُذفت مسبقاً
+
+    # نتحقق من الأطفال المتبقين (الطفل المحذوف لم يعد موجوداً)
+    remaining_children = Child.objects.filter(family=family).count()
 
     if remaining_children == 0:
-        # الطفل هو الأخير في العائلة — نحذف حساب المستخدم والعائلة
         user_account = family.account
         if user_account:
-            user_account.delete()  # حذف الحساب أولاً لتجنب أخطاء المفاتيح الخارجية
-        family.delete()  # ثم حذف العائلة
+            # حذف الحساب → CASCADE يحذف العائلة تلقائياً
+            user_account.delete()
+        else:
+            # لا يوجد حساب — نحذف العائلة مباشرة
+            family.delete()
