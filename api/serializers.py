@@ -350,10 +350,8 @@ class ChildListSerializer(serializers.ModelSerializer):
         first_schedule = next_schedules.first()
         
         if first_schedule:
-            # حساب عمر الطفل الفعلي عند موعد اللقاح (بالأشهر)
-            dob = obj.date_of_birth
-            due = first_schedule.due_date
-            age_months_real = (due.year - dob.year) * 12 + (due.month - dob.month)
+            # نجلب العمر الدقيق (بالكسور) مباشرةً من جدول اللقاح (مثلاً 2.5 لشهرين ونصف)
+            age_months_real = first_schedule.vaccine_schedule.age_in_months
 
             # استخراج جميع الجرعات التي تستحق في نفس الشهر والسنة
             same_date_schedules = next_schedules.filter(
@@ -427,7 +425,7 @@ class VaccineCreateUpdateSerializer(serializers.ModelSerializer):
             age_in_months = float(sched.get('age_in_months', 0))
             stage = sched.get('stage')
             if not stage:
-                stage = 'SCHOOL' if age_in_months >= 48 else 'BASIC'
+                stage = 'SCHOOL' if age_in_months >= 72 else 'BASIC'  # 72 أشهر = 6 سنوات
             VaccineSchedule.objects.create(
                 vaccine=vaccine,
                 dose_number=int(sched.get('dose_number', 1)),
