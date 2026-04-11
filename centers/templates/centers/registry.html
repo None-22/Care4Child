@@ -181,11 +181,23 @@
         if (MY_CENTER_ID) {
             document.getElementById('center-filter').value = MY_CENTER_ID;
         }
+
+        // الافتراضي دائماً "قيد التحصين" بصرف النظر عن المحفوظ
+        document.getElementById('status-filter').value = 'active';
+        currentStatus = 'active';
         
         if (savedPage && savedPage > 1) {
             await loadChildren(savedPage);
         } else {
             await loadChildren(1);
+        }
+    });
+
+    // إعادة جلب البيانات عند الرجوع للصفحة (back button أو بعد تسجيل لقاح)
+    window.addEventListener('pageshow', (e) => {
+        // e.persisted = true يعني الصفحة جاءت من الـ bfcache (back-forward cache)
+        if (e.persisted) {
+            loadChildren(currentPage || 1);
         }
     });
 
