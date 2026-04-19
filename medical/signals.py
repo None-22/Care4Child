@@ -210,3 +210,40 @@ def cleanup_family_if_last_child(sender, instance, **kwargs):
         else:
             # لا يوجد حساب — نحذف العائلة مباشرة
             family.delete()
+
+@receiver(post_save, sender=VaccineRecord)
+def send_complaint_notification(sender, instance, created, **kwargs):
+    """
+    عند تسجيل جرعة جديدة:
+    → أرسل إشعار FCM لولي الأمر يخبره بإمكانية الإبلاغ عن مشكلة
+    """
+    if not created:
+        return
+
+    child = instance.child
+    family = child.family
+
+    # نستخدم المركز المسجل في الجرعة (الجديد)، أو مركز الطفل كاحتياط
+    center = instance.health_center or child.health_center
+
+    if not center or not family or not family.account:
+        return
+
+    from notifications.services import FCMService
+
+    FCMService.send_notification(
+        user=family.account,
+        title="تم تسجيل جرعة طفلك ✅",
+        body=(
+            f"تم تسجيل حصول {child.full_name} على جرعة "
+            f"{instance.vaccine.name_ar} في {center.name_ar}. "
+            f"هل واجهتَ أي مشكلة؟ اضغط للإبلاغ."
+        ),
+        notification_type='COMPLAINT_PROMPT',
+        data={
+            'type': 'COMPLAINT_PROMPT',
+            'vaccine_record_id': str(instance.id),
+            'center_name': center.name_ar,
+            'child_name': child.full_name,
+        }
+    )

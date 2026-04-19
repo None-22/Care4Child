@@ -10,7 +10,8 @@ from .views import (
     ChildViewSet, VaccineViewSet, VaccineRecordViewSet,
     UpdateFCMTokenView, DashboardStatsView, ReportsByCenterView,
     NotificationViewSet, AllVaccinesCoverageReportView,
-    TriggerRemindersCronView
+    TriggerRemindersCronView,
+    CenterComplaintViewSet, CenterComplaintReportView
 )
 
 # إنشاء Router
@@ -24,6 +25,7 @@ router.register(r'children', ChildViewSet)
 router.register(r'vaccines', VaccineViewSet)
 router.register(r'vaccine-records', VaccineRecordViewSet)
 router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'complaints', CenterComplaintViewSet, basename='complaint')
 
 app_name = 'api'
 
@@ -42,6 +44,7 @@ urlpatterns = [
     # Reports (New)
     path('reports/by-center/', ReportsByCenterView.as_view(), name='reports_by_center'),
     path('reports/all-vaccines-coverage/', AllVaccinesCoverageReportView.as_view(), name='all-vaccines-coverage'),
+    path('reports/complaints/', CenterComplaintReportView.as_view(), name='complaints-report'),
     
     # Webhook for Render cron jobs
     path('cron/trigger-reminders/', TriggerRemindersCronView.as_view(), name='cron_trigger_reminders'),

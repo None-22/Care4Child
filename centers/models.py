@@ -97,3 +97,61 @@ class HealthCenter(models.Model):
         verbose_name = "مركز صحي"
         verbose_name_plural = "المراكز الصحية"
         unique_together = ('name_ar', 'governorate', 'directorate')
+
+class CenterComplaint(models.Model):
+    COMPLAINT_TYPES = (
+        ('EXCELLENT',            'ممتاز - خدمة رائعة'),
+        ('GOOD',                 'جيد - لا توجد ملاحظات'),
+        ('VACCINE_UNAVAILABLE',  'اللقاح غير متوفر بالمركز'),
+        ('SUBSTITUTE_GIVEN',     'تم إعطاء لقاح بديل'),
+        ('ILLEGAL_FEES',         'طُلبت رسوم مالية غير قانونية'),
+        ('BAD_TREATMENT',        'سوء المعاملة'),
+        ('STAFF_ABSENT',         'غياب الموظفين'),
+        ('OTHER',                'أخرى'),
+    )
+
+    STATUS_CHOICES = (
+        ('PENDING',    'قيد المراجعة'),
+        ('REVIEWED',   'تمت المراجعة'),
+        ('RESOLVED',   'تم الحل'),
+    )
+
+    # الروابط
+    vaccine_record = models.OneToOneField(
+        'medical.VaccineRecord',
+        on_delete=models.CASCADE,
+        related_name='complaint',
+        verbose_name="سجل التطعيم",
+        null=True,
+        blank=True
+    )
+    health_center = models.ForeignKey(
+        HealthCenter,
+        on_delete=models.PROTECT,
+        related_name='complaints',
+        verbose_name="المركز المُبلَّغ عنه"
+    )
+    family = models.ForeignKey(
+        'medical.Family',
+        on_delete=models.CASCADE,
+        related_name='complaints',
+        verbose_name="العائلة"
+    )
+
+    # بيانات الشكوى
+    complaint_type = models.CharField(
+        max_length=25,
+        choices=COMPLAINT_TYPES,
+        verbose_name="نوع الشكوى"
+    )
+    details = models.TextField(blank=True, null=True, verbose_name="تفاصيل إضافية")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "شكوى على مركز"
+        verbose_name_plural = "شكاوى المراكز"
+
+    def __str__(self):
+        return f"{self.get_complaint_type_display()} — {self.health_center.name_ar}"

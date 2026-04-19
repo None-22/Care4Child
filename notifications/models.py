@@ -10,6 +10,7 @@ class NotificationLog(models.Model):
         ('REMINDER', 'تذكير بموعد'),
         ('MISSED', 'تنبيه تأخير'),
         ('SYSTEM', 'إشعار نظام'),
+        ('COMPLAINT_PROMPT', 'طلب إبلاغ عن مشكلة'),
     )
 
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="المستلم", related_name="notifications")

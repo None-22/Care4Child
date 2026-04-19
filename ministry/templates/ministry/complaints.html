@@ -1,0 +1,91 @@
+{% extends 'base.html' %} 
+{% block title %}سجل الشكاوى والرقابة | Care4Child{% endblock %}
+{% block page_title %}الرقابة المجتمعية والشكاوى{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="ministry-banner mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="text-white mb-2"><i class="fas fa-exclamation-triangle me-2"></i>سجل الرقابة المجتمعية والشكاوى</h2>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.85);">
+                        <i class="fas fa-eye me-1"></i>نظرة شاملة لمراقبة جودة المراكز وتقييمات أولياء الأمور
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light fw-bold px-4 rounded-pill"><i class="fas fa-file-excel me-2"></i>تصدير التقرير</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow border-0" style="border-radius:15px;overflow:hidden;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 text-center align-middle">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="py-3">رقم الشكوى</th>
+                        <th class="py-3">التاريخ</th>
+                        <th class="py-3">المركز الصحي</th>
+                        <th class="py-3">ولي الأمر</th>
+                        <th class="py-3">نوع المشكلة</th>
+                        <th class="py-3">التفاصيل</th>
+                        <th class="py-3">الحالة</th>
+                        <th class="py-3">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr>
+                        <td class="fw-bold text-muted">#{{ c.id }}</td>
+                        <td>{{ c.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="fw-bold text-primary">{{ c.health_center.name|default:"غير محدد" }}</td>
+                        <td>{{ c.family.mother_name|default:"---" }} / {{ c.family.father_name|default:"---" }}</td>
+                        <td>
+                            {% if c.complaint_type == 'vaccine_unavailable' %}
+                                <span class="badge bg-danger">لقاح غير متوفر</span>
+                            {% elif c.complaint_type == 'bad_treatment' %}
+                                <span class="badge bg-warning text-dark">سوء معاملة</span>
+                            {% elif c.complaint_type == 'illegal_fees' %}
+                                <span class="badge bg-danger">رسوم غير قانونية</span>
+                            {% elif c.complaint_type == 'crowded' %}
+                                <span class="badge bg-secondary">ازدحام</span>
+                            {% else %}
+                                <span class="badge bg-info">أخرى</span>
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ c.details }}">
+                            {{ c.details|default:"لا يوجد تفاصيل إضافية" }}
+                        </td>
+                        <td>
+                            {% if c.status == 'pending' %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">قيد المراجعة</span>
+                            {% elif c.status == 'resolved' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill">تم الحل</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill">تم التصعيد</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary rounded-pill px-3" {% if c.status == 'resolved' %}disabled{% endif %}>
+                                معالجة
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
+                            <p class="mb-0">لا توجد شكاوى مسجلة حتى الآن.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

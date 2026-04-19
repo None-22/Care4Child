@@ -31,7 +31,7 @@ def initialize_firebase():
 
 class FCMService:
     @staticmethod
-    def send_notification(user, title, body, notification_type='SYSTEM'):
+    def send_notification(user, title, body, notification_type='SYSTEM', data=None):
         if not user.fcm_token:
             NotificationLog.objects.create(recipient=user, title=title, body=body, 
                                          notification_type=notification_type, sent_via_fcm=False, 
@@ -43,6 +43,9 @@ class FCMService:
 
         if firebase_ok:
             try:
+                payload_data = {'type': notification_type, 'click_action': 'FLUTTER_NOTIFICATION_CLICK'}
+                if data:
+                    payload_data.update(data)
                 message = messaging.Message(
                     notification=messaging.Notification(title=title, body=body),
                     android=messaging.AndroidConfig(
@@ -58,7 +61,7 @@ class FCMService:
                         ),
                     ),
                     token=user.fcm_token,
-                    data={'type': notification_type, 'click_action': 'FLUTTER_NOTIFICATION_CLICK'}
+                    data=payload_data
                 )
                 response = messaging.send(message)
                 NotificationLog.objects.create(recipient=user, title=title, body=body, 

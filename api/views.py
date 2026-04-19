@@ -380,6 +380,26 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
             'today_vaccinations': today_count,
         })
 
+    @action(detail=False, methods=['get'])
+    def pending_evaluations(self, request):
+        user = self.request.user
+        if user.role != 'CUSTOMER':
+            return Response([])
+
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Only look for records in the last 7 days for the user's family
+        recent_date = timezone.now().date() - timedelta(days=7)
+        records = VaccineRecord.objects.filter(
+            child__family__account=user,
+            date_given__gte=recent_date,
+            complaint__isnull=True  # No evaluation submitted yet
+        ).order_by('-date_given', '-id')
+        
+        serializer = self.get_serializer(records, many=True)
+        return Response(serializer.data)
+
 
 # ============== FCM Token Update View ==============
 
@@ -661,12 +681,24 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from axes.helpers import get_lockout_response
+from axes.handlers.proxy import AxesProxyHandler
 
 class CustomAuthTokenView(ObtainAuthToken):
     """
     تحقق من حالة المركز الصحي قبل إعطاء توكن للمستخدم.
+    🔒 مدمج مع django-axes لمنع هجمات Brute Force.
     """
     def post(self, request, *args, **kwargs):
+        # 🔒 فحص axes: هل هذا الـ IP/يوزر محظور؟
+        if AxesProxyHandler.is_already_locked(request, credentials={'username': request.data.get('username', '')}):
+            return Response(
+                {
+                    'error': 'تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة بعد ساعة.',
+                    'locked': True,
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -710,3 +742,81 @@ class TriggerRemindersCronView(APIView):
             return Response({"success": True, "message": "Notification engine ran successfully."})
         except Exception as e:
             return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ================= Complaints =================
+
+from centers.models import CenterComplaint
+from .serializers import CenterComplaintSerializer, CenterComplaintCreateSerializer
+
+class CenterComplaintViewSet(viewsets.ModelViewSet):
+    """
+    API للشكاوى
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or getattr(user, 'role', None) == 'MINISTRY':
+            return CenterComplaint.objects.all().order_by('-created_at')
+        if getattr(user, 'role', None) == 'CUSTOMER':
+            return CenterComplaint.objects.filter(family__account=user).order_by('-created_at')
+        # Center staff should ideally not see complaints about themselves, or maybe they can?
+        # Based on requirements: "تنتقل الشكوى مباشرةً إلى لوحة تحكم الوزارة متجاوزةً مدير المركز"
+        return CenterComplaint.objects.none()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CenterComplaintCreateSerializer
+        return CenterComplaintSerializer
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied, ValidationError
+        
+        user = self.request.user
+        if getattr(user, 'role', None) != 'CUSTOMER':
+            raise PermissionDenied("فقط أولياء الأمور يمكنهم تقديم شكاوى متعلقة بالجرعات.")
+        
+        vaccine_record = serializer.validated_data.get('vaccine_record')
+        if vaccine_record:
+            if vaccine_record.child.family.account != user:
+                raise PermissionDenied("لا يمكنك تقديم شكوى لجرعة طفل في عائلة أخرى.")
+            center = vaccine_record.health_center or vaccine_record.child.health_center
+        else:
+            center = serializer.validated_data.get('health_center')
+            if not center:
+                raise ValidationError("يجب تحديد المركز الصحي إذا لم يتم اختيار جرعة معينة.")
+        
+        serializer.save(
+            family=user.family_profile,
+            health_center=center,
+            status='PENDING'
+        )
+
+class CenterComplaintReportView(APIView):
+    """
+    API تقرير شكاوى المراكز للوزارة
+    """
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        centers = HealthCenter.objects.filter(is_active=True).annotate(
+            total_complaints=Count('complaints')
+        ).filter(total_complaints__gt=0)
+        
+        report_data = []
+        for center in centers:
+            complaints = CenterComplaint.objects.filter(health_center=center)
+            complaints_by_type = complaints.values('complaint_type').annotate(count=Count('id'))
+            
+            types_dict = {item['complaint_type']: item['count'] for item in complaints_by_type}
+            
+            report_data.append({
+                'center_id': center.id,
+                'center_name': center.name_ar,
+                'total_complaints': center.total_complaints,
+                'complaints_by_type': types_dict,
+                'latest_complaint_date': complaints.order_by('-created_at').first().created_at if complaints.exists() else None
+            })
+            
+        report_data.sort(key=lambda x: x['total_complaints'], reverse=True)
+        return Response(report_data)

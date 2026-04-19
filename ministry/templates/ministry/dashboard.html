@@ -30,6 +30,33 @@
     </div>
 </div>
 
+    <!-- COMPLAINTS KPI ROW -->
+    <div class="row w-100 mb-4" style="margin: 0;">
+        <div class="col-12 mb-2">
+            <h5 class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>الرقابة والشكاوى الحديثة</h5>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: rgba(220, 38, 38, 0.04); border-right: 4px solid #dc2626 !important; height: 100%;">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h6 class="card-title text-danger fw-bold mb-3">شكاوى تتطلب التدخل</h6>
+                    <h2 class="display-5 fw-bold mb-0" style="color: var(--text-color, #1e293b);">{{ pending_complaints_count|default:"0" }}</h2>
+                    <div class="mt-auto pt-3">
+                        <a href="{% url 'ministry:complaints_list' %}" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3">عرض التفاصيل <i class="fas fa-arrow-left ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-3">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; height: 100%; background: var(--bg-card, #fff);">
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div style="height: 120px; width: 100%; display: flex; justify-content: center;">
+                        <canvas id="complaintsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <div class="db-wrap">
 
     <!-- KPI SIDEBAR -->
@@ -259,6 +286,29 @@
                 '  ·  ' + new Date().toLocaleTimeString('ar-SA');
         };
         clk(); setInterval(clk, 1000);
+
+        const ctx2 = document.getElementById('complaintsChart');
+        if (ctx2) {
+            new Chart(ctx2.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['لقاح غير متوفر', 'طلب رسوم', 'سوء معاملة', 'ازدحام', 'أخرى'],
+                    datasets: [{
+                        data: [45, 15, 20, 10, 10], // داتا تجريبية مؤقتة
+                        backgroundColor: ['#dc2626', '#d97706', '#f59e0b', '#0ea5e9', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'left', labels: { boxWidth: 12, font: { size: 10 } } },
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
 
         const anim = (id, end, dur = 900) => {
             const el = document.getElementById(id); if (!el) return;

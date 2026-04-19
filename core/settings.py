@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'api',
     'notifications.apps.NotificationsConfig', # إدارة الإشعارات
     'ministry.apps.MinistryConfig',  # وزارة الصحة
+    'axes',                          # 🔒 حماية محاولات الاختراق
 ]
 
 MIDDLEWARE = [
@@ -79,6 +80,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',  # 🔒 يجب أن يكون آخر واحد
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -170,8 +172,8 @@ CORS_ALLOWED_ORIGINS_REGEXES = []
 
 # Authentication Settings
 LOGIN_REDIRECT_URL = 'centers:dashboard'
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'
+LOGOUT_REDIRECT_URL = '/users/login/'
+LOGIN_URL = '/users/login/'
 
 # REST Framework Config
 REST_FRAMEWORK = {
@@ -183,6 +185,74 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# ======================================================
+# 🔒 django-axes — حماية من هجمات Brute Force
+# ======================================================
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',          # يجب أن يكون أولاً
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+from datetime import timedelta
+
+def get_axes_cooloff(request):
+    """
+    قفل تدريجي - تستقبل الدالة الـ request وليس رقماً:
+    - الدورة الأولى  (1-5 فشل)   → دقيقة واحدة
+    - الدورة الثانية (6-10 فشل)  → دقيقتان
+    - الدورة الثالثة (11-15 فشل) → 4 دقائق
+    - وهكذا يتضاعف حتى 60 دقيقة كحد أقصى
+    """
+    from axes.models import AccessAttempt
+    username = ''
+    ip_address = ''
+    if hasattr(request, 'POST'):
+        username = request.POST.get('username', '')
+    if hasattr(request, 'META'):
+        ip_address = request.META.get('REMOTE_ADDR', '')
+
+    attempt = AccessAttempt.objects.filter(
+        username=username,
+        ip_address=ip_address,
+    ).first()
+
+    failures = attempt.failures_since_start if attempt else 0
+    lockout_number = max(1, (failures // 5))       # رقم الدورة الحالية
+    minutes = min(2 ** (lockout_number - 1), 60)   # 1, 2, 4, 8 ... حتى 60
+    return timedelta(minutes=minutes)
+
+AXES_FAILURE_LIMIT = 5           # عدد المحاولات الخاطئة المسموحة
+AXES_COOLOFF_TIME = get_axes_cooloff   # قفل تدريجي (callable)
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']  # قفل بـ(يوزر + IP) معاً
+AXES_RESET_ON_SUCCESS = True     # أعد العداد تلقائياً بعد الدخول الناجح
+AXES_VERBOSE = False             # لا نريد سجلات زائدة في الـ console
+AXES_LOCKOUT_TEMPLATE = 'axes/lockout.html'  # صفحة القفل المخصصة
+
+def axes_lockout_response(request, credentials, *args, **kwargs):
+    """ترسل wait_minutes للصفحة المخصصة حتى يظهر العداد بشكل صحيح."""
+    from django.shortcuts import render
+    from axes.models import AccessAttempt
+
+    username = credentials.get('username', '')
+    ip_address = request.META.get('REMOTE_ADDR', '')
+
+    attempt = AccessAttempt.objects.filter(
+        username=username,
+        ip_address=ip_address,
+    ).first()
+
+    failures = attempt.failures_since_start if attempt else 0
+    lockout_number = max(1, failures // 5)
+    wait_minutes = min(2 ** (lockout_number - 1), 60)
+
+    return render(request, 'axes/lockout.html', {
+        'wait_minutes': wait_minutes,
+        'failures': failures,
+        'lockout_number': lockout_number,
+    }, status=429)
+
+AXES_LOCKOUT_CALLABLE = axes_lockout_response
 
 
 

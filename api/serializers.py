@@ -31,10 +31,28 @@ class HealthCenterListSerializer(serializers.ModelSerializer):
     governorate_name = serializers.CharField(source='governorate.name_ar', read_only=True)
     directorate_name = serializers.CharField(source='directorate.name_ar', read_only=True)
     
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = HealthCenter
         fields = ['id', 'name_ar', 'name_en', 'center_code', 'governorate_name', 
-                  'directorate_name', 'is_active', 'created_at']
+                  'directorate_name', 'is_active', 'created_at', 'average_rating', 'reviews_count']
+
+    def get_average_rating(self, obj):
+        comps = obj.complaints.all()
+        if not comps: return 0.0
+        score = 0
+        for c in comps:
+             if c.complaint_type == 'EXCELLENT': score += 5
+             elif c.complaint_type == 'GOOD': score += 4
+             elif c.complaint_type == 'OTHER': score += 3
+             elif c.complaint_type == 'SUBSTITUTE_GIVEN': score += 2
+             else: score += 1
+        return round(score / len(comps), 1)
+
+    def get_reviews_count(self, obj):
+        return obj.complaints.count()
 
 
 class HealthCenterDetailSerializer(serializers.ModelSerializer):
@@ -42,19 +60,36 @@ class HealthCenterDetailSerializer(serializers.ModelSerializer):
     directorate = DirectorateSerializer(read_only=True)
     staff_count = serializers.SerializerMethodField()
     children_count = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
     
     class Meta:
         model = HealthCenter
         fields = ['id', 'name_ar', 'name_en', 'center_code', 'address', 'working_hours', 
                   'license_number', 'governorate', 
                   'directorate', 'is_active', 'staff_count', 'children_count', 
-                  'created_at']
+                  'created_at', 'average_rating', 'reviews_count']
     
     def get_staff_count(self, obj):
         return CustomUser.objects.filter(health_center=obj).count()
     
     def get_children_count(self, obj):
         return Child.objects.filter(health_center=obj).count()
+
+    def get_average_rating(self, obj):
+        comps = obj.complaints.all()
+        if not comps: return 0.0
+        score = 0
+        for c in comps:
+             if c.complaint_type == 'EXCELLENT': score += 5
+             elif c.complaint_type == 'GOOD': score += 4
+             elif c.complaint_type == 'OTHER': score += 3
+             elif c.complaint_type == 'SUBSTITUTE_GIVEN': score += 2
+             else: score += 1
+        return round(score / len(comps), 1)
+
+    def get_reviews_count(self, obj):
+        return obj.complaints.count()
 
 
 class HealthCenterCreateUpdateSerializer(serializers.ModelSerializer):
@@ -703,6 +738,40 @@ from notifications.models import NotificationLog
 
 class NotificationLogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NotificationLog
         fields = ['id', 'title', 'body', 'notification_type', 'is_read', 'created_at']
         read_only_fields = ['id', 'title', 'body', 'notification_type', 'created_at']
+
+# ============== Complaints ==============
+
+from centers.models import CenterComplaint
+
+class CenterComplaintSerializer(serializers.ModelSerializer):
+    health_center_name = serializers.CharField(source='health_center.name_ar', read_only=True)
+    family_name = serializers.SerializerMethodField(read_only=True)
+    complaint_type_display = serializers.CharField(source='get_complaint_type_display', read_only=True)
+
+    class Meta:
+        model = CenterComplaint
+        fields = ['id', 'vaccine_record', 'health_center', 'health_center_name', 
+                  'family', 'family_name', 'complaint_type', 'complaint_type_display', 
+                  'details', 'status', 'created_at']
+        read_only_fields = ['status', 'created_at']
+
+    def get_family_name(self, obj):
+        if obj.family:
+            return f"{obj.family.father_name} & {obj.family.mother_name}"
+        return ""
+
+class CenterComplaintCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CenterComplaint
+        fields = ['vaccine_record', 'health_center', 'complaint_type', 'details']
+        extra_kwargs = {
+            'vaccine_record': {'required': False, 'allow_null': True},
+            'health_center': {'required': False, 'allow_null': True},
+        }
+
+    def validate_vaccine_record(self, value):
+        if value and hasattr(value, 'complaint'):
+            raise serializers.ValidationError("تم تسجيل شكوى لهذه الجرعة مسبقاً")
+        return value

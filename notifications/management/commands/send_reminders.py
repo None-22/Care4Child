@@ -57,13 +57,14 @@ class Command(BaseCommand):
                 is_taken=False
             ).select_related('child', 'child__family__account', 'vaccine_schedule__vaccine')
 
-            # ✅ تجميع اللقاحات حسب (المستخدم، الطفل، العمر) لإرسال إشعار واحد لكل طفل
+            # ✅ تجميع اللقاحات حسب (المستخدم، الطفل، العمر) لإرسال إشعار واحد لكل (طفل + عمر)
             grouped = defaultdict(list)
             for schedule in upcoming_schedules:
                 family_user = schedule.child.family.account
                 if not family_user:
                     continue
-                key = (family_user.id, schedule.child.id)
+                # المفتاح يشمل العمر لضمان إشعار واحد فقط لكل (طفل + عمر) في نفس اليوم
+                key = (family_user.id, schedule.child.id, schedule.vaccine_schedule.age_in_months)
                 grouped[key].append({
                     'user': family_user,
                     'child': schedule.child,
@@ -71,7 +72,7 @@ class Command(BaseCommand):
                     'age_in_months': schedule.vaccine_schedule.age_in_months,
                 })
 
-            for (user_id, child_id), items in grouped.items():
+            for (user_id, child_id, age_in_months), items in grouped.items():
                 family_user = items[0]['user']
                 child = items[0]['child']
                 vaccine_names = [item['vaccine_name'] for item in items]
@@ -84,8 +85,8 @@ class Command(BaseCommand):
                 else:
                     day_text = f"بعد {days_ahead} أيام"
 
-                # العمر من أول لقاح في المجموعة (كلها نفس العمر)
-                age_text = age_to_arabic(items[0]['age_in_months'])
+                # العمر محدد من المفتاح نفسه (ضمان الدقة)
+                age_text = age_to_arabic(age_in_months)
                 title = f"تذكير: تطعيمات عمر {age_text} - {child.full_name}"
 
                 vaccines_text = "، ".join(vaccine_names)
@@ -102,7 +103,11 @@ class Command(BaseCommand):
                         f"يرجى الحضور للمركز الصحي."
                     )
 
-                if FCMService.send_notification(family_user, title, body, notification_type='REMINDER'):
+                if FCMService.send_notification(
+                    family_user, title, body,
+                    notification_type='REMINDER',
+                    data={'route': 'notifications'},
+                ):
                     reminders_sent += 1
 
         self.stdout.write(self.style.SUCCESS(f"Sent {reminders_sent} REMINDERS in total."))
@@ -114,13 +119,13 @@ class Command(BaseCommand):
             is_taken=False
         ).select_related('child', 'child__family__account', 'vaccine_schedule__vaccine')
 
-        # ✅ تجميع اللقاحات الفائتة أيضاً
+        # ✅ تجميع اللقاحات الفائتة حسب (المستخدم، الطفل، العمر) - إشعار واحد لكل (طفل + عمر)
         grouped_missed = defaultdict(list)
         for schedule in missed_schedules:
             family_user = schedule.child.family.account
             if not family_user:
                 continue
-            key = (family_user.id, schedule.child.id)
+            key = (family_user.id, schedule.child.id, schedule.vaccine_schedule.age_in_months)
             grouped_missed[key].append({
                 'user': family_user,
                 'child': schedule.child,
@@ -129,12 +134,12 @@ class Command(BaseCommand):
             })
 
         missed_sent = 0
-        for (user_id, child_id), items in grouped_missed.items():
+        for (user_id, child_id, age_in_months), items in grouped_missed.items():
             family_user = items[0]['user']
             child = items[0]['child']
             vaccine_names = [item['vaccine_name'] for item in items]
 
-            age_text = age_to_arabic(items[0]['age_in_months'])
+            age_text = age_to_arabic(age_in_months)
             title = f"تحذير: فات موعد تطعيمات عمر {age_text} - {child.full_name}"
 
             vaccines_text = "، ".join(vaccine_names)
@@ -149,7 +154,11 @@ class Command(BaseCommand):
                     f"لعمر {age_text} يوم أمس: {vaccines_text}. يرجى التوجه للمركز بأقرب وقت!"
                 )
 
-            if FCMService.send_notification(family_user, title, body, notification_type='MISSED'):
+            if FCMService.send_notification(
+                family_user, title, body,
+                notification_type='MISSED',
+                data={'route': 'notifications'},
+            ):
                 missed_sent += 1
 
         self.stdout.write(self.style.WARNING(f"Sent {missed_sent} MISSED ALERTS."))

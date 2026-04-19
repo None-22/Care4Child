@@ -142,9 +142,13 @@ class VaccineRecord(models.Model):
     
     date_given = models.DateField(verbose_name="تاريخ الإعطاء")
     staff = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="الموظف المسؤول")
-    
-    # يمكن إضافة حقل "المركز الذي أعطى اللقاح" مستقبلاً
-    
+    health_center = models.ForeignKey(
+        'centers.HealthCenter',
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        verbose_name="المركز الذي أعطى الجرعة",
+        related_name='vaccine_records'
+    )
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

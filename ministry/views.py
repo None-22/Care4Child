@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .decorators import ministry_required
+from centers.models import CenterComplaint
 
 
 @login_required
@@ -10,7 +11,8 @@ def dashboard_view(request):
     Ministry National Dashboard.
     Renders a shell — all data fetched client-side from /api/dashboard/stats/
     """
-    return render(request, 'ministry/dashboard.html')
+    pending_complaints_count = CenterComplaint.objects.filter(status='pending').count()
+    return render(request, 'ministry/dashboard.html', {'pending_complaints_count': pending_complaints_count})
 
 
 @login_required
@@ -118,3 +120,17 @@ def reports_view(request):
     Coverage reports per center, pie charts, exportable data.
     """
     return render(request, 'ministry/reports.html')
+
+
+@login_required
+@ministry_required
+def complaints_list_view(request):
+    """
+    Ministry Complaints List Page
+    """
+    complaints = CenterComplaint.objects.select_related('family', 'health_center').order_by('-created_at')
+    
+    context = {
+        'complaints': complaints,
+    }
+    return render(request, 'ministry/complaints.html', context)

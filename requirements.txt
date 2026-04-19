@@ -19,3 +19,4 @@ django-extensions==4.1
 django-jazzmin==3.0.1
 python-dateutil==2.9.0.post0
 django-dbml
+django-axes==8.3.1

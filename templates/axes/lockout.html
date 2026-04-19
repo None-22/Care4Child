@@ -1,0 +1,311 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>الحساب مقفل مؤقتاً – Care4Child</title>
+
+  <!-- Dark Mode: نفس منطق المنصة -->
+  <script>
+    (function () {
+      if (localStorage.getItem('c4c_theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <!-- Google Fonts: Cairo (نفس المنصة) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 RTL -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- نفس متغيرات الألوان من المنصة -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=14.0">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      /* Light mode */
+      background: linear-gradient(135deg, #f0f6ff 0%, #e8f0fe 50%, #f5f8ff 100%);
+      transition: background .3s;
+    }
+
+    [data-theme="dark"] body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e2d40 60%, #0f172a 100%);
+    }
+
+    /* الكارد الرئيسي */
+    .lock-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(29,116,196,0.12);
+      border: 1px solid rgba(29,116,196,0.10);
+      animation: slideUp .45s ease;
+    }
+
+    [data-theme="dark"] .lock-card {
+      background: #1a2639;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* شعار القفل */
+    .lock-icon {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: rgba(239,68,68,0.10);
+      border: 2px solid rgba(239,68,68,0.30);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 2.2rem;
+      color: #ef4444;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.25); }
+      50%      { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+    }
+
+    /* العنوان والنص */
+    .lock-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+    [data-theme="dark"] .lock-title { color: #f1f5f9; }
+
+    .lock-sub {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+    [data-theme="dark"] .lock-sub { color: #94a3b8; }
+
+    /* صندوق العداد */
+    .timer-box {
+      border-radius: 16px;
+      padding: 20px 16px;
+      margin-bottom: 24px;
+      background: rgba(239,68,68,0.06);
+      border: 1px solid rgba(239,68,68,0.20);
+    }
+    [data-theme="dark"] .timer-box {
+      background: rgba(239,68,68,0.10);
+      border-color: rgba(239,68,68,0.25);
+    }
+
+    .timer-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ef4444;
+      margin-bottom: 12px;
+      letter-spacing: .3px;
+    }
+
+    .timer-digits {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .digit-block {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(239,68,68,0.15);
+      border-radius: 12px;
+      padding: 10px 18px;
+      min-width: 74px;
+    }
+    [data-theme="dark"] .digit-block {
+      background: rgba(255,255,255,0.06);
+    }
+    .digit-block .dnum {
+      display: block;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ef4444;
+      line-height: 1;
+    }
+    .digit-block .dlbl {
+      display: block;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+    .tsep { font-size: 2rem; font-weight: 900; color: #ef4444; }
+
+    /* إحصاء المحاولات */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border: 1px solid;
+      border-color: rgba(29,116,196,0.12);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    [data-theme="dark"] .stats-row { border-color: rgba(255,255,255,0.08); }
+
+    .stat-item {
+      flex: 1;
+      padding: 14px 8px;
+      text-align: center;
+      border-left: 1px solid rgba(29,116,196,0.10);
+    }
+    .stat-item:last-child { border-left: none; }
+    [data-theme="dark"] .stat-item { border-color: rgba(255,255,255,0.06); }
+
+    .stat-val {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1d74c4;
+    }
+    .stat-key {
+      font-size: 0.73rem;
+      color: #94a3b8;
+    }
+
+    /* زر الرجوع */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      background: #1d74c4;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(29,116,196,0.28);
+    }
+    .btn-back:hover { background: #1560a8; color:#fff; transform:translateY(-1px); }
+
+    .brand-footer {
+      margin-top: 28px;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+    }
+    [data-theme="dark"] .brand-footer { color: #334155; }
+  </style>
+</head>
+<body>
+
+<div class="lock-card">
+
+  <!-- أيقونة القفل -->
+  <div class="lock-icon">
+    <i class="fas fa-lock"></i>
+  </div>
+
+  <h1 class="lock-title">تم تجاوز عدد المحاولات</h1>
+  <p class="lock-sub">
+    للحماية من المحاولات غير المصرح بها،<br>
+    تم تعليق الوصول إلى هذا الحساب مؤقتاً.<br>
+    يمكنك المحاولة مجدداً بعد انتهاء الوقت.
+  </p>
+
+  <!-- العداد التنازلي -->
+  <div class="timer-box">
+    <div class="timer-label"><i class="fas fa-hourglass-half me-1"></i> الوقت المتبقي لإلغاء القفل</div>
+    <div class="timer-digits">
+      <div class="digit-block">
+        <span class="dnum" id="mm">00</span>
+        <span class="dlbl">دقيقة</span>
+      </div>
+      <span class="tsep">:</span>
+      <div class="digit-block">
+        <span class="dnum" id="ss">00</span>
+        <span class="dlbl">ثانية</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- الإحصاء -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <span class="stat-val">{{ failures }}</span>
+      <span class="stat-key">محاولة فاشلة</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">{{ lockout_number }}</span>
+      <span class="stat-key">مرة قفل</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">{{ wait_minutes }}</span>
+      <span class="stat-key">دقيقة انتظار</span>
+    </div>
+  </div>
+
+  <a href="/users/login/" class="btn-back">
+    <i class="fas fa-arrow-right"></i>
+    العودة لتسجيل الدخول
+  </a>
+
+  <p class="brand-footer">🔒 Care4Child &mdash; نظام حماية الحسابات</p>
+</div>
+
+<script>
+  const waitMinutes = parseInt("{{ wait_minutes }}") || 1;
+  const storageKey  = 'axes_lockout_end';
+  const mm = document.getElementById('mm');
+  const ss = document.getElementById('ss');
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  let endTime = parseInt(localStorage.getItem(storageKey) || '0');
+  const now = Date.now();
+  if (!endTime || endTime < now) {
+    endTime = now + waitMinutes * 60 * 1000;
+    localStorage.setItem(storageKey, endTime);
+  }
+
+  function tick() {
+    const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    if (remaining <= 0) {
+      mm.textContent = '00'; ss.textContent = '00';
+      localStorage.removeItem(storageKey);
+      window.location.href = '/users/login/';
+      return;
+    }
+    mm.textContent = pad(Math.floor(remaining / 60));
+    ss.textContent = pad(remaining % 60);
+    setTimeout(tick, 1000);
+  }
+  tick();
+</script>
+
+</body>
+</html>
