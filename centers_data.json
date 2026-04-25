@@ -1,0 +1,50 @@
+[
+{
+  "model": "centers.healthcenter",
+  "pk": 1,
+  "fields": {
+    "governorate": 7,
+    "directorate": 24,
+    "center_code": "07070001",
+    "name_ar": "هيئة مستشفى الثورة",
+    "name_en": "Al-Thawra Hospital Authority",
+    "address": "خلف جامع البر،مقابل عيادة الدكتور عبدالسلام نصير",
+    "working_hours": "from 8 a.m to 12 p.m",
+    "license_number": null,
+    "is_active": true,
+    "created_at": "2026-03-27T18:30:56.381Z"
+  }
+},
+{
+  "model": "centers.healthcenter",
+  "pk": 2,
+  "fields": {
+    "governorate": 7,
+    "directorate": 28,
+    "center_code": "07110001",
+    "name_ar": "مستشفى الامومة والطفولة",
+    "name_en": "Maternity and Childhood Hospital",
+    "address": "شارع تعز،الجبانة العليا",
+    "working_hours": "from 8 a.m to 12 p.m",
+    "license_number": null,
+    "is_active": true,
+    "created_at": "2026-03-27T18:37:58.639Z"
+  }
+},
+{
+  "model": "centers.healthcenter",
+  "pk": 3,
+  "fields": {
+    "governorate": 7,
+    "directorate": 24,
+    "center_code": "07070002",
+    "name_ar": "المنار",
+    "name_en": "almanar",
+    "address": "فوق النمر",
+    "working_hours": "8صباحا-12مساء",
+    "license_number": null,
+    "is_active": true,
+    "created_at": "2026-03-30T07:41:31.877Z"
+  }
+}
+]

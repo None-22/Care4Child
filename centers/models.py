@@ -116,6 +116,8 @@ class CenterComplaint(models.Model):
         ('RESOLVED',   'تم الحل'),
     )
 
+    STARS_CHOICES = [(i, f'{i} نجمة') for i in range(1, 6)]
+
     # الروابط
     vaccine_record = models.OneToOneField(
         'medical.VaccineRecord',
@@ -138,20 +140,32 @@ class CenterComplaint(models.Model):
         verbose_name="العائلة"
     )
 
-    # بيانات الشكوى
+    # ── حقل التقييم الجديد (نجوم 1-5) ──────────────────────────────
+    stars = models.IntegerField(
+        choices=STARS_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="التقييم بالنجوم"
+    )
+
+    # بيانات الشكوى (complaint_type محتفظ به للبيانات القديمة)
     complaint_type = models.CharField(
         max_length=25,
         choices=COMPLAINT_TYPES,
-        verbose_name="نوع الشكوى"
+        verbose_name="نوع الشكوى",
+        null=True,
+        blank=True,
     )
-    details = models.TextField(blank=True, null=True, verbose_name="تفاصيل إضافية")
+    details = models.TextField(blank=True, null=True, verbose_name="تعليق / تفاصيل إضافية")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "شكوى على مركز"
-        verbose_name_plural = "شكاوى المراكز"
+        verbose_name = "تقييم مركز"
+        verbose_name_plural = "تقييمات المراكز"
 
     def __str__(self):
-        return f"{self.get_complaint_type_display()} — {self.health_center.name_ar}"
+        stars_str = f"{self.stars}⭐" if self.stars else self.get_complaint_type_display()
+        return f"{stars_str} — {self.health_center.name_ar}"
+

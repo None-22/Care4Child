@@ -77,16 +77,22 @@ class HealthCenterDetailSerializer(serializers.ModelSerializer):
         return Child.objects.filter(health_center=obj).count()
 
     def get_average_rating(self, obj):
+        # نجوم حقيقية أولاً، ثم fallback للبيانات القديمة
+        star_comps = obj.complaints.filter(stars__isnull=False)
+        if star_comps.exists():
+            total = sum(c.stars for c in star_comps)
+            return round(total / star_comps.count(), 1)
+        # fallback للبيانات القديمة (complaint_type)
         comps = obj.complaints.all()
         if not comps: return 0.0
         score = 0
         for c in comps:
-             if c.complaint_type == 'EXCELLENT': score += 5
-             elif c.complaint_type == 'GOOD': score += 4
-             elif c.complaint_type == 'OTHER': score += 3
-             elif c.complaint_type == 'SUBSTITUTE_GIVEN': score += 2
-             else: score += 1
-        return round(score / len(comps), 1)
+            if c.complaint_type == 'EXCELLENT': score += 5
+            elif c.complaint_type == 'GOOD': score += 4
+            elif c.complaint_type == 'OTHER': score += 3
+            elif c.complaint_type == 'SUBSTITUTE_GIVEN': score += 2
+            else: score += 1
+        return round(score / comps.count(), 1)
 
     def get_reviews_count(self, obj):
         return obj.complaints.count()
@@ -748,12 +754,11 @@ from centers.models import CenterComplaint
 class CenterComplaintSerializer(serializers.ModelSerializer):
     health_center_name = serializers.CharField(source='health_center.name_ar', read_only=True)
     family_name = serializers.SerializerMethodField(read_only=True)
-    complaint_type_display = serializers.CharField(source='get_complaint_type_display', read_only=True)
 
     class Meta:
         model = CenterComplaint
-        fields = ['id', 'vaccine_record', 'health_center', 'health_center_name', 
-                  'family', 'family_name', 'complaint_type', 'complaint_type_display', 
+        fields = ['id', 'vaccine_record', 'health_center', 'health_center_name',
+                  'family', 'family_name', 'stars', 'complaint_type',
                   'details', 'status', 'created_at']
         read_only_fields = ['status', 'created_at']
 
@@ -762,16 +767,31 @@ class CenterComplaintSerializer(serializers.ModelSerializer):
             return f"{obj.family.father_name} & {obj.family.mother_name}"
         return ""
 
+
 class CenterComplaintCreateSerializer(serializers.ModelSerializer):
+    """المستخدم يُرسل: vaccine_record (إجباري) + stars (1-5 إجباري) + details (اختياري)"""
     class Meta:
         model = CenterComplaint
-        fields = ['vaccine_record', 'health_center', 'complaint_type', 'details']
+        fields = ['vaccine_record', 'health_center', 'stars', 'details']
         extra_kwargs = {
             'vaccine_record': {'required': False, 'allow_null': True},
-            'health_center': {'required': False, 'allow_null': True},
+            'health_center':  {'required': False, 'allow_null': True},
+            'stars':          {'required': True},
         }
+
+    def validate_stars(self, value):
+        if value not in range(1, 6):
+            raise serializers.ValidationError("التقييم يجب أن يكون بين 1 و5 نجوم.")
+        return value
 
     def validate_vaccine_record(self, value):
         if value and hasattr(value, 'complaint'):
-            raise serializers.ValidationError("تم تسجيل شكوى لهذه الجرعة مسبقاً")
+            raise serializers.ValidationError("تم تقييم هذه الجرعة مسبقاً.")
         return value
+
+
+class CenterReviewSerializer(serializers.ModelSerializer):
+    """للعرض العام — يُخفي بيانات العائلة"""
+    class Meta:
+        model = CenterComplaint
+        fields = ['id', 'stars', 'details', 'created_at']

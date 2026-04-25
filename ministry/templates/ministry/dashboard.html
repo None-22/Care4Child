@@ -30,32 +30,6 @@
     </div>
 </div>
 
-    <!-- COMPLAINTS KPI ROW -->
-    <div class="row w-100 mb-4" style="margin: 0;">
-        <div class="col-12 mb-2">
-            <h5 class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>الرقابة والشكاوى الحديثة</h5>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 12px; background: rgba(220, 38, 38, 0.04); border-right: 4px solid #dc2626 !important; height: 100%;">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <h6 class="card-title text-danger fw-bold mb-3">شكاوى تتطلب التدخل</h6>
-                    <h2 class="display-5 fw-bold mb-0" style="color: var(--text-color, #1e293b);">{{ pending_complaints_count|default:"0" }}</h2>
-                    <div class="mt-auto pt-3">
-                        <a href="{% url 'ministry:complaints_list' %}" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3">عرض التفاصيل <i class="fas fa-arrow-left ms-1"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 12px; height: 100%; background: var(--bg-card, #fff);">
-                <div class="card-body d-flex align-items-center justify-content-center">
-                    <div style="height: 120px; width: 100%; display: flex; justify-content: center;">
-                        <canvas id="complaintsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 <div class="db-wrap">
 
@@ -258,12 +232,13 @@
                             <th>مكتملون</th>
                             <th>قيد المتابعة</th>
                             <th>التغطية</th>
+                            <th>التقييم ⭐</th>
                             <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="centers-tbody">
                         <tr>
-                            <td colspan="8" class="text-center py-3">
+                            <td colspan="9" class="text-center py-3">
                                 <div class="spinner-border spinner-border-sm text-primary"></div>
                             </td>
                         </tr>
@@ -274,6 +249,26 @@
     </div>
 
 </div>
+
+<!-- Modal تقييمات المركز -->
+<div class="modal fade" id="centerReviewsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow" style="border-radius:16px;">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="reviewsModalTitle">تعليقات المراجعين</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3" style="max-height:70vh;overflow-y:auto;">
+        <div id="reviewsList">
+          <div class="d-flex justify-content-center py-4">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -287,28 +282,6 @@
         };
         clk(); setInterval(clk, 1000);
 
-        const ctx2 = document.getElementById('complaintsChart');
-        if (ctx2) {
-            new Chart(ctx2.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['لقاح غير متوفر', 'طلب رسوم', 'سوء معاملة', 'ازدحام', 'أخرى'],
-                    datasets: [{
-                        data: [45, 15, 20, 10, 10], // داتا تجريبية مؤقتة
-                        backgroundColor: ['#dc2626', '#d97706', '#f59e0b', '#0ea5e9', '#64748b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'left', labels: { boxWidth: 12, font: { size: 10 } } },
-                    },
-                    cutout: '65%'
-                }
-            });
-        }
 
         const anim = (id, end, dur = 900) => {
             const el = document.getElementById(id); if (!el) return;
@@ -335,6 +308,9 @@
         }
 
         const K = d.kpis || {}, C = d.charts || {}, centers = d.centers_report || [];
+        // جلب المراكز الكاملة (تحتوي average_rating و reviews_count)
+        let allCenters = [];
+        try { allCenters = await apiFetch('/api/health-centers/'); } catch {}
         const total = K.total_children || 0, comp = K.completed_children || 0, def = K.defaulters_count || 0;
         const rate = K.completion_rate || 0, trend = C.vaccination_trend || [], lbs = C.labels || [];
         const defRate = total ? Math.round(def / total * 100) : 0;
@@ -501,48 +477,126 @@
             });
         }
 
-        /* Ranking - أرقام فقط بدون نسبة مئوية */
+        /* Ranking — مرتب حسب تقييم النجوم */
         const rankEl = document.getElementById('ranking-container');
-        if (!centers.length) { rankEl.innerHTML = '<div class="emp"><i class="fas fa-ranking-star"></i><p>لا توجد بيانات</p></div>'; }
+        if (!allCenters.length) { rankEl.innerHTML = '<div class="emp"><i class="fas fa-ranking-star"></i><p>لا توجد بيانات</p></div>'; }
         else {
-            const sr = [...centers].sort((a, b) => parseFloat(b.coverage_rate || 0) - parseFloat(a.coverage_rate || 0));
+            const sorted = [...allCenters]
+                .filter(c => c.is_active)
+                .sort((a, b) => parseFloat(b.average_rating || 0) - parseFloat(a.average_rating || 0));
             const medals = ['🥇', '🥈', '🥉'];
-            rankEl.innerHTML = sr.map((ctr, i) => `
-            <div style="display:flex;align-items:center;gap:8px;padding:.42rem .9rem;border-bottom:1px solid var(--bd);transition:background .15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
-                <span style="font-size:.75rem;font-weight:900;color:var(--muted);width:26px;text-align:center;flex-shrink:0;">${i < 3 ? medals[i] : ''} ${i + 1}</span>
-                <div style="min-width:0;flex:1;">
-                    <div style="font-size:.76rem;font-weight:700;color:var(--blue-d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ctr.name || '—'}</div>
-                    <div style="font-size:.62rem;color:var(--muted);">${ctr.total_children || 0} طفل · ${ctr.completed_children || 0} مكتمل</div>
-                </div>
-            </div>`).join('');
+            rankEl.innerHTML = sorted.map((c, i) => {
+                const avg   = parseFloat(c.average_rating || 0);
+                const count = c.reviews_count || 0;
+                const filled = Math.round(avg);
+                const stars = [1,2,3,4,5].map(n =>
+                    n <= filled
+                        ? '<i class="fas fa-star text-warning" style="font-size:.65rem;"></i>'
+                        : '<i class="far fa-star" style="font-size:.65rem;color:#ccc;"></i>'
+                ).join('');
+                return `
+                <div style="display:flex;align-items:center;gap:8px;padding:.42rem .9rem;border-bottom:1px solid var(--bd);transition:background .15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size:.75rem;font-weight:900;color:var(--muted);width:26px;text-align:center;flex-shrink:0;">${i < 3 ? medals[i] : ''} ${i + 1}</span>
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-size:.76rem;font-weight:700;color:var(--blue-d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name_ar || '—'}</div>
+                        <div style="font-size:.62rem;color:var(--muted);">${stars}&nbsp;<span>${avg > 0 ? avg.toFixed(1) + ' ⭐' : 'لا يوجد تقييم'}</span>&nbsp;·&nbsp;${count} تقييم</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
+
 
         /* Centers Table */
         const tbody = document.getElementById('centers-tbody');
-        if (!centers.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">لا توجد بيانات مراكز.</td></tr>'; }
+        if (!centers.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">لا توجد بيانات مراكز.</td></tr>'; }
         else {
             tbody.innerHTML = centers.map((ctr, i) => {
                 const r = parseFloat(ctr.coverage_rate || 0);
                 const cls = r >= 70 ? 'sp-g' : r >= 40 ? 'sp-y' : 'sp-r';
                 const lbl = r >= 70 ? 'جيد' : r >= 40 ? 'متوسط' : 'منخفض';
-                const bc = r >= 70 ? '#0d9488' : r >= 40 ? '#d97706' : '#dc2626';
+                const bc  = r >= 70 ? '#0d9488' : r >= 40 ? '#d97706' : '#dc2626';
                 const pending = Math.max((ctr.total_children || 0) - (ctr.completed_children || 0) - (ctr.defaulters_children || 0), 0);
+
+                // نجوم التقييم — نجلبها من allCenters (اللِست فيها average_rating)
+                const centerData = allCenters.find(c => c.name_ar === ctr.name) || {};
+                const avg    = parseFloat(centerData.average_rating || 0);
+                const rCount = centerData.reviews_count || 0;
+                const filled = Math.round(avg);
+                const starsHtml = [1,2,3,4,5].map(n =>
+                    n <= filled
+                        ? '<i class="fas fa-star text-warning" style="font-size:.65rem;"></i>'
+                        : '<i class="far fa-star" style="font-size:.65rem;color:#ccc;"></i>'
+                ).join('');
+                const ratingCell = avg > 0
+                    ? starsHtml
+                    : '<span class="text-muted" style="font-size:.72rem;">لا يوجد</span>';
+
+                const centerId = centerData.id || '';
                 return `<tr>
                 <td style="color:var(--muted);font-size:.72rem;">${i + 1}</td>
-                <td style="font-weight:700;color:var(--blue-d);font-size:.78rem;">${ctr.name || '—'}</td>
+                <td>
+                    <span class="fw-bold" style="color:var(--blue-d);font-size:.78rem;cursor:pointer;"
+                        onclick="showCenterReviews(${centerId}, '${(ctr.name || '').replace(/'/g, "&apos;")}')"
+                        title="عرض التقييمات">${ctr.name || '—'}</span>
+                </td>
                 <td style="font-size:.7rem;color:var(--muted);">${ctr.location || '—'}</td>
                 <td style="font-size:.78rem;">${ctr.total_children ?? 0}</td>
                 <td style="font-size:.78rem;color:var(--green);font-weight:700;">${ctr.completed_children ?? 0}</td>
                 <td style="font-size:.78rem;color:var(--blue);font-weight:700;">${pending}</td>
-                <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:55px;background:var(--bg-trk, #f1f5f9);border-radius:99px;height:5px;overflow:hidden;"><div style="width:${Math.min(r, 100)}%;background:${bc};height:100%;border-radius:99px;"></div></div><span style="font-size:.74rem;font-weight:700;">${r}%</span></div></td>
+                <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:55px;background:var(--bg-trk,#f1f5f9);border-radius:99px;height:5px;overflow:hidden;"><div style="width:${Math.min(r,100)}%;background:${bc};height:100%;border-radius:99px;"></div></div><span style="font-size:.74rem;font-weight:700;">${r}%</span></div></td>
+                <td>${ratingCell}</td>
                 <td><span class="sp ${cls}">${lbl}</span></td>
             </tr>`;
             }).join('');
         }
 
 
-
     });
+
+    /* ───────────── showCenterReviews ───────────── */
+    async function showCenterReviews(centerId, centerName) {
+        if (!centerId) return;
+        document.getElementById('reviewsModalTitle').textContent = 'تعليقات: ' + centerName;
+        document.getElementById('reviewsList').innerHTML =
+            '<div class="d-flex justify-content-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div></div>';
+
+        const modal = new bootstrap.Modal(document.getElementById('centerReviewsModal'));
+        modal.show();
+
+        try {
+            const data = await apiFetch(`/api/health-centers/${centerId}/reviews/`);
+            const results = data.results || [];
+            
+            // فلترة التعليقات النصية فقط (استبعاد التقييمات التي ليس بها نص)
+            const commentsOnly = results.filter(r => r.details && r.details.trim() !== '');
+
+            if (!commentsOnly.length) {
+                document.getElementById('reviewsList').innerHTML =
+                    '<p class="text-center text-muted py-3">لا توجد تعليقات مكتوبة لهذا المركز.</p>';
+                return;
+            }
+
+            document.getElementById('reviewsList').innerHTML = commentsOnly.map(r => {
+                const s = r.stars || 0;
+                const stars = [1,2,3,4,5].map(n =>
+                    n <= s ? '<i class="fas fa-star text-warning" style="font-size:.75rem;"></i>'
+                           : '<i class="far fa-star text-muted" style="font-size:.75rem;"></i>'
+                ).join('');
+                const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '';
+                return `
+                <div class="d-flex gap-3 py-3 border-bottom align-items-start">
+                    <div style="white-space:nowrap; padding-top:2px;">${stars}</div>
+                    <div class="flex-grow-1">
+                        <p class="mb-1" style="font-size:.95rem; color:var(--blue-d);">${r.details}</p>
+                        <small class="text-muted"><i class="far fa-clock me-1"></i>${date}</small>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch(e) {
+            document.getElementById('reviewsList').innerHTML =
+                '<div class="alert alert-danger">تعذّر تحميل التقييمات.</div>';
+        }
+    }
 
     /* إعادة رسم الـ charts عند تبديل الثيم */
     new MutationObserver(function (mutations) {

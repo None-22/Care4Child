@@ -119,7 +119,7 @@ class HealthCenterViewSet(viewsets.ModelViewSet):
         staff = CustomUser.objects.filter(health_center=center)
         serializer = UserListSerializer(staff, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'])
     def children(self, request, pk=None):
         """الأطفال في المركز"""
@@ -127,6 +127,22 @@ class HealthCenterViewSet(viewsets.ModelViewSet):
         children = Child.objects.filter(health_center=center)
         serializer = ChildListSerializer(children, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def reviews(self, request, pk=None):
+        """
+        تقييمات المركز العامة (نجوم + تعليق) — بدون بيانات العائلة.
+        متاح لأي مستخدم مسجّل.
+        """
+        from api.serializers import CenterReviewSerializer
+        center = self.get_object()
+        reviews = center.complaints.filter(stars__isnull=False).order_by('-created_at')
+        serializer = CenterReviewSerializer(reviews, many=True)
+        return Response({
+            'count': reviews.count(),
+            'average': round(sum(r.stars for r in reviews) / reviews.count(), 1) if reviews.exists() else 0.0,
+            'results': serializer.data,
+        })
 
 
 # ============== User ViewSet ==============

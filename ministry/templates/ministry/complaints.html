@@ -27,59 +27,50 @@
             <table class="table table-hover table-striped mb-0 text-center align-middle">
                 <thead class="bg-dark text-white">
                     <tr>
-                        <th class="py-3">رقم الشكوى</th>
+                        <th class="py-3">الرقم</th>
                         <th class="py-3">التاريخ</th>
                         <th class="py-3">المركز الصحي</th>
-                        <th class="py-3">ولي الأمر</th>
-                        <th class="py-3">نوع المشكلة</th>
-                        <th class="py-3">التفاصيل</th>
-                        <th class="py-3">الحالة</th>
-                        <th class="py-3">الإجراء</th>
+                        <th class="py-3">تتعلق بالطفل</th>
+                        <th class="py-3">التقييم ⭐</th>
+                        <th class="py-3 text-start">التعليق المكتوب</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in complaints %}
                     <tr>
                         <td class="fw-bold text-muted">#{{ c.id }}</td>
-                        <td>{{ c.created_at|date:"Y-m-d H:i" }}</td>
-                        <td class="fw-bold text-primary">{{ c.health_center.name|default:"غير محدد" }}</td>
-                        <td>{{ c.family.mother_name|default:"---" }} / {{ c.family.father_name|default:"---" }}</td>
+                        <td style="font-size: 0.85rem;">{{ c.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="fw-bold text-primary">{{ c.health_center.name_ar|default:"غير محدد" }}</td>
+                        <td style="font-size: 0.9rem;">{{ c.family.children.first.full_name|default:"---" }}</td>
                         <td>
-                            {% if c.complaint_type == 'vaccine_unavailable' %}
-                                <span class="badge bg-danger">لقاح غير متوفر</span>
-                            {% elif c.complaint_type == 'bad_treatment' %}
-                                <span class="badge bg-warning text-dark">سوء معاملة</span>
-                            {% elif c.complaint_type == 'illegal_fees' %}
-                                <span class="badge bg-danger">رسوم غير قانونية</span>
-                            {% elif c.complaint_type == 'crowded' %}
-                                <span class="badge bg-secondary">ازدحام</span>
+                            <div style="font-size: 0.85rem;">
+                                {% with stars=c.stars|default:0 %}
+                                    <span class="fw-bold me-1">{{ stars }}</span>
+                                    <span class="text-warning">
+                                        {% for i in '12345'|make_list %}
+                                            {% if forloop.counter <= stars %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted" style="font-size: 0.8rem;"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% endwith %}
+                            </div>
+                        </td>
+                        <td class="text-start" style="max-width: 250px; font-size: 0.9rem;">
+                            {% if c.details %}
+                                {{ c.details }}
                             {% else %}
-                                <span class="badge bg-info">أخرى</span>
+                                <span class="text-muted fst-italic">بدون تعليق نصي</span>
                             {% endif %}
-                        </td>
-                        <td style="max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ c.details }}">
-                            {{ c.details|default:"لا يوجد تفاصيل إضافية" }}
-                        </td>
-                        <td>
-                            {% if c.status == 'pending' %}
-                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">قيد المراجعة</span>
-                            {% elif c.status == 'resolved' %}
-                                <span class="badge bg-success px-3 py-2 rounded-pill">تم الحل</span>
-                            {% else %}
-                                <span class="badge bg-danger px-3 py-2 rounded-pill">تم التصعيد</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary rounded-pill px-3" {% if c.status == 'resolved' %}disabled{% endif %}>
-                                معالجة
-                            </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            <i class="fas fa-check-circle text-success mb-2" style="font-size: 2rem;"></i>
-                            <p class="mb-0">لا توجد شكاوى مسجلة حتى الآن.</p>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-star-half-stroke mb-3 text-secondary" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                            <h6 class="mb-0">لا توجد تقييمات مسجلة حتى الآن.</h6>
                         </td>
                     </tr>
                     {% endfor %}

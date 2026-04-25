@@ -73,33 +73,39 @@ def sync_vaccine_record_to_child(sender, instance, created, **kwargs):
     """
     عند إضافة أو تعديل سجل تطعيم (VaccineRecord):
     1. نحدث جدول الطفل (ChildVaccineSchedule) لنجعله is_taken = True
-    2. نتحقق ما إذا كان الطفل قد أكمل جميع التلقيحات الأساسية (BASIC)
-    3. إذا أكمل الأساسي، نحدّث حالة الطفل (is_completed = True)
+    2. نحدث health_center للطفل إذا لم يكن محدداً (يُصلح مشكلة العدد = 0 في المراكز)
+    3. نتحقق ما إذا كان الطفل قد أكمل جميع التلقيحات الأساسية (BASIC)
+    4. إذا أكمل الأساسي، نحدّث حالة الطفل (is_completed = True)
     """
     child = instance.child
     vaccine = instance.vaccine
     dose = instance.dose_number
-    
+
+    # 0. تعيين health_center للطفل تلقائياً إذا لم يكن محدداً
+    if created and instance.health_center and not child.health_center:
+        child.health_center = instance.health_center
+        child.save(update_fields=['health_center'])
+
     # 1. Update ChildVaccineSchedule
     schedule_item = ChildVaccineSchedule.objects.filter(
         child=child,
         vaccine_schedule__vaccine=vaccine,
         vaccine_schedule__dose_number=dose
     ).first()
-    
+
     if schedule_item and not schedule_item.is_taken:
         schedule_item.is_taken = True
         schedule_item.save(update_fields=['is_taken'])
-        
+
     # 2. Check complete status
     all_basic_schedules = ChildVaccineSchedule.objects.filter(
         child=child,
         vaccine_schedule__stage='BASIC'
     )
-    
+
     if all_basic_schedules.exists():
         has_pending_basic = all_basic_schedules.filter(is_taken=False).exists()
-        
+
         if not has_pending_basic and not child.is_completed:
             child.is_completed = True
             child.completed_date = timezone.now().date()
@@ -108,6 +114,7 @@ def sync_vaccine_record_to_child(sender, instance, created, **kwargs):
             child.is_completed = False
             child.completed_date = None
             child.save(update_fields=['is_completed', 'completed_date'])
+
 
 
 @receiver(post_delete, sender=VaccineRecord)

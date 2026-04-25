@@ -93,6 +93,10 @@
                     class="nav-item {% if request.resolver_match.url_name == 'users' and request.resolver_match.app_name == 'ministry' %}active{% endif %}">
                     <i class="fas fa-users-cog"></i><span class="si-text">مستخدمو النظام</span>
                 </a>
+                <a href="{% url 'ministry:complaints_list' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'complaints_list' %}active{% endif %}">
+                    <i class="fas fa-star-half-stroke"></i><span class="si-text">سجل التقييمات</span>
+                </a>
             </nav>
 
             {% else %}

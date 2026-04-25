@@ -301,9 +301,23 @@
         container.innerHTML = `<table class="ministry-table">
         <thead><tr>
             <th>#</th><th>المركز الصحي</th><th>كود المركز</th>
-            <th>المحافظة</th><th>المديرية</th><th>الحالة</th><th>تاريخ الإنشاء</th><th class="text-center">إجراءات</th>
+            <th>المحافظة</th><th>المديرية</th>
+            <th>التقييم ⭐</th>
+            <th>الحالة</th><th>تاريخ الإنشاء</th><th class="text-center">إجراءات</th>
         </tr></thead>
-        <tbody>${centers.map((c, i) => `
+        <tbody>${centers.map((c, i) => {
+            const avg    = parseFloat(c.average_rating || 0);
+            const count  = c.reviews_count || 0;
+            const filled = Math.round(avg);
+            const stars  = [1,2,3,4,5].map(n =>
+                n <= filled
+                    ? '<i class="fas fa-star text-warning" style="font-size:.7rem;"></i>'
+                    : '<i class="far fa-star text-muted" style="font-size:.7rem;"></i>'
+            ).join('');
+            const badge  = avg > 0
+                ? stars
+                : '<span class="text-muted small">لا يوجد</span>';
+            return `
         <tr class="${!c.is_active ? 'table-secondary opacity-75' : ''}">
             <td class="text-muted">${i + 1}</td>
             <td><div class="fw-bold">${c.name_ar || '—'}</div>
@@ -311,6 +325,7 @@
             <td><span class="badge bg-secondary-subtle text-dark font-monospace">${c.center_code || '—'}</span></td>
             <td>${c.governorate_name || '—'}</td>
             <td>${c.directorate_name || '—'}</td>
+            <td>${badge}</td>
             <td>${c.is_active
                 ? '<span class="badge bg-success-subtle text-success px-3 py-2 fw-bold"><i class="fas fa-circle me-1" style="font-size:0.5rem;"></i>نشط</span>'
                 : '<span class="badge bg-danger-subtle text-danger px-3 py-2 fw-bold"><i class="fas fa-circle me-1" style="font-size:0.5rem;"></i>موقوف</span>'}</td>
@@ -329,7 +344,7 @@
                     </button>
                 </div>
             </td>
-        </tr>`).join('')}
+        </tr>`;}).join('')}
         </tbody>
     </table>`;
     }
