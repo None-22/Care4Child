@@ -40,6 +40,12 @@ class HealthCenterListSerializer(serializers.ModelSerializer):
                   'directorate_name', 'is_active', 'created_at', 'average_rating', 'reviews_count']
 
     def get_average_rating(self, obj):
+        # نجوم حقيقية أولاً، ثم fallback للبيانات القديمة
+        star_comps = obj.complaints.filter(stars__isnull=False)
+        if star_comps.exists():
+            total = sum(c.stars for c in star_comps)
+            return round(total / star_comps.count(), 1)
+        # fallback للبيانات القديمة (complaint_type)
         comps = obj.complaints.all()
         if not comps: return 0.0
         score = 0
@@ -504,7 +510,7 @@ class VaccineRecordListSerializer(serializers.ModelSerializer):
     class Meta:
         model = VaccineRecord
         fields = ['id', 'child_name', 'vaccine_name', 'dose_number', 'staff_name', 
-                  'date_given', 'created_at']
+                  'health_center', 'date_given', 'created_at']
 
 
 class VaccineRecordDetailSerializer(serializers.ModelSerializer):

@@ -373,7 +373,12 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         from django.utils import timezone
-        serializer.save(staff=self.request.user, date_given=timezone.now().date())
+        user = self.request.user
+        serializer.save(
+            staff=user, 
+            date_given=timezone.now().date(),
+            health_center=getattr(user, 'health_center', None)
+        )
 
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -405,15 +410,34 @@ class VaccineRecordViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         from datetime import timedelta
         
-        # Only look for records in the last 7 days for the user's family
         recent_date = timezone.now().date() - timedelta(days=7)
         records = VaccineRecord.objects.filter(
             child__family__account=user,
-            date_given__gte=recent_date,
-            complaint__isnull=True  # No evaluation submitted yet
+            date_given__gte=recent_date
         ).order_by('-date_given', '-id')
         
-        serializer = self.get_serializer(records, many=True)
+        # We need to know which (child, date_given) pairs are already evaluated
+        evaluated_pairs = VaccineRecord.objects.filter(
+            child__family__account=user,
+            date_given__gte=recent_date,
+            complaint__isnull=False
+        ).values_list('child_id', 'date_given')
+        evaluated_set = set(evaluated_pairs)
+
+        pending_records = []
+        seen_pairs = set()
+
+        for r in records:
+            pair = (r.child_id, r.date_given)
+            if pair in evaluated_set:
+                continue # Already evaluated this visit
+            if pair in seen_pairs:
+                continue # Already added a representative for this visit
+            
+            seen_pairs.add(pair)
+            pending_records.append(r)
+        
+        serializer = self.get_serializer(pending_records, many=True)
         return Response(serializer.data)
 
 
