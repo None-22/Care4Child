@@ -2,6 +2,7 @@
 Serializers لـ Django REST API
 """
 from rest_framework import serializers
+from django.db.models import Avg
 import datetime
 from .validators import validate_name, validate_phone_number, validate_past_date
 from users.models import CustomUser
@@ -40,13 +41,12 @@ class HealthCenterListSerializer(serializers.ModelSerializer):
                   'directorate_name', 'is_active', 'created_at', 'average_rating', 'reviews_count']
 
     def get_average_rating(self, obj):
-        # نجوم حقيقية أولاً، ثم fallback للبيانات القديمة
-        star_comps = obj.complaints.filter(stars__isnull=False)
-        if star_comps.exists():
-            total = sum(c.stars for c in star_comps)
-            return round(total / star_comps.count(), 1)
+        # نجوم حقيقية أولاً — نستخدم Avg() مباشرة من DB
+        result = obj.complaints.filter(stars__isnull=False).aggregate(avg=Avg('stars'))
+        if result['avg'] is not None:
+            return round(result['avg'], 1)
         # fallback للبيانات القديمة (complaint_type)
-        comps = obj.complaints.all()
+        comps = list(obj.complaints.exclude(complaint_type__isnull=True))
         if not comps: return 0.0
         score = 0
         for c in comps:
@@ -58,7 +58,8 @@ class HealthCenterListSerializer(serializers.ModelSerializer):
         return round(score / len(comps), 1)
 
     def get_reviews_count(self, obj):
-        return obj.complaints.count()
+        # نعدّ فقط التقييمات اللي فيها نجوم فعلية
+        return obj.complaints.filter(stars__isnull=False).count()
 
 
 class HealthCenterDetailSerializer(serializers.ModelSerializer):
@@ -83,13 +84,12 @@ class HealthCenterDetailSerializer(serializers.ModelSerializer):
         return Child.objects.filter(health_center=obj).count()
 
     def get_average_rating(self, obj):
-        # نجوم حقيقية أولاً، ثم fallback للبيانات القديمة
-        star_comps = obj.complaints.filter(stars__isnull=False)
-        if star_comps.exists():
-            total = sum(c.stars for c in star_comps)
-            return round(total / star_comps.count(), 1)
+        # نجوم حقيقية أولاً — نستخدم Avg() مباشرة من DB
+        result = obj.complaints.filter(stars__isnull=False).aggregate(avg=Avg('stars'))
+        if result['avg'] is not None:
+            return round(result['avg'], 1)
         # fallback للبيانات القديمة (complaint_type)
-        comps = obj.complaints.all()
+        comps = list(obj.complaints.exclude(complaint_type__isnull=True))
         if not comps: return 0.0
         score = 0
         for c in comps:
@@ -98,10 +98,11 @@ class HealthCenterDetailSerializer(serializers.ModelSerializer):
             elif c.complaint_type == 'OTHER': score += 3
             elif c.complaint_type == 'SUBSTITUTE_GIVEN': score += 2
             else: score += 1
-        return round(score / comps.count(), 1)
+        return round(score / len(comps), 1)
 
     def get_reviews_count(self, obj):
-        return obj.complaints.count()
+        # نعدّ فقط التقييمات اللي فيها نجوم فعلية
+        return obj.complaints.filter(stars__isnull=False).count()
 
 
 class HealthCenterCreateUpdateSerializer(serializers.ModelSerializer):
