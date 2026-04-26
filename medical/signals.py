@@ -221,8 +221,8 @@ def cleanup_family_if_last_child(sender, instance, **kwargs):
 @receiver(post_save, sender=VaccineRecord)
 def send_complaint_notification(sender, instance, created, **kwargs):
     """
-    عند تسجيل جرعة جديدة:
-    → أرسل إشعار FCM لولي الأمر يخبره بإمكانية الإبلاغ عن مشكلة
+    عند تسجيل جرعات جديدة في نفس اليوم:
+    → أرسل إشعار FCM واحد فقط لولي الأمر يخبره بإمكانية تقييم الزيارة
     """
     if not created:
         return
@@ -236,15 +236,25 @@ def send_complaint_notification(sender, instance, created, **kwargs):
     if not center or not family or not family.account:
         return
 
+    # التأكد من عدم إرسال إشعارات متكررة لنفس الطفل في نفس اليوم
+    today = timezone.now().date()
+    other_records_today = VaccineRecord.objects.filter(
+        child=child,
+        date_given=today
+    ).exclude(id=instance.id).exists()
+
+    if other_records_today:
+        return  # تم إرسال إشعار مسبقاً للجرعة الأولى اليوم
+
     from notifications.services import FCMService
 
     FCMService.send_notification(
         user=family.account,
-        title="تم تسجيل جرعة طفلك ✅",
+        title="تقييم زيارة التطعيم 🌟",
         body=(
-            f"تم تسجيل حصول {child.full_name} على جرعة "
-            f"{instance.vaccine.name_ar} في {center.name_ar}. "
-            f"هل واجهتَ أي مشكلة؟ اضغط للإبلاغ."
+            f"تم تسجيل تطعيمات لطفلك "
+            f"{child.full_name} في {center.name_ar}. "
+            f"شاركنا رأيك في الخدمة المقدمة!"
         ),
         notification_type='COMPLAINT_PROMPT',
         data={

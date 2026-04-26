@@ -110,7 +110,7 @@ from .models import CenterComplaint
 
 @admin.register(CenterComplaint)
 class CenterComplaintAdmin(admin.ModelAdmin):
-    list_display = ('health_center', 'complaint_type', 'status', 'created_at')
-    list_filter = ('status', 'complaint_type', 'health_center')
-    search_fields = ('health_center__name_ar', 'family__access_code')
+    list_display = ('health_center', 'family', 'stars', 'details', 'created_at')
+    list_filter = ('stars', 'health_center')
+    search_fields = ('health_center__name_ar', 'family__access_code', 'details')
     readonly_fields = ('created_at',)

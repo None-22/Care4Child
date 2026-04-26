@@ -38,7 +38,8 @@ def record_vaccine(request, child_id, schedule_id):
             vaccine=schedule.vaccine,
             dose_number=schedule.dose_number,
             date_given=timezone.now().date(),
-            staff=request.user
+            staff=request.user,
+            health_center=getattr(request.user, 'health_center', None)
         )
         
         from medical.models import ChildVaccineSchedule
