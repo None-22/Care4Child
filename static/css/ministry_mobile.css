@@ -43,14 +43,6 @@
         min-width: unset !important;
         gap: 0.5rem !important;
     }
-
-    .vac-filter-bar select {
-        min-width: unset !important;
-        flex: 1 1 120px;
-    }
-
-    /* Children filters: stack */
-    .d-flex.flex-md-row .input-group { width: 100% !important; }
 }
 
 /* ── MOBILE (≤ 768px) ── */
@@ -78,15 +70,8 @@
         gap: 10px;
     }
 
-    .ministry-banner button,
-    .ministry-banner .btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    /* Banner with flex-column already — keep buttons full width */
+    /* Banner with flex-column already */
     .ministry-banner .d-flex.gap-2 {
-        width: 100%;
         flex-direction: column;
     }
 
@@ -113,39 +98,22 @@
     .ministry-table th:nth-child(2) {
         position: sticky;
         right: 0;
-        background: #fff;
+        background: var(--sur, #fff);
         z-index: 2;
         box-shadow: -3px 0 6px rgba(0,0,0,0.07);
-    }
-
-    /* ── KPI Cards: عمود واحد ── */
-    .row.g-3 > .col-md-4,
-    .row.g-3 > .col-md-3,
-    .row.g-3 > .col-md-6 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-    }
-
-    /* ── Governorates: stack columns ── */
-    .row.g-4 > .col-lg-6 {
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
     }
 
     /* ── Vaccines filter: vertical stack ── */
     .vac-filter-bar {
-        flex-direction: column !important;
-        align-items: stretch !important;
+        flex-wrap: wrap !important;
         min-width: unset !important;
         gap: 0.5rem !important;
     }
 
     .vac-filter-bar .vac-filter-label { font-size: 0.75rem; }
-
-    .vac-filter-bar select.vac-filter-select {
-        min-width: unset !important;
-        width: 100% !important;
-    }
 
     /* Coverage target badge */
     #cov-target-badge { font-size: 0.72rem; }
@@ -171,17 +139,6 @@
 
     .ministry-card-body {
         padding: 12px 14px;
-    }
-
-    /* ── Children page filters ── */
-    #advancedFilters .row.g-2 > div[class*="col-"] {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-
-    #advancedFilters .col-md-auto {
-        flex: 0 0 100%;
-        max-width: 100%;
     }
 
     /* ── Pagination ── */
@@ -244,12 +201,6 @@
 @media (max-width: 480px) {
 
     .ministry-banner h2 { font-size: 0.9rem; }
-
-    /* Children filters: 1 column */
-    #advancedFilters .row.g-2 > div[class*="col-"] {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
 
     /* Stats badges: smaller */
     .badge { font-size: 0.65rem; }
