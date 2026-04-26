@@ -105,3 +105,35 @@
         min-width: auto;
         padding: 0 16px;
     }
+
+    /* ── Responsive Name Column ── */
+    .sticky-col-start {
+        width: 350px;
+        min-width: 300px;
+        max-width: 350px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (max-width: 991px) {
+        .sticky-col-start {
+            width: 250px;
+            min-width: 200px;
+            max-width: 250px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sticky-col-start {
+            width: 140px;
+            min-width: 120px;
+            max-width: 140px;
+        }
+        
+        .sticky-col-start a {
+            white-space: normal !important;
+            word-wrap: break-word;
+            font-size: 0.75rem !important;
+            line-height: 1.2;
+        }
+    }

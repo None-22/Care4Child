@@ -1,0 +1,268 @@
+/* ============================================================
+   Ministry Platform — Mobile Responsive Fix
+   يغطي: كل صفحات المنصة على الجوال والتابلت
+   ============================================================ */
+
+/* ── TABLET (≤ 991px) ── */
+@media (max-width: 991px) {
+
+    /* Banner: اجعل الصف يلتف */
+    .ministry-banner .d-flex.justify-content-between {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .ministry-banner .d-flex.justify-content-between > div:first-child {
+        flex: 1 1 auto;
+    }
+
+    .ministry-banner .d-flex.justify-content-between > button,
+    .ministry-banner .d-flex.justify-content-between > .d-flex {
+        flex-shrink: 0;
+    }
+
+    /* KPI row: 2 per row */
+    .ministry-kpi {
+        padding: 14px 12px;
+        gap: 10px;
+    }
+
+    .ministry-kpi .kpi-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+
+    .ministry-kpi .kpi-value {
+        font-size: 1.5rem;
+    }
+
+    /* Vaccines filter bar: stack vertically */
+    .vac-filter-bar {
+        flex-wrap: wrap !important;
+        min-width: unset !important;
+        gap: 0.5rem !important;
+    }
+
+    .vac-filter-bar select {
+        min-width: unset !important;
+        flex: 1 1 120px;
+    }
+
+    /* Children filters: stack */
+    .d-flex.flex-md-row .input-group { width: 100% !important; }
+}
+
+/* ── MOBILE (≤ 768px) ── */
+@media (max-width: 768px) {
+
+    /* ── Banner ── */
+    .ministry-banner {
+        padding: 14px 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .ministry-banner h2 {
+        font-size: 1rem;
+        margin-bottom: 2px;
+    }
+
+    .ministry-banner p {
+        font-size: 0.8rem;
+    }
+
+    .ministry-banner .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    .ministry-banner button,
+    .ministry-banner .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Banner with flex-column already — keep buttons full width */
+    .ministry-banner .d-flex.gap-2 {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    /* ── Ministry Tables: scroll + smaller font ── */
+    .ministry-card .table-responsive,
+    #centers-container,
+    #vaccines-container,
+    #gov-container,
+    #dir-container,
+    #children-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ministry-table th,
+    .ministry-table td {
+        font-size: 0.75rem;
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    /* تثبيت العمود الثاني (الاسم) */
+    .ministry-table td:nth-child(2),
+    .ministry-table th:nth-child(2) {
+        position: sticky;
+        right: 0;
+        background: #fff;
+        z-index: 2;
+        box-shadow: -3px 0 6px rgba(0,0,0,0.07);
+    }
+
+    /* ── KPI Cards: عمود واحد ── */
+    .row.g-3 > .col-md-4,
+    .row.g-3 > .col-md-3,
+    .row.g-3 > .col-md-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* ── Governorates: stack columns ── */
+    .row.g-4 > .col-lg-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* ── Vaccines filter: vertical stack ── */
+    .vac-filter-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        min-width: unset !important;
+        gap: 0.5rem !important;
+    }
+
+    .vac-filter-bar .vac-filter-label { font-size: 0.75rem; }
+
+    .vac-filter-bar select.vac-filter-select {
+        min-width: unset !important;
+        width: 100% !important;
+    }
+
+    /* Coverage target badge */
+    #cov-target-badge { font-size: 0.72rem; }
+
+    /* ── Complaints table font ── */
+    .table.table-hover td,
+    .table.table-hover th {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.6rem;
+        white-space: nowrap;
+    }
+
+    /* ── Card Header ── */
+    .ministry-card-header {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ministry-card-header h3 {
+        font-size: 0.9rem;
+    }
+
+    .ministry-card-body {
+        padding: 12px 14px;
+    }
+
+    /* ── Children page filters ── */
+    #advancedFilters .row.g-2 > div[class*="col-"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    #advancedFilters .col-md-auto {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* ── Pagination ── */
+    .pagination-container,
+    #pagination-bar {
+        padding: 10px 8px;
+        flex-wrap: wrap;
+        justify-content: center !important;
+        gap: 6px;
+    }
+
+    #pagination-bar button {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        border-radius: 99px;
+    }
+
+    .pagination .page-link {
+        min-width: 32px !important;
+        height: 32px !important;
+        font-size: 0.75rem;
+    }
+
+    /* ── Modal ── */
+    .modal-dialog {
+        margin: 8px;
+    }
+
+    .modal-body {
+        padding: 14px;
+    }
+
+    /* Dose rows in vaccine modal: stack */
+    .dose-row {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .dose-row input,
+    .dose-row select {
+        flex: 1 1 auto !important;
+        min-width: 80px;
+    }
+
+    /* ── Header actions cleanup ── */
+    .header-actions { gap: 0.6rem; }
+
+    /* ── Charts height ── */
+    canvas { max-height: 200px !important; }
+
+    /* ── Registry table ── */
+    .registry-table th,
+    .registry-table td {
+        font-size: 0.72rem;
+        padding: 6px 8px;
+    }
+}
+
+/* ── SMALL MOBILE (≤ 480px) ── */
+@media (max-width: 480px) {
+
+    .ministry-banner h2 { font-size: 0.9rem; }
+
+    /* Children filters: 1 column */
+    #advancedFilters .row.g-2 > div[class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Stats badges: smaller */
+    .badge { font-size: 0.65rem; }
+
+    .ministry-kpi .kpi-value { font-size: 1.4rem; }
+    .ministry-kpi .kpi-label { font-size: 0.72rem; }
+
+    /* Search input */
+    .input-group { border-radius: 8px; }
+
+    /* Hide # column on very small screens */
+    .ministry-table td:first-child,
+    .ministry-table th:first-child {
+        display: none;
+    }
+}

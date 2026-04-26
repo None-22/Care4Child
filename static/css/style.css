@@ -1720,3 +1720,163 @@ body.sidebar-closed .sidebar-footer {
     --ministry-primary: linear-gradient(135deg, #1d74c4 0%, #3aaafc 100%);
     --ministry-accent:  linear-gradient(135deg, #0d7a71 0%, #17c2b3 100%);
 }
+
+/* ============================================================
+   RESPONSIVE — TABLET (≤ 992px)
+   ============================================================ */
+@media (max-width: 992px) {
+    :root { --sidebar-width: 260px; }
+    .content-wrapper { padding: 2rem 1.5rem; }
+    .kpi-value { font-size: 2.2rem; }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE (≤ 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* Sidebar: مخفي افتراضياً — يظهر كـ drawer عند sidebar-open */
+    .saas-sidebar {
+        transform: translateX(100%);
+        width: 280px !important;
+        box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+        z-index: 1050;
+        transition: transform 0.3s ease;
+    }
+    body.sidebar-open .saas-sidebar {
+        transform: translateX(0);
+    }
+    body.sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1040;
+    }
+
+    /* Header: يمتد للعرض الكامل */
+    .saas-header {
+        right: 0 !important;
+        padding: 0 1rem;
+        height: 64px;
+    }
+    :root { --header-height: 64px; }
+    .page-title { font-size: 1.1rem; }
+
+    /* Main: بدون margin للسايدبار */
+    .saas-main {
+        margin-right: 0 !important;
+        padding-top: 64px;
+    }
+
+    /* Content */
+    .content-wrapper { padding: 1rem; }
+
+    /* KPI Cards: عمودان */
+    .row.g-3 > [class*="col-md-"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .kpi-card { padding: 1rem; gap: 0.8rem; }
+    .kpi-icon { width: 44px; height: 44px; font-size: 1.4rem; }
+    .kpi-value { font-size: 1.8rem; }
+    .kpi-label { font-size: 0.85rem; }
+
+    /* Ministry KPI */
+    .ministry-kpi { padding: 0.8rem 1rem; gap: 0.6rem; }
+
+    /* الجداول: scroll أفقي */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table td, .table th,
+    .saas-table td, .saas-table th,
+    .ministry-table td, .ministry-table th {
+        font-size: 0.78rem;
+        padding: 0.6rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    /* تثبيت عمود الاسم (العمود الثاني) */
+    .ministry-table td:nth-child(2),
+    .ministry-table th:nth-child(2) {
+        position: sticky;
+        right: 0;
+        background: #fff;
+        z-index: 2;
+        box-shadow: -3px 0 6px rgba(0,0,0,0.07);
+    }
+
+    /* Cards */
+    .saas-card, .ministry-card {
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.75rem;
+    }
+    .card-header-styled, .ministry-card-header {
+        padding: 0.9rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-title-styled, .ministry-card-header h3 { font-size: 1rem; }
+    .card-body-styled { padding: 1rem; }
+
+    /* Ministry Banner */
+    .ministry-banner, .saas-wave-banner {
+        padding: 1rem 1.2rem;
+        border-radius: var(--radius-sm);
+    }
+    .ministry-banner h2 { font-size: 1.05rem; }
+    .ministry-banner p { font-size: 0.82rem; }
+
+    /* Filters */
+    .d-flex.flex-column.flex-md-row { flex-direction: column !important; }
+    .form-select.w-auto { width: 100% !important; min-width: unset !important; }
+
+    /* Pagination */
+    #pagination-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center !important;
+        padding: 0.75rem 0.5rem;
+    }
+    #pagination-bar button { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
+    #pagination-controls .page-link {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.78rem;
+    }
+
+    /* Modal */
+    .modal-dialog { margin: 0.5rem; }
+    .modal-body { padding: 1rem; }
+
+    /* Charts */
+    canvas { max-height: 220px !important; }
+
+    /* Vaccine schedule table: force scroll */
+    #schedule-table-wrap,
+    #vaccineTbody,
+    .schedule-scroll-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: block;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — SMALL MOBILE (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+    .row.g-3 > [class*="col-md-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .kpi-value { font-size: 1.5rem; }
+    .page-title { font-size: 1rem; }
+    .content-wrapper { padding: 0.6rem; }
+    .ministry-banner h2 { font-size: 0.95rem; }
+
+    /* إخفاء الهيدر actions الثانوية */
+    .header-actions .header-icon-btn:not(:first-child) { display: none; }
+}
